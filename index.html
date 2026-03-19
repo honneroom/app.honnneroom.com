@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ログイン｜業務かるがも</title>
+<link rel="icon" type="image/png" href="/assets/icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;700&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+
+<!-- Google tag (gtag.js) -->
+<!-- TODO: 業務かるがも用のGA4測定IDに差し替え -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XXXXXXXXXX', {
+    linker: { domains: ['gyomu-karugamo.com', 'app.gyomu-karugamo.com'] }
+  });
+</script>
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #1a1714;
+    --cream: #f5f0e8;
+    --warm: #e8dfd0;
+    --duck: #4a7c6f;
+    --duck-light: #6a9e8f;
+    --duck-pale: #d4e8e2;
+    --mist: #8a9a96;
+    --error: #b3261e;
+    --success: #4a7c6f;
+  }
+
+  html, body {
+    min-height: 100vh;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* 背景装飾 */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -100px; right: -100px;
+    width: 500px; height: 500px;
+    border-radius: 50%;
+    background: var(--duck-pale);
+    opacity: 0.35;
+    pointer-events: none;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -80px; left: -80px;
+    width: 360px; height: 360px;
+    border-radius: 50%;
+    background: var(--warm);
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  /* ノイズテクスチャ */
+  .noise {
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.3;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 440px;
+  }
+
+  /* ロゴ */
+  .logo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 40px;
+    text-decoration: none;
+    animation: fadeDown 0.6s ease forwards;
+  }
+
+  .logo img {
+    width: 56px;
+    height: 56px;
+    object-fit: contain;
+  }
+
+  .logo-name {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: 0.04em;
+  }
+
+  .logo-tagline {
+    font-size: 12px;
+    color: var(--mist);
+    letter-spacing: 0.08em;
+    margin-top: -4px;
+  }
+
+  /* カード */
+  .card {
+    background: white;
+    border: 1px solid rgba(26,23,20,0.08);
+    padding: 40px 40px 36px;
+    animation: fadeUp 0.6s ease 0.1s both;
+  }
+
+  .card-section {
+    margin-bottom: 0;
+  }
+
+  .card-section + .card-section {
+    margin-top: 32px;
+    padding-top: 32px;
+    border-top: 1px solid rgba(26,23,20,0.08);
+  }
+
+  .section-label {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--duck);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-label::after {
+    content: '';
+    display: block;
+    flex: 1;
+    height: 1px;
+    background: var(--duck);
+    opacity: 0.2;
+  }
+
+  .section-title {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+
+  .section-desc {
+    font-size: 13px;
+    color: var(--mist);
+    line-height: 1.7;
+    font-weight: 300;
+    margin-bottom: 20px;
+  }
+
+  /* フォーム要素 */
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  input[type="email"],
+  input[type="password"],
+  input[type="text"] {
+    width: 100%;
+    padding: 12px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 300;
+    color: var(--ink);
+    background: var(--cream);
+    border: 1px solid rgba(26,23,20,0.12);
+    border-radius: 0;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  input[type="email"]:focus,
+  input[type="password"]:focus,
+  input[type="text"]:focus {
+    border-color: var(--duck);
+    box-shadow: 0 0 0 3px rgba(74,124,111,0.12);
+    background: white;
+  }
+
+  input[type="email"]::placeholder,
+  input[type="password"]::placeholder {
+    color: #b0a898;
+  }
+
+  .show-pw {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--mist);
+    cursor: pointer;
+    user-select: none;
+    margin-top: -2px;
+    margin-bottom: 4px;
+  }
+
+  .show-pw input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    accent-color: var(--duck);
+    cursor: pointer;
+  }
+
+  /* 同意チェック */
+  .agree {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: var(--mist);
+    line-height: 1.6;
+    font-weight: 300;
+  }
+
+  .agree input[type="checkbox"] {
+    width: 15px;
+    height: 15px;
+    margin-top: 2px;
+    flex-shrink: 0;
+    accent-color: var(--duck);
+    cursor: pointer;
+  }
+
+  .agree a {
+    color: var(--duck);
+    text-decoration: none;
+  }
+
+  .agree a:hover {
+    text-decoration: underline;
+  }
+
+  /* ボタン */
+  .btn-primary {
+    width: 100%;
+    padding: 13px 24px;
+    background: var(--duck);
+    color: white;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+    margin-top: 4px;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: var(--ink);
+    transform: translateY(-1px);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* メッセージ */
+  .msg {
+    font-size: 13px;
+    line-height: 1.5;
+    min-height: 1.3em;
+    margin-top: 8px;
+    font-weight: 300;
+  }
+  .msg.error { color: var(--error); }
+  .msg.success { color: var(--success); }
+
+  /* フッター */
+  .foot {
+    margin-top: 28px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--mist);
+    line-height: 1.7;
+    font-weight: 300;
+    animation: fadeUp 0.6s ease 0.25s both;
+  }
+
+  .foot a {
+    color: var(--duck);
+    text-decoration: none;
+  }
+
+  .foot-links {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+
+  .foot-links a {
+    color: var(--mist);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .foot-links a:hover { color: var(--duck); }
+
+  /* アニメーション */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 480px) {
+    body { padding: 32px 16px; }
+    .card { padding: 28px 24px 28px; }
+    .logo { margin-bottom: 32px; }
+  }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+</head>
+<body>
+
+<div class="noise"></div>
+
+<div class="container">
+
+  <!-- ロゴ -->
+  <a href="/" class="logo">
+    <img src="/assets/icon.png" alt="業務かるがも">
+    <span class="logo-name">業務かるがも</span>
+    <span class="logo-tagline">人生の業務を、一人で抱えない。</span>
+  </a>
+
+  <div class="card">
+
+    <!-- パスワードログイン -->
+    <div class="card-section">
+      <div class="section-label">Login</div>
+      <h2 class="section-title">ログイン</h2>
+      <p class="section-desc">パスワードを設定済みの方はこちら。</p>
+
+      <div class="field">
+        <input id="pw-email" type="email" placeholder="メールアドレス" autocomplete="email">
+        <input id="pw-password" type="password" placeholder="パスワード" autocomplete="current-password">
+        <label class="show-pw">
+          <input type="checkbox" id="show-password">
+          パスワードを表示
+        </label>
+      </div>
+
+      <button id="btn-login-pw" class="btn-primary">ログイン</button>
+      <p id="pw-message" class="msg" aria-live="polite"></p>
+    </div>
+
+    <!-- 新規登録 / パスワード再設定 -->
+    <div class="card-section">
+      <div class="section-label">Register / Reset</div>
+      <h2 class="section-title">新規登録 / パスワード再設定</h2>
+      <p class="section-desc">メールアドレスを認証してアカウントを作成します。すでにアカウントがある場合、同じ手順でパスワード再設定へ進めます。</p>
+
+      <label class="agree">
+        <input type="checkbox" id="agree">
+        <span>
+          <a href="/terms.html" target="_blank" rel="noopener">利用規約</a>および
+          <a href="/privacy.html" target="_blank" rel="noopener">プライバシーポリシー</a>を読んで同意しました。また、本サービスは女性を対象としており、女性であることに同意します。
+        </span>
+      </label>
+
+      <div class="field">
+        <input id="magic-email" type="email" placeholder="メールアドレス" autocomplete="email">
+      </div>
+
+      <button id="btn-magic" class="btn-primary" disabled>認証メールを送る</button>
+      <p id="magic-message" class="msg" aria-live="polite"></p>
+    </div>
+
+  </div>
+
+  <div class="foot">
+    <p>メールが届かない場合は、迷惑メールフォルダもご確認ください。</p>
+    <div class="foot-links">
+      <a href="/terms.html" target="_blank" rel="noopener">利用規約</a>
+      <a href="/privacy.html" target="_blank" rel="noopener">プライバシーポリシー</a>
+      <a href="/legal.html" target="_blank" rel="noopener">特定商取引法に基づく表記</a>
+      <a href="/contact.html" target="_blank" rel="noopener">お問い合わせ</a>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const SUPABASE_URL = "https://rhynpigqhnbwjyudvvfw.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoeW5waWdxaG5id2p5dWR2dmZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3ODcyNTMsImV4cCI6MjA4MzM2MzI1M30.S9h-SH0JB0cEhMukUUaOuYEetx2I8qecZapIeCpk57M";
+
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+  });
+
+  const TXT = {
+    needEmail: "メールアドレスを入力してください。",
+    needPassword: "パスワードを入力してください。",
+    needAgree: "利用規約とプライバシーポリシーへの同意が必要です。",
+    invalidEmail: "メールアドレスの形式が正しくありません。",
+    sent: "認証メールを送信しました。メール内のリンクから続行してください。",
+    pwLoginFailed: "ログインに失敗しました。メールアドレスまたはパスワードをご確認ください。",
+    errorPrefix: "エラー：",
+  };
+
+  const $ = (s) => document.querySelector(s);
+
+  const agreeCheckbox = $("#agree");
+  const magicBtn = $("#btn-magic");
+  const pwLoginBtn = $("#btn-login-pw");
+  const pwMsg = $("#pw-message");
+  const magicMsg = $("#magic-message");
+
+  function showMsg(el, text, type = "error") {
+    if (!el) return;
+    el.textContent = text || "";
+    el.classList.remove("error", "success");
+    if (text) el.classList.add(type);
+  }
+
+  function validateEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  agreeCheckbox.addEventListener("change", () => {
+    magicBtn.disabled = !agreeCheckbox.checked;
+  });
+
+  const showPw = $("#show-password");
+  const pwField = $("#pw-password");
+  showPw.addEventListener("change", () => {
+    pwField.type = showPw.checked ? "text" : "password";
+  });
+
+  $("#pw-email").addEventListener("input", () => showMsg(pwMsg, ""));
+  $("#pw-password").addEventListener("input", () => showMsg(pwMsg, ""));
+  $("#magic-email").addEventListener("input", () => showMsg(magicMsg, ""));
+
+  pwLoginBtn.onclick = async () => {
+    const email = $("#pw-email").value.trim();
+    const password = $("#pw-password").value;
+
+    showMsg(pwMsg, "");
+    if (!email) { showMsg(pwMsg, TXT.needEmail); return; }
+    if (!validateEmail(email)) { showMsg(pwMsg, TXT.invalidEmail); return; }
+    if (!password) { showMsg(pwMsg, TXT.needPassword); return; }
+
+    pwLoginBtn.disabled = true;
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    pwLoginBtn.disabled = false;
+
+    if (error) {
+      showMsg(pwMsg, TXT.pwLoginFailed);
+      return;
+    }
+
+    try {
+      gtag('event', 'login_success', { method: 'password', funnel_step: 'login_complete' });
+    } catch(e) {}
+
+    window.location.href = `/app.html`;
+  };
+
+  magicBtn.onclick = async () => {
+    const email = $("#magic-email").value.trim();
+
+    showMsg(magicMsg, "");
+    if (!email) { showMsg(magicMsg, TXT.needEmail); return; }
+    if (!validateEmail(email)) { showMsg(magicMsg, TXT.invalidEmail); return; }
+    if (!agreeCheckbox.checked) { showMsg(magicMsg, TXT.needAgree); return; }
+
+    magicBtn.disabled = true;
+    const { error } = await sb.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: true,
+        emailRedirectTo: `https://app.gyomu-karugamo.com/app.html`
+      }
+    });
+    magicBtn.disabled = false;
+
+    if (error) {
+      showMsg(magicMsg, TXT.errorPrefix + error.message);
+    } else {
+      showMsg(magicMsg, TXT.sent, "success");
+    }
+  };
+</script>
+
+</body>
+</html>
