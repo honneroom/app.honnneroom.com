@@ -75,8 +75,14 @@ img.av{object-fit:cover;display:block}
 
 /* CARDS */
 .card-list{display:flex;flex-direction:column;gap:2px}
-.post-card{background:white;padding:18px 20px;border:1px solid rgba(26,23,20,.06);cursor:pointer;transition:all .2s}
-.post-card:hover{border-color:rgba(196,98,45,.4);transform:translateX(2px)}
+.post-card{background:white;padding:18px 20px;border:1px solid rgba(26,23,20,.06);border-left:3px solid transparent;cursor:pointer;transition:all .2s}
+.post-card:hover{transform:translateX(2px)}
+/* つぶやき: オレンジの左ボーダー */
+.post-card.is-post{border-left-color:var(--primary)}
+.post-card.is-post:hover{border-color:rgba(196,98,45,.3);border-left-color:var(--primary)}
+/* 相談: インクの左ボーダー＋薄い背景 */
+.post-card.is-question{border-left-color:#7a5c4a;background:#fdfcfb}
+.post-card.is-question:hover{border-color:rgba(122,92,74,.3);border-left-color:#7a5c4a}
 .card-meta{display:flex;align-items:flex-start;gap:7px;margin-bottom:10px;flex-wrap:wrap}
 .av-info{min-width:0;flex:1}
 .uname{font-size:12px;color:var(--ink)}
@@ -85,12 +91,15 @@ img.av{object-fit:cover;display:block}
 .uname-link:hover{text-decoration:underline}
 .attr-tags{display:flex;gap:3px;flex-wrap:wrap;margin-top:2px}
 .attr-tag{font-size:10px;padding:2px 6px;background:var(--warm);color:var(--mist)}
-.tbadge-post{font-size:10px;padding:2px 8px;background:#fef3e8;color:var(--primary);letter-spacing:.04em;align-self:flex-start}
-.tbadge-q{font-size:10px;padding:2px 8px;background:var(--primary-pale);color:var(--primary);letter-spacing:.04em;align-self:flex-start}
+/* つぶやきバッジ: 塗り */
+.tbadge-post{font-size:10px;padding:3px 9px;background:var(--primary);color:white;letter-spacing:.04em;align-self:flex-start;font-weight:500}
+/* 相談バッジ: アウトライン */
+.tbadge-q{font-size:10px;padding:3px 9px;background:white;color:#7a5c4a;border:1px solid #7a5c4a;letter-spacing:.04em;align-self:flex-start;font-weight:500}
 .cat-tag{font-size:10px;padding:2px 8px;background:var(--warm);color:var(--mist);letter-spacing:.04em;align-self:flex-start}
 .card-title{font-family:'Shippori Mincho',serif;font-size:15px;font-weight:600;line-height:1.5;margin-bottom:6px}
 .card-preview{font-size:13px;color:var(--mist);line-height:1.7;font-weight:300;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .post-card.is-post .card-preview{-webkit-line-clamp:4;color:#4a4440;font-size:14px}
+.post-card.is-question .card-preview{-webkit-line-clamp:3;color:#4a4440}
 .card-footer{display:flex;align-items:center;gap:12px;margin-top:10px;font-size:11px;color:var(--mist);flex-wrap:wrap}
 .solved{color:var(--primary)}
 
@@ -570,14 +579,16 @@ function bindReactsSm(container){
 /* ===== 通知ドロワー ===== */
 async function loadNotifications(){
   if(!S.user)return;
-  const{data}=await sb.from("notifications")
+  const{data,error}=await sb.from("notifications")
     .select(`id,is_read,created_at,thread_id,reply_id,notif_type,
       threads!thread_id(title,body,type),
       replies!reply_id(body,profiles!user_id(display_name))`)
     .eq("user_id",S.user.id)
     .order("created_at",{ascending:false}).limit(50);
+  if(error){console.error("loadNotifications error:",JSON.stringify(error));return;}
   S.notifications=data||[];
   S.unreadCount=S.notifications.filter(n=>!n.is_read).length;
+  console.log("loadNotifications: count=",S.notifications.length,"unread=",S.unreadCount);
   updateNotifBadge();
 }
 function updateNotifBadge(){
@@ -585,17 +596,18 @@ function updateNotifBadge(){
   if(S.unreadCount>0){badge.textContent=S.unreadCount>99?"99+":S.unreadCount;badge.classList.remove("hidden");}
   else badge.classList.add("hidden");
 }
-function openNotifDrawer(){
+async function openNotifDrawer(){
   $("#notifOverlay").classList.add("show");
   $("#notifDrawer").classList.add("show");
+  // 毎回最新を取得してから表示
+  await loadNotifications();
   renderNotifDrawer();
   // 既読処理
   const unreadIds=S.notifications.filter(n=>!n.is_read).map(n=>n.id);
   if(unreadIds.length){
-    sb.from("notifications").update({is_read:true}).in("id",unreadIds).then(()=>{
-      S.notifications=S.notifications.map(n=>({...n,is_read:true}));
-      S.unreadCount=0;updateNotifBadge();
-    });
+    await sb.from("notifications").update({is_read:true}).in("id",unreadIds);
+    S.notifications=S.notifications.map(n=>({...n,is_read:true}));
+    S.unreadCount=0;updateNotifBadge();
   }
 }
 function closeNotifDrawer(){
@@ -654,7 +666,7 @@ function cardHtml(t,showBadge){
   const rc=t.replies?.[0]?.count??0;
   const isPost=t.type==="post";
   const isOwn=S.user?.id===t.user_id;
-  return`<div class="post-card${isPost?" is-post":""}" data-id="${t.id}" data-type="${t.type}">
+  return`<div class="post-card${isPost?" is-post":" is-question"}" data-id="${t.id}" data-type="${t.type}">
     <div class="card-meta">
       <div class="av-click" data-uid="${t.user_id}" style="cursor:pointer" title="${esc(label)}のプロフィールを見る">
         ${avatarHtml(p,28)}
@@ -663,7 +675,7 @@ function cardHtml(t,showBadge){
         <span class="uname-link av-click" data-uid="${t.user_id}">${esc(label)}</span>
         <div class="attr-tags">${attrHtml(p)}</div>
       </div>
-      ${showBadge?(isPost?`<span class="tbadge-post">つぶやき</span>`:`<span class="tbadge-q">相談</span>`):""}
+      ${isPost?`<span class="tbadge-post">つぶやき</span>`:`<span class="tbadge-q">相談</span>`}
       ${t.category?`<span class="cat-tag">${esc(t.category)}</span>`:""}
       ${isOwn?`<button class="del-btn" data-id="${t.id}" data-type="thread" title="削除">🗑</button>`:""}
     </div>
@@ -1056,7 +1068,12 @@ async function openDetail(threadId,type){
       if(error){msg(rMsgEl,"送信に失敗しました。");return;}
       msg(rMsgEl,"返信しました！","ok");
       rBodyEl.value="";if(rCountEl)rCountEl.textContent="0";
-      if(rd)await createNotification(threadId,rd.id,t.user_id);
+      if(rd){
+        await createNotification(threadId,rd.id,t.user_id);
+        // 自分以外が返信した場合、送信者側のバッジは更新不要だが
+        // スレッドオーナーが自分の場合はバッジ更新
+        await loadNotifications();
+      }
       setTimeout(()=>openDetail(threadId,type),800);
     });
   }
@@ -1247,8 +1264,7 @@ async function createNotification(threadId,replyId,threadOwnerId){
   const{data,error}=await sb.from("notifications").insert({
     user_id:ownerId,
     thread_id:threadId,
-    reply_id:replyId,
-    notif_type:"reply"
+    reply_id:replyId
   }).select();
   if(error){
     console.error("createNotification error:", JSON.stringify(error));
