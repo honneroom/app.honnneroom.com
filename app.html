@@ -255,6 +255,13 @@ img.av{object-fit:cover;display:block}
 .empty{text-align:center;padding:48px 20px;color:var(--mist);font-size:13px;font-weight:300;line-height:1.8}
 .empty-h{font-family:'Shippori Mincho',serif;font-size:17px;color:var(--ink);margin-bottom:8px}
 .sec-divider{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mist);margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid rgba(26,23,20,.08)}
+/* マイページ 投稿タブ */
+.mp-tabs{display:flex;border:1px solid rgba(26,23,20,.10);background:white;margin-bottom:2px}
+.mp-tab{flex:1;padding:10px;font-size:12px;letter-spacing:.06em;text-align:center;cursor:pointer;border:none;background:none;color:var(--mist);font-family:'DM Sans',sans-serif;transition:all .2s;border-right:1px solid rgba(26,23,20,.08)}
+.mp-tab:last-child{border-right:none}
+.mp-tab.active{background:var(--ink);color:white}
+.mp-pane{display:none}
+.mp-pane.active{display:block}
 
 @media(max-width:560px){
   .uemail{display:none}
@@ -1153,26 +1160,41 @@ async function renderMypage(){
   `).eq("user_id",S.user.id).order("created_at",{ascending:false}).limit(100);
 
   const ts=threads||[];
-  if(!ts.length){wrap.innerHTML=`<div class="empty"><div class="empty-h">まだ投稿がありません</div><p>上のフォームからつぶやきや相談を投稿しましょう。</p></div>`;return;}
-
   const posts=ts.filter(t=>t.type==="post");
   const questions=ts.filter(t=>t.type==="question");
-  let html="";
 
-  if(posts.length){
-    html+=`<div class="sec-divider">自分のつぶやき (${posts.length})</div>`;
-    html+=`<div class="card-list" id="mpPostList">`+posts.map(t=>cardHtml(t,false)).join("")+`</div>`;
-  }
-  if(questions.length){
-    html+=`<div class="sec-divider">自分の相談 (${questions.length})</div>`;
-    html+=`<div class="card-list" id="mpQList">`+questions.map(t=>cardHtml(t,false)).join("")+`</div>`;
-  }
-  wrap.innerHTML=html;
+  // タブUI構築
+  wrap.innerHTML=`
+    <div class="mp-tabs">
+      <button class="mp-tab active" data-pane="mpPanePost">つぶやき (${posts.length})</button>
+      <button class="mp-tab" data-pane="mpPaneQuestion">相談 (${questions.length})</button>
+    </div>
+    <div id="mpPanePost" class="mp-pane active">
+      ${posts.length
+        ? `<div class="card-list">`+posts.map(t=>cardHtml(t,false)).join("")+`</div>`
+        : `<div class="empty"><div class="empty-h">まだつぶやきがありません</div><p>上のフォームからつぶやいてみましょう。</p></div>`
+      }
+    </div>
+    <div id="mpPaneQuestion" class="mp-pane">
+      ${questions.length
+        ? `<div class="card-list">`+questions.map(t=>cardHtml(t,false)).join("")+`</div>`
+        : `<div class="empty"><div class="empty-h">まだ相談がありません</div><p>上のフォームから相談してみましょう。</p></div>`
+      }
+    </div>`;
+
+  // タブ切替
+  wrap.querySelectorAll(".mp-tab").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      wrap.querySelectorAll(".mp-tab").forEach(b=>b.classList.remove("active"));
+      wrap.querySelectorAll(".mp-pane").forEach(p=>p.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById(btn.dataset.pane)?.classList.add("active");
+    });
+  });
 
   wrap.querySelectorAll(".post-card").forEach(c=>{
     c.addEventListener("click",e=>{
       if(e.target.closest(".del-btn")||e.target.closest(".rbtn-sm"))return;
-      // マイページから詳細を開くときHOMEタブに切り替えてから開く
       switchTab("home");
       setTimeout(()=>openDetail(c.dataset.id,c.dataset.type),80);
     });
@@ -1214,18 +1236,25 @@ async function deleteReply(replyId,threadId,type){
 
 /* ===== 通知 ===== */
 async function createNotification(threadId,replyId,threadOwnerId){
-  // threadOwnerIdが渡された場合はDBアクセス不要
   let ownerId=threadOwnerId;
   if(!ownerId){
     const{data:th}=await sb.from("threads").select("user_id").eq("id",threadId).single();
-    if(!th)return;
+    if(!th){console.warn("createNotification: thread not found",threadId);return;}
     ownerId=th.user_id;
   }
-  if(ownerId===S.user.id)return; // 自分への通知はスキップ
-  const{error}=await sb.from("notifications").insert({
-    user_id:ownerId,thread_id:threadId,reply_id:replyId
-  });
-  if(error)console.error("createNotification error:",error);
+  if(ownerId===S.user.id){console.log("createNotification: skip (own thread)");return;}
+  console.log("createNotification: inserting for",ownerId,"thread",threadId,"reply",replyId);
+  const{data,error}=await sb.from("notifications").insert({
+    user_id:ownerId,
+    thread_id:threadId,
+    reply_id:replyId,
+    notif_type:"reply"
+  }).select();
+  if(error){
+    console.error("createNotification error:", JSON.stringify(error));
+  }else{
+    console.log("createNotification success:", data);
+  }
 }
 async function createBestAnswerNotification(threadId,replyId){
   const{data:r}=await sb.from("replies").select("user_id").eq("id",replyId).single();
