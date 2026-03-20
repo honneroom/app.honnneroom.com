@@ -302,9 +302,6 @@ img.av{object-fit:cover;display:block}
     <div id="homeListView">
       <div id="pwNoticeBanner"></div>
 
-      <!-- 投稿フォーム（つぶやき / 相談） -->
-      <div class="post-form-area" id="postFormArea"></div>
-
       <!-- フィルター -->
       <div class="search-bar">
         <input id="homeSearch" class="s-input" type="text" placeholder="キーワードで検索…" autocomplete="off">
@@ -326,6 +323,8 @@ img.av{object-fit:cover;display:block}
 
   <!-- マイページ タブ -->
   <section id="tab-mypage" class="tab-pane">
+    <!-- 投稿フォーム（つぶやき / 相談） -->
+    <div class="post-form-area" id="postFormArea"></div>
     <div id="mypageWrap"></div>
   </section>
 
@@ -697,7 +696,6 @@ function bindCardList(container){
 function renderHomeTab(){
   showHomeList();
   buildCatFilter("homeCatFilter");
-  renderPostFormInHome();
   renderHomeList();
   document.querySelectorAll(".type-btn").forEach(b=>{
     b.onclick=()=>{
@@ -830,6 +828,11 @@ async function submitPost(){
   const body=$("#ptBody")?.value?.trim();
   const category=$("#ptCat")?.value||"";
   const m=$("#ptMsg");
+  if(!S.profile?.display_name){
+    msg(m,"投稿する前に「設定」から表示名を設定してください。");
+    setTimeout(()=>switchTab("account"),1500);
+    return;
+  }
   if(!body){msg(m,"内容を入力してください。");return;}
   const btn=$("#btnPostSubmit");btn.disabled=true;
   const{error}=await sb.from("threads").insert({user_id:S.user.id,type:"post",body,title:"",category});
@@ -843,6 +846,11 @@ async function submitPost(){
 async function submitQuestion(){
   const category=$("#qCatSel")?.value,title=$("#qTitle")?.value?.trim(),body=$("#qBody")?.value?.trim();
   const m=$("#qMsg");
+  if(!S.profile?.display_name){
+    msg(m,"投稿する前に「設定」から表示名を設定してください。");
+    setTimeout(()=>switchTab("account"),1500);
+    return;
+  }
   if(!category){msg(m,"カテゴリを選択してください。");return;}
   if(!title){msg(m,"タイトルを入力してください。");return;}
   if(!body){msg(m,"内容を入力してください。");return;}
@@ -922,7 +930,7 @@ async function openDetail(threadId,type){
             <div class="attr-tags">${attrHtml(rp)}</div>
           </div>
           <span style="font-size:11px;color:var(--mist);margin-left:auto">${rtime(r.created_at)}</span>
-          ${canBest?`<button class="btn-best" data-rid="${r.id}">🏆 ベスト</button>`:""}
+          ${canBest&&!isPost?`<button class="btn-best" data-rid="${r.id}">🏆 ベストアンサー</button>`:""}
           ${S.user&&!isReplyOwner&&S.isStd?`<button class="report-btn" data-type="reply" data-id="${r.id}">通報</button>`:""}
           ${isReplyOwner?`<button class="del-btn" data-id="${r.id}" data-type="reply">🗑</button>`:""}
         </div>
@@ -1041,7 +1049,7 @@ async function openDetail(threadId,type){
       if(error){msg(rMsgEl,"送信に失敗しました。");return;}
       msg(rMsgEl,"返信しました！","ok");
       rBodyEl.value="";if(rCountEl)rCountEl.textContent="0";
-      if(rd)await createNotification(threadId,rd.id);
+      if(rd)await createNotification(threadId,rd.id,t.user_id);
       setTimeout(()=>openDetail(threadId,type),800);
     });
   }
@@ -1135,6 +1143,7 @@ async function openUserProfile(userId){
 
 /* ===== マイページ ===== */
 async function renderMypage(){
+  renderPostFormInHome();
   const wrap=$("#mypageWrap");
   wrap.innerHTML=`<div class="loading">読み込み中…</div>`;
   const{data:threads}=await sb.from("threads").select(`
@@ -1144,7 +1153,7 @@ async function renderMypage(){
   `).eq("user_id",S.user.id).order("created_at",{ascending:false}).limit(100);
 
   const ts=threads||[];
-  if(!ts.length){wrap.innerHTML=`<div class="empty"><div class="empty-h">まだ投稿がありません</div><p>HOMEからつぶやきや相談を投稿しましょう。</p></div>`;return;}
+  if(!ts.length){wrap.innerHTML=`<div class="empty"><div class="empty-h">まだ投稿がありません</div><p>上のフォームからつぶやきや相談を投稿しましょう。</p></div>`;return;}
 
   const posts=ts.filter(t=>t.type==="post");
   const questions=ts.filter(t=>t.type==="question");
@@ -1204,10 +1213,19 @@ async function deleteReply(replyId,threadId,type){
 }
 
 /* ===== 通知 ===== */
-async function createNotification(threadId,replyId){
-  const{data:th}=await sb.from("threads").select("user_id").eq("id",threadId).single();
-  if(!th||th.user_id===S.user.id)return;
-  await sb.from("notifications").insert({user_id:th.user_id,thread_id:threadId,reply_id:replyId});
+async function createNotification(threadId,replyId,threadOwnerId){
+  // threadOwnerIdが渡された場合はDBアクセス不要
+  let ownerId=threadOwnerId;
+  if(!ownerId){
+    const{data:th}=await sb.from("threads").select("user_id").eq("id",threadId).single();
+    if(!th)return;
+    ownerId=th.user_id;
+  }
+  if(ownerId===S.user.id)return; // 自分への通知はスキップ
+  const{error}=await sb.from("notifications").insert({
+    user_id:ownerId,thread_id:threadId,reply_id:replyId
+  });
+  if(error)console.error("createNotification error:",error);
 }
 async function createBestAnswerNotification(threadId,replyId){
   const{data:r}=await sb.from("replies").select("user_id").eq("id",replyId).single();
@@ -1346,6 +1364,9 @@ async function saveProfile(){
   const displayName=$("#pDisplayName").value.trim();
   if(!displayName){msg(m,"表示名を入力してください。");return;}
   const ageRaw=parseInt($("#pAge").value);
+  if($("#pAge").value.trim()!==""&&(isNaN(ageRaw)||ageRaw<18||ageRaw>100)){
+    msg(m,"年齢は18〜100の範囲で入力してください。");return;
+  }
   const age=(!isNaN(ageRaw)&&ageRaw>=18&&ageRaw<=100)?ageRaw:null;
   const selectedIcon=document.querySelector("input[name=iconPick]:checked")?.value||null;
   const upd={
