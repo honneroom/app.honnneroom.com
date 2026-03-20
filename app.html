@@ -75,7 +75,15 @@ img.av{object-fit:cover;display:block}
 
 /* CARDS */
 .card-list{display:flex;flex-direction:column;gap:2px}
-.post-card{background:white;padding:18px 20px;border:1px solid rgba(26,23,20,.06);border-left:3px solid transparent;cursor:pointer;transition:all .2s}
+.post-card{background:white;padding:0;border:1px solid rgba(26,23,20,.06);border-left:3px solid transparent;cursor:pointer;transition:all .2s;overflow:hidden}
+.post-card > .card-meta,.post-card > .card-title,.post-card > .card-preview,.post-card > .card-footer,.post-card > .react-row-sm{padding-left:18px;padding-right:20px}
+.post-card > .card-meta{padding-top:14px}
+.post-card > .card-footer{padding-bottom:14px}
+/* タイプヘッダー */
+.type-header{display:flex;align-items:center;justify-content:space-between;padding:6px 14px;font-size:11px;font-weight:500;letter-spacing:.06em}
+.type-header-post{background:var(--primary);color:white}
+.type-header-q{background:#3d2b1f;color:#e8dfd0}
+.cat-tag-inline{font-size:10px;opacity:.8;letter-spacing:.04em}
 .post-card:hover{transform:translateX(2px)}
 /* つぶやき: オレンジの左ボーダー */
 .post-card.is-post{border-left-color:var(--primary)}
@@ -97,14 +105,14 @@ img.av{object-fit:cover;display:block}
 .tbadge-q{font-size:10px;padding:3px 9px;background:white;color:#7a5c4a;border:1px solid #7a5c4a;letter-spacing:.04em;align-self:flex-start;font-weight:500}
 .cat-tag{font-size:10px;padding:2px 8px;background:var(--warm);color:var(--mist);letter-spacing:.04em;align-self:flex-start}
 .card-title{font-family:'Shippori Mincho',serif;font-size:15px;font-weight:600;line-height:1.5;margin-bottom:6px}
-.card-preview{font-size:13px;color:var(--mist);line-height:1.7;font-weight:300;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-preview{font-size:13px;color:var(--mist);line-height:1.7;font-weight:300;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:0}
 .post-card.is-post .card-preview{-webkit-line-clamp:4;color:#4a4440;font-size:14px}
 .post-card.is-question .card-preview{-webkit-line-clamp:3;color:#4a4440}
 .card-footer{display:flex;align-items:center;gap:12px;margin-top:10px;font-size:11px;color:var(--mist);flex-wrap:wrap}
 .solved{color:var(--primary)}
 
 /* REACTIONS */
-.react-row-sm{display:flex;gap:5px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid rgba(26,23,20,.05)}
+.react-row-sm{display:flex;gap:5px;flex-wrap:wrap;margin-top:10px;padding-top:10px;padding-bottom:14px;border-top:1px solid rgba(26,23,20,.05)}
 .rbtn-sm{display:inline-flex;align-items:center;gap:3px;font-size:12px;padding:4px 8px;background:var(--cream);border:1px solid rgba(26,23,20,.08);cursor:pointer;transition:all .15s;color:var(--mist);font-family:'DM Sans',sans-serif;line-height:1}
 .rbtn-sm:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-pale)}
 .rbtn-sm.on{background:var(--primary-pale);border-color:var(--primary);color:var(--primary)}
@@ -579,15 +587,22 @@ function bindReactsSm(container){
 /* ===== 通知ドロワー ===== */
 async function loadNotifications(){
   if(!S.user)return;
-  const{data,error}=await sb.from("notifications")
+  // まずシンプルなSELECTでバッジ用の未読数を取得
+  const{data:simple,error:e1}=await sb.from("notifications")
+    .select("id,is_read,created_at,thread_id,reply_id,notif_type")
+    .eq("user_id",S.user.id)
+    .order("created_at",{ascending:false}).limit(50);
+  if(e1){console.error("loadNotifications simple error:",JSON.stringify(e1));return;}
+  // join付きで詳細も取得（失敗してもシンプル結果を使う）
+  const{data:full,error:e2}=await sb.from("notifications")
     .select(`id,is_read,created_at,thread_id,reply_id,notif_type,
       threads!thread_id(title,body,type),
       replies!reply_id(body,profiles!user_id(display_name))`)
     .eq("user_id",S.user.id)
     .order("created_at",{ascending:false}).limit(50);
-  if(error){console.error("loadNotifications error:",JSON.stringify(error));return;}
-  S.notifications=data||[];
-  S.unreadCount=S.notifications.filter(n=>!n.is_read).length;
+  if(e2){console.warn("loadNotifications full error:",JSON.stringify(e2));}
+  S.notifications=(full||simple||[]);
+  S.unreadCount=(simple||[]).filter(n=>!n.is_read).length;
   console.log("loadNotifications: count=",S.notifications.length,"unread=",S.unreadCount);
   updateNotifBadge();
 }
@@ -667,6 +682,10 @@ function cardHtml(t,showBadge){
   const isPost=t.type==="post";
   const isOwn=S.user?.id===t.user_id;
   return`<div class="post-card${isPost?" is-post":" is-question"}" data-id="${t.id}" data-type="${t.type}">
+    <div class="type-header${isPost?" type-header-post":" type-header-q"}">
+      ${isPost?`<span>✏️ つぶやき</span>`:`<span>💬 相談</span>`}
+      ${t.category?`<span class="cat-tag-inline">${esc(t.category)}</span>`:""}
+    </div>
     <div class="card-meta">
       <div class="av-click" data-uid="${t.user_id}" style="cursor:pointer" title="${esc(label)}のプロフィールを見る">
         ${avatarHtml(p,28)}
@@ -675,8 +694,6 @@ function cardHtml(t,showBadge){
         <span class="uname-link av-click" data-uid="${t.user_id}">${esc(label)}</span>
         <div class="attr-tags">${attrHtml(p)}</div>
       </div>
-      ${isPost?`<span class="tbadge-post">つぶやき</span>`:`<span class="tbadge-q">相談</span>`}
-      ${t.category?`<span class="cat-tag">${esc(t.category)}</span>`:""}
       ${isOwn?`<button class="del-btn" data-id="${t.id}" data-type="thread" title="削除">🗑</button>`:""}
     </div>
     ${!isPost&&t.title?`<div class="card-title">${esc(t.title)}</div>`:""}
