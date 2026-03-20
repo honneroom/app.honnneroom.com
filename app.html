@@ -75,22 +75,16 @@ img.av{object-fit:cover;display:block}
 
 /* CARDS */
 .card-list{display:flex;flex-direction:column;gap:2px}
-.post-card{background:white;padding:0;border:1px solid rgba(26,23,20,.06);border-left:3px solid transparent;cursor:pointer;transition:all .2s;overflow:hidden}
-.post-card > .card-meta,.post-card > .card-title,.post-card > .card-preview,.post-card > .card-footer,.post-card > .react-row-sm{padding-left:18px;padding-right:20px}
-.post-card > .card-meta{padding-top:14px}
-.post-card > .card-footer{padding-bottom:14px}
-/* タイプヘッダー */
-.type-header{display:flex;align-items:center;justify-content:space-between;padding:6px 14px;font-size:11px;font-weight:500;letter-spacing:.06em}
-.type-header-post{background:var(--primary);color:white}
-.type-header-q{background:#3d2b1f;color:#e8dfd0}
-.cat-tag-inline{font-size:10px;opacity:.8;letter-spacing:.04em}
-.post-card:hover{transform:translateX(2px)}
-/* つぶやき: オレンジの左ボーダー */
+.post-card{background:white;padding:16px 20px;border:1px solid rgba(26,23,20,.06);border-left:4px solid transparent;cursor:pointer;transition:all .2s}
+.post-card:hover{transform:translateX(2px);border-color:rgba(26,23,20,.12)}
+/* つぶやき: オレンジ左ボーダー */
 .post-card.is-post{border-left-color:var(--primary)}
-.post-card.is-post:hover{border-color:rgba(196,98,45,.3);border-left-color:var(--primary)}
-/* 相談: インクの左ボーダー＋薄い背景 */
-.post-card.is-question{border-left-color:#7a5c4a;background:#fdfcfb}
-.post-card.is-question:hover{border-color:rgba(122,92,74,.3);border-left-color:#7a5c4a}
+/* 相談: ブラウン左ボーダー */
+.post-card.is-question{border-left-color:#7a5c4a}
+/* タイプバッジ（カード内） */
+.type-label{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:500;padding:2px 8px;letter-spacing:.04em;margin-bottom:8px;border-radius:2px}
+.type-label-post{background:var(--primary-pale);color:var(--primary)}
+.type-label-q{background:#ede6df;color:#7a5c4a}
 .card-meta{display:flex;align-items:flex-start;gap:7px;margin-bottom:10px;flex-wrap:wrap}
 .av-info{min-width:0;flex:1}
 .uname{font-size:12px;color:var(--ink)}
@@ -267,6 +261,14 @@ img.av{object-fit:cover;display:block}
 .pw-notice-close{background:none;border:none;cursor:pointer;color:var(--mist);font-size:16px;padding:0 0 0 4px;flex-shrink:0;align-self:flex-start;line-height:1.3;transition:color .2s}
 .pw-notice-close:hover{color:var(--ink)}
 
+/* HOME 投稿誘導ボタン */
+.home-post-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.home-post-btn-post,.home-post-btn-q{border:none;padding:12px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:400;cursor:pointer;transition:all .2s;letter-spacing:.02em;border-radius:2px}
+.home-post-btn-post{background:var(--primary-pale);color:var(--primary);border:1px solid rgba(196,98,45,.2)}
+.home-post-btn-post:hover{background:var(--primary);color:white}
+.home-post-btn-q{background:#ede6df;color:#7a5c4a;border:1px solid rgba(122,92,74,.2)}
+.home-post-btn-q:hover{background:#7a5c4a;color:white}
+
 /* MISC */
 .loading{display:flex;align-items:center;justify-content:center;padding:48px;color:var(--mist);font-size:13px;letter-spacing:.06em}
 .empty{text-align:center;padding:48px 20px;color:var(--mist);font-size:13px;font-weight:300;line-height:1.8}
@@ -325,6 +327,12 @@ img.av{object-fit:cover;display:block}
   <section id="tab-home" class="tab-pane active">
     <div id="homeListView">
       <div id="pwNoticeBanner"></div>
+
+      <!-- 投稿誘導ボタン -->
+      <div class="home-post-btns">
+        <button class="home-post-btn-post" id="btnGoPost">✏️ つぶやく</button>
+        <button class="home-post-btn-q" id="btnGoQuestion">💬 相談する</button>
+      </div>
 
       <!-- フィルター -->
       <div class="search-bar">
@@ -587,23 +595,22 @@ function bindReactsSm(container){
 /* ===== 通知ドロワー ===== */
 async function loadNotifications(){
   if(!S.user)return;
-  // まずシンプルなSELECTでバッジ用の未読数を取得
+  // notif_typeを含まないシンプルSELECTでまず取得
   const{data:simple,error:e1}=await sb.from("notifications")
-    .select("id,is_read,created_at,thread_id,reply_id,notif_type")
+    .select("id,is_read,created_at,thread_id,reply_id")
     .eq("user_id",S.user.id)
     .order("created_at",{ascending:false}).limit(50);
-  if(e1){console.error("loadNotifications simple error:",JSON.stringify(e1));return;}
+  if(e1){console.error("loadNotifications error:",JSON.stringify(e1));return;}
   // join付きで詳細も取得（失敗してもシンプル結果を使う）
   const{data:full,error:e2}=await sb.from("notifications")
-    .select(`id,is_read,created_at,thread_id,reply_id,notif_type,
+    .select(`id,is_read,created_at,thread_id,reply_id,
       threads!thread_id(title,body,type),
       replies!reply_id(body,profiles!user_id(display_name))`)
     .eq("user_id",S.user.id)
     .order("created_at",{ascending:false}).limit(50);
-  if(e2){console.warn("loadNotifications full error:",JSON.stringify(e2));}
+  if(e2){console.warn("loadNotifications full error (non-critical):",JSON.stringify(e2));}
   S.notifications=(full||simple||[]);
   S.unreadCount=(simple||[]).filter(n=>!n.is_read).length;
-  console.log("loadNotifications: count=",S.notifications.length,"unread=",S.unreadCount);
   updateNotifBadge();
 }
 function updateNotifBadge(){
@@ -639,7 +646,7 @@ function renderNotifDrawer(){
     const who=n.replies?.profiles?.display_name||"誰か";
     const th=n.threads;
     const title=th?.title||(th?.body?.slice(0,20)+"…")||"投稿";
-    const isBest=n.notif_type==="best_answer";
+    const isBest=(n.notif_type||"reply")==="best_answer";
     return`<div class="notif-card${n.is_read?"":" unread"}" data-tid="${n.thread_id}" data-type="${th?.type||'question'}">
       <div class="notif-icon">${isBest?"🏆":"💬"}</div>
       <div class="notif-body-inner">
@@ -682,10 +689,6 @@ function cardHtml(t,showBadge){
   const isPost=t.type==="post";
   const isOwn=S.user?.id===t.user_id;
   return`<div class="post-card${isPost?" is-post":" is-question"}" data-id="${t.id}" data-type="${t.type}">
-    <div class="type-header${isPost?" type-header-post":" type-header-q"}">
-      ${isPost?`<span>✏️ つぶやき</span>`:`<span>💬 相談</span>`}
-      ${t.category?`<span class="cat-tag-inline">${esc(t.category)}</span>`:""}
-    </div>
     <div class="card-meta">
       <div class="av-click" data-uid="${t.user_id}" style="cursor:pointer" title="${esc(label)}のプロフィールを見る">
         ${avatarHtml(p,28)}
@@ -694,6 +697,8 @@ function cardHtml(t,showBadge){
         <span class="uname-link av-click" data-uid="${t.user_id}">${esc(label)}</span>
         <div class="attr-tags">${attrHtml(p)}</div>
       </div>
+      <span class="type-label${isPost?" type-label-post":" type-label-q"}">${isPost?"✏️ つぶやき":"💬 相談"}</span>
+      ${t.category?`<span class="cat-tag">${esc(t.category)}</span>`:""}
       ${isOwn?`<button class="del-btn" data-id="${t.id}" data-type="thread" title="削除">🗑</button>`:""}
     </div>
     ${!isPost&&t.title?`<div class="card-title">${esc(t.title)}</div>`:""}
@@ -741,6 +746,24 @@ function renderHomeTab(){
   });
   const si=$("#homeSearch");
   si.oninput=()=>{S.search=si.value.trim();renderHomeList();};
+
+  // 投稿誘導ボタン: マイページの該当フォームタブへ遷移
+  $("#btnGoPost")?.addEventListener("click",()=>{
+    switchTab("mypage");
+    setTimeout(()=>{
+      const btn=document.querySelector(".form-tab-btn[data-panel='panelPost']");
+      if(btn){btn.click();}
+      document.getElementById("postFormArea")?.scrollIntoView({behavior:"smooth",block:"start"});
+    },80);
+  });
+  $("#btnGoQuestion")?.addEventListener("click",()=>{
+    switchTab("mypage");
+    setTimeout(()=>{
+      const btn=document.querySelector(".form-tab-btn[data-panel='panelQuestion']");
+      if(btn){btn.click();}
+      document.getElementById("postFormArea")?.scrollIntoView({behavior:"smooth",block:"start"});
+    },80);
+  });
 
   // PW未設定バナー
   const banner=$("#pwNoticeBanner");
@@ -1292,7 +1315,10 @@ async function createNotification(threadId,replyId,threadOwnerId){
 async function createBestAnswerNotification(threadId,replyId){
   const{data:r}=await sb.from("replies").select("user_id").eq("id",replyId).single();
   if(!r||r.user_id===S.user.id)return;
-  await sb.from("notifications").insert({user_id:r.user_id,thread_id:threadId,reply_id:replyId,notif_type:"best_answer"});
+  // notif_typeカラムがあれば設定、なければ省略
+  const payload={user_id:r.user_id,thread_id:threadId,reply_id:replyId};
+  try{await sb.from("notifications").insert({...payload,notif_type:"best_answer"});}
+  catch(e){await sb.from("notifications").insert(payload);}
 }
 
 /* ===== ACCOUNT ===== */
