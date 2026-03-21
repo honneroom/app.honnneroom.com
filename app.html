@@ -75,18 +75,16 @@ img.av{object-fit:cover;display:block}
 
 /* CARDS */
 .card-list{display:flex;flex-direction:column;gap:2px}
-.post-card{padding:16px 20px;border:1px solid transparent;border-left:4px solid transparent;cursor:pointer;transition:all .2s}
-.post-card:hover{filter:brightness(.97)}
-/* つぶやき: 薄いオレンジ背景 */
-.post-card.is-post{background:#fdf6f2;border-color:rgba(196,98,45,.12);border-left-color:var(--primary)}
-.post-card.is-post:hover{background:#faeee6}
-/* 相談: 薄いベージュ背景 */
-.post-card.is-question{background:#f5f1ec;border-color:rgba(122,92,74,.1);border-left-color:#7a5c4a}
-.post-card.is-question:hover{background:#ede7df}
-/* タイプバッジ（カード内） */
-.type-label{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:500;padding:2px 8px;letter-spacing:.04em;margin-bottom:8px;border-radius:2px}
-.type-label-post{background:rgba(196,98,45,.15);color:var(--primary)}
-.type-label-q{background:rgba(122,92,74,.12);color:#7a5c4a}
+.post-card{background:white;padding:16px 20px;border:1px solid rgba(26,23,20,.06);border-left:4px solid transparent;cursor:pointer;transition:all .2s}
+.post-card:hover{border-color:rgba(26,23,20,.14);transform:translateX(2px)}
+/* つぶやき */
+.post-card.is-post{border-left-color:var(--primary)}
+/* 相談 */
+.post-card.is-question{border-left-color:#7a5c4a}
+/* タイプバッジ */
+.type-label{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:600;padding:3px 10px;letter-spacing:.04em;margin-bottom:8px;border-radius:2px}
+.type-label-post{background:var(--primary);color:white}
+.type-label-q{background:#5c3d28;color:white}
 .card-meta{display:flex;align-items:flex-start;gap:7px;margin-bottom:10px;flex-wrap:wrap}
 .av-info{min-width:0;flex:1}
 .uname{font-size:12px;color:var(--ink)}
@@ -1302,36 +1300,40 @@ async function createNotification(threadId,replyId,threadOwnerId){
     ownerId=th.user_id;
   }
   if(ownerId===S.user.id)return;
-  const{error:e1}=await sb.from("notifications").insert({
-    user_id:ownerId,thread_id:threadId,reply_id:replyId,notif_type:"reply"
-  });
-  if(e1){
-    // notif_typeカラムがない場合のフォールバック
-    const{error:e2}=await sb.from("notifications").insert({
-      user_id:ownerId,thread_id:threadId,reply_id:replyId
-    });
-    if(e2)console.error("createNotification failed:",e2.message);
+  const attempts=[
+    {user_id:ownerId,thread_id:threadId,reply_id:replyId,notif_type:"reply"},
+    {user_id:ownerId,thread_id:threadId,reply_id:replyId},
+    {user_id:ownerId,thread_id:threadId},
+  ];
+  for(const payload of attempts){
+    const{error}=await sb.from("notifications").insert(payload);
+    if(!error){
+      console.log("createNotification ok:",Object.keys(payload).join(","));
+      return;
+    }
+    console.warn("createNotification attempt failed:",error.message);
   }
 }
 async function createBestAnswerNotification(threadId,replyId){
   const{data:r}=await sb.from("replies").select("user_id").eq("id",replyId).single();
   if(!r||r.user_id===S.user.id)return;
-  // まずnotif_typeあり、失敗したらなしでinsert
-  const{error:e1}=await sb.from("notifications").insert({
-    user_id:r.user_id,thread_id:threadId,reply_id:replyId,notif_type:"best_answer"
-  });
-  if(e1){
-    console.warn("bestAnswer notif with type failed, retrying without:",e1.message);
-    const{error:e2}=await sb.from("notifications").insert({
-      user_id:r.user_id,thread_id:threadId,reply_id:replyId
-    });
-    if(e2)console.error("bestAnswer notif failed:",e2.message);
-    else console.log("bestAnswer notif inserted (without type)");
-  }else{
-    console.log("bestAnswer notif inserted");
+  const targetUser=r.user_id;
+  // 段階的フォールバック: カラム構成の違いに対応
+  const attempts=[
+    {user_id:targetUser,thread_id:threadId,reply_id:replyId,notif_type:"best_answer"},
+    {user_id:targetUser,thread_id:threadId,reply_id:replyId},
+    {user_id:targetUser,thread_id:threadId},
+  ];
+  for(const payload of attempts){
+    const{error}=await sb.from("notifications").insert(payload);
+    if(!error){
+      console.log("bestAnswer notif ok with payload:",Object.keys(payload).join(","));
+      await loadNotifications();
+      return;
+    }
+    console.warn("bestAnswer notif attempt failed:",error.message,"payload:",Object.keys(payload).join(","));
   }
-  // 自分がベストアンサーを選んだ場合、通知を再取得してバッジ更新
-  await loadNotifications();
+  console.error("bestAnswer notif: all attempts failed");
 }
 
 /* ===== ACCOUNT ===== */
