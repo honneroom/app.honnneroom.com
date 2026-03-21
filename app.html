@@ -537,7 +537,13 @@ const EICONS={"わかる":"🤝","参考になった":"💡","応援してる":"
 
 async function loadReactions(ids){
   if(!ids.length)return;
-  const{data}=await sb.from("reactions").select("reply_id,emoji,user_id").in("reply_id",ids);
+  // 対象IDのキャッシュをリセットしてから取得（重複カウント防止）
+  for(const id of ids){
+    delete S.reactions[id];
+    delete S.myReactions[id];
+  }
+  const{data,error}=await sb.from("reactions").select("reply_id,emoji,user_id").in("reply_id",ids);
+  if(error){console.error("loadReactions error:",error.message);return;}
   for(const r of(data||[])){
     if(!S.reactions[r.reply_id])S.reactions[r.reply_id]={};
     if(!S.reactions[r.reply_id][r.emoji])S.reactions[r.reply_id][r.emoji]={count:0};
@@ -697,7 +703,7 @@ function cardHtml(t,showBadge){
         <span class="uname-link av-click" data-uid="${t.user_id}">${esc(label)}</span>
         <div class="attr-tags">${attrHtml(p)}</div>
       </div>
-      <span class="type-label${isPost?" type-label-post":" type-label-q"}">${isPost?"✏️ つぶやき":"💬 相談"}</span>
+      <span class="type-label${isPost?" type-label-post":" type-label-q"}">${isPost?"つぶやき":"相談"}</span>
       ${t.category?`<span class="cat-tag">${esc(t.category)}</span>`:""}
       ${isOwn?`<button class="del-btn" data-id="${t.id}" data-type="thread" title="削除">🗑</button>`:""}
     </div>
