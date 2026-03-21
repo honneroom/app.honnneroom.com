@@ -75,16 +75,18 @@ img.av{object-fit:cover;display:block}
 
 /* CARDS */
 .card-list{display:flex;flex-direction:column;gap:2px}
-.post-card{background:white;padding:16px 20px;border:1px solid rgba(26,23,20,.06);border-left:4px solid transparent;cursor:pointer;transition:all .2s}
-.post-card:hover{transform:translateX(2px);border-color:rgba(26,23,20,.12)}
-/* つぶやき: オレンジ左ボーダー */
-.post-card.is-post{border-left-color:var(--primary)}
-/* 相談: ブラウン左ボーダー */
-.post-card.is-question{border-left-color:#7a5c4a}
+.post-card{padding:16px 20px;border:1px solid transparent;border-left:4px solid transparent;cursor:pointer;transition:all .2s}
+.post-card:hover{filter:brightness(.97)}
+/* つぶやき: 薄いオレンジ背景 */
+.post-card.is-post{background:#fdf6f2;border-color:rgba(196,98,45,.12);border-left-color:var(--primary)}
+.post-card.is-post:hover{background:#faeee6}
+/* 相談: 薄いベージュ背景 */
+.post-card.is-question{background:#f5f1ec;border-color:rgba(122,92,74,.1);border-left-color:#7a5c4a}
+.post-card.is-question:hover{background:#ede7df}
 /* タイプバッジ（カード内） */
 .type-label{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:500;padding:2px 8px;letter-spacing:.04em;margin-bottom:8px;border-radius:2px}
-.type-label-post{background:var(--primary-pale);color:var(--primary)}
-.type-label-q{background:#ede6df;color:#7a5c4a}
+.type-label-post{background:rgba(196,98,45,.15);color:var(--primary)}
+.type-label-q{background:rgba(122,92,74,.12);color:#7a5c4a}
 .card-meta{display:flex;align-items:flex-start;gap:7px;margin-bottom:10px;flex-wrap:wrap}
 .av-info{min-width:0;flex:1}
 .uname{font-size:12px;color:var(--ink)}
@@ -1296,29 +1298,40 @@ async function createNotification(threadId,replyId,threadOwnerId){
   let ownerId=threadOwnerId;
   if(!ownerId){
     const{data:th}=await sb.from("threads").select("user_id").eq("id",threadId).single();
-    if(!th){console.warn("createNotification: thread not found",threadId);return;}
+    if(!th)return;
     ownerId=th.user_id;
   }
-  if(ownerId===S.user.id){console.log("createNotification: skip (own thread)");return;}
-  console.log("createNotification: inserting for",ownerId,"thread",threadId,"reply",replyId);
-  const{data,error}=await sb.from("notifications").insert({
-    user_id:ownerId,
-    thread_id:threadId,
-    reply_id:replyId
-  }).select();
-  if(error){
-    console.error("createNotification error:", JSON.stringify(error));
-  }else{
-    console.log("createNotification success:", data);
+  if(ownerId===S.user.id)return;
+  const{error:e1}=await sb.from("notifications").insert({
+    user_id:ownerId,thread_id:threadId,reply_id:replyId,notif_type:"reply"
+  });
+  if(e1){
+    // notif_typeカラムがない場合のフォールバック
+    const{error:e2}=await sb.from("notifications").insert({
+      user_id:ownerId,thread_id:threadId,reply_id:replyId
+    });
+    if(e2)console.error("createNotification failed:",e2.message);
   }
 }
 async function createBestAnswerNotification(threadId,replyId){
   const{data:r}=await sb.from("replies").select("user_id").eq("id",replyId).single();
   if(!r||r.user_id===S.user.id)return;
-  // notif_typeカラムがあれば設定、なければ省略
-  const payload={user_id:r.user_id,thread_id:threadId,reply_id:replyId};
-  try{await sb.from("notifications").insert({...payload,notif_type:"best_answer"});}
-  catch(e){await sb.from("notifications").insert(payload);}
+  // まずnotif_typeあり、失敗したらなしでinsert
+  const{error:e1}=await sb.from("notifications").insert({
+    user_id:r.user_id,thread_id:threadId,reply_id:replyId,notif_type:"best_answer"
+  });
+  if(e1){
+    console.warn("bestAnswer notif with type failed, retrying without:",e1.message);
+    const{error:e2}=await sb.from("notifications").insert({
+      user_id:r.user_id,thread_id:threadId,reply_id:replyId
+    });
+    if(e2)console.error("bestAnswer notif failed:",e2.message);
+    else console.log("bestAnswer notif inserted (without type)");
+  }else{
+    console.log("bestAnswer notif inserted");
+  }
+  // 自分がベストアンサーを選んだ場合、通知を再取得してバッジ更新
+  await loadNotifications();
 }
 
 /* ===== ACCOUNT ===== */
