@@ -63,7 +63,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);p
 .type-filter{display:flex;border:1px solid rgba(26,23,20,.10);background:white;margin-bottom:14px}
 .type-btn{flex:1;padding:9px;font-size:12px;letter-spacing:.06em;text-align:center;cursor:pointer;border:none;background:none;color:var(--mist);font-family:'DM Sans',sans-serif;transition:all .2s;border-right:1px solid rgba(26,23,20,.08)}
 .type-btn:last-child{border-right:none}
-.type-btn.active{background:var(--ink);color:white}
+.type-btn.active{background:var(--primary);color:white}
 .cat-filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
 .cat-chip{font-size:11px;padding:5px 12px;border:1px solid rgba(26,23,20,.12);background:white;color:var(--mist);cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;letter-spacing:.04em}
 .cat-chip.active{background:var(--primary);color:white;border-color:var(--primary)}
@@ -278,7 +278,7 @@ img.av{object-fit:cover;display:block}
 .mp-tabs{display:flex;border:1px solid rgba(26,23,20,.10);background:white;margin-bottom:2px}
 .mp-tab{flex:1;padding:10px;font-size:12px;letter-spacing:.06em;text-align:center;cursor:pointer;border:none;background:none;color:var(--mist);font-family:'DM Sans',sans-serif;transition:all .2s;border-right:1px solid rgba(26,23,20,.08)}
 .mp-tab:last-child{border-right:none}
-.mp-tab.active{background:var(--ink);color:white}
+.mp-tab.active{background:var(--primary);color:white}
 .mp-pane{display:none}
 .mp-pane.active{display:block}
 
@@ -714,7 +714,7 @@ function cardHtml(t,showBadge){
       ${t.best_reply_id?`<span class="solved">✓ 解決済み</span>`:""}
       <span>${rtime(t.created_at)}</span>
     </div>
-    ${isPost?buildReactSm(t.id):""}
+    ${buildReactSm(t.id)}
   </div>`;
 }
 function bindCardList(container){
@@ -810,7 +810,7 @@ function renderHomeList(){
   if(S.homeCat)ts=ts.filter(t=>t.category===S.homeCat);
   ts=filterT(ts,S.search);
   if(!ts.length){el.innerHTML=`<div class="empty"><div class="empty-h">該当する投稿がありません</div></div>`;return;}
-  const pids=ts.filter(t=>t.type==="post").map(t=>t.id);
+  const pids=ts.map(t=>t.id); // つぶやき・相談ともにリアクション読み込み
   loadReactions(pids).then(()=>{el.innerHTML=ts.map(t=>cardHtml(t,true)).join("");bindCardList(el);});
 }
 
@@ -1306,40 +1306,41 @@ async function createNotification(threadId,replyId,threadOwnerId){
     ownerId=th.user_id;
   }
   if(ownerId===S.user.id)return;
-  const attempts=[
+  const payloads=[
     {user_id:ownerId,thread_id:threadId,reply_id:replyId,notif_type:"reply"},
     {user_id:ownerId,thread_id:threadId,reply_id:replyId},
     {user_id:ownerId,thread_id:threadId},
   ];
-  for(const payload of attempts){
-    const{error}=await sb.from("notifications").insert(payload);
+  for(const p of payloads){
+    const{error}=await sb.from("notifications").insert(p);
     if(!error){
-      console.log("createNotification ok:",Object.keys(payload).join(","));
+      console.log("createNotification ok:",Object.keys(p).join(","));
       return;
     }
-    console.warn("createNotification attempt failed:",error.message);
+    console.warn("createNotification failed:",error.code,error.message);
   }
 }
 async function createBestAnswerNotification(threadId,replyId){
-  const{data:r}=await sb.from("replies").select("user_id").eq("id",replyId).single();
-  if(!r||r.user_id===S.user.id)return;
-  const targetUser=r.user_id;
-  // 段階的フォールバック: カラム構成の違いに対応
-  const attempts=[
-    {user_id:targetUser,thread_id:threadId,reply_id:replyId,notif_type:"best_answer"},
-    {user_id:targetUser,thread_id:threadId,reply_id:replyId},
-    {user_id:targetUser,thread_id:threadId},
+  // 返信者のuser_idを取得
+  const{data:r,error:re}=await sb.from("replies").select("user_id").eq("id",replyId).single();
+  if(re||!r){console.error("bestAnswer: reply not found",re?.message);return;}
+  if(r.user_id===S.user.id){console.log("bestAnswer: skip self");return;}
+  // notificationsにinsert（フォールバック付き）
+  const payloads=[
+    {user_id:r.user_id,thread_id:threadId,reply_id:replyId,notif_type:"best_answer"},
+    {user_id:r.user_id,thread_id:threadId,reply_id:replyId},
+    {user_id:r.user_id,thread_id:threadId},
   ];
-  for(const payload of attempts){
-    const{error}=await sb.from("notifications").insert(payload);
+  for(const p of payloads){
+    const{error}=await sb.from("notifications").insert(p);
     if(!error){
-      console.log("bestAnswer notif ok with payload:",Object.keys(payload).join(","));
+      console.log("bestAnswer notif success:",Object.keys(p).join(","));
       await loadNotifications();
       return;
     }
-    console.warn("bestAnswer notif attempt failed:",error.message,"payload:",Object.keys(payload).join(","));
+    console.warn("bestAnswer notif failed:",error.code,error.message);
   }
-  console.error("bestAnswer notif: all attempts failed");
+  console.error("bestAnswer notif: all payloads failed");
 }
 
 /* ===== ACCOUNT ===== */
@@ -1450,7 +1451,9 @@ function renderAccount(){
 
   const pa=$("#planActions");
   if(S.isStd){
-    pa.innerHTML=`<button id="btnCancel" class="btn-d">サブスクを解約する</button>`;
+    pa.innerHTML=`
+      <button id="btnCancel" class="btn-d">サブスクを解約する</button>
+      <p style="font-size:12px;color:var(--mist);font-weight:300;line-height:1.7;margin-top:10px">解約後は無料期間終了までStandardプランをご利用いただけます。無料期間終了後は自動的にFreeプランに移行します。</p>`;
     $("#btnCancel").addEventListener("click",openPortal);
   }else{
     pa.innerHTML=`<p style="font-size:13px;color:var(--mist);font-weight:300;margin-bottom:12px;line-height:1.7">Standardプランで投稿・返信が無制限に使えます。</p>
