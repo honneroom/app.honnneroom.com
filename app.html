@@ -553,22 +553,24 @@ async function loadReactions(ids){
 }
 async function toggleReaction(tid,emoji,cb){
   if(!S.user)return;
-  const current=S.myReactions[tid]||null;
-  if(current===emoji){
-    // 削除
-    await sb.from("reactions").delete()
-      .eq("user_id",S.user.id).eq("reply_id",tid).eq("emoji",emoji);
+  // 現在の自分のリアクションをDBから確認
+  const{data:existing}=await sb.from("reactions")
+    .select("id,emoji")
+    .eq("user_id",S.user.id)
+    .eq("reply_id",tid);
+  const myRow=existing?.find(r=>r.emoji===emoji);
+  const otherRow=existing?.find(r=>r.emoji!==emoji);
+
+  if(myRow){
+    // 同じリアクションを押した→削除
+    await sb.from("reactions").delete().eq("id",myRow.id);
   }else{
-    if(current){
-      // 既存を削除してから
-      await sb.from("reactions").delete()
-        .eq("user_id",S.user.id).eq("reply_id",tid).eq("emoji",current);
+    // 別のリアクションがあれば先に削除
+    if(otherRow){
+      await sb.from("reactions").delete().eq("id",otherRow.id);
     }
-    // 追加（重複防止のためupsert）
-    await sb.from("reactions").upsert(
-      {user_id:S.user.id,reply_id:tid,emoji},
-      {onConflict:"user_id,reply_id,emoji",ignoreDuplicates:true}
-    );
+    // 新しくinsert
+    await sb.from("reactions").insert({user_id:S.user.id,reply_id:tid,emoji});
   }
   // DB から最新を取り直してキャッシュ更新
   await loadReactions([tid]);
