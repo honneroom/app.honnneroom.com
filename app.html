@@ -63,7 +63,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);p
 .type-filter{display:flex;border:1px solid rgba(26,23,20,.10);background:white;margin-bottom:14px}
 .type-btn{flex:1;padding:9px;font-size:12px;letter-spacing:.06em;text-align:center;cursor:pointer;border:none;background:none;color:var(--mist);font-family:'DM Sans',sans-serif;transition:all .2s;border-right:1px solid rgba(26,23,20,.08)}
 .type-btn:last-child{border-right:none}
-.type-btn.active{background:var(--primary);color:white}
+.type-btn.active{background:#7a5c4a;color:white}
 .cat-filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
 .cat-chip{font-size:11px;padding:5px 12px;border:1px solid rgba(26,23,20,.12);background:white;color:var(--mist);cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;letter-spacing:.04em}
 .cat-chip.active{background:var(--primary);color:white;border-color:var(--primary)}
@@ -278,7 +278,7 @@ img.av{object-fit:cover;display:block}
 .mp-tabs{display:flex;border:1px solid rgba(26,23,20,.10);background:white;margin-bottom:2px}
 .mp-tab{flex:1;padding:10px;font-size:12px;letter-spacing:.06em;text-align:center;cursor:pointer;border:none;background:none;color:var(--mist);font-family:'DM Sans',sans-serif;transition:all .2s;border-right:1px solid rgba(26,23,20,.08)}
 .mp-tab:last-child{border-right:none}
-.mp-tab.active{background:var(--primary);color:white}
+.mp-tab.active{background:#7a5c4a;color:white}
 .mp-pane{display:none}
 .mp-pane.active{display:block}
 
@@ -554,21 +554,24 @@ async function loadReactions(ids){
 async function toggleReaction(tid,emoji,cb){
   if(!S.user)return;
   const current=S.myReactions[tid]||null;
-  if(!S.reactions[tid])S.reactions[tid]={};
   if(current===emoji){
-    await sb.from("reactions").delete().eq("user_id",S.user.id).eq("reply_id",tid).eq("emoji",emoji);
-    if(S.reactions[tid][emoji])S.reactions[tid][emoji].count=Math.max(0,S.reactions[tid][emoji].count-1);
-    S.myReactions[tid]=null;
+    // 削除
+    await sb.from("reactions").delete()
+      .eq("user_id",S.user.id).eq("reply_id",tid).eq("emoji",emoji);
   }else{
     if(current){
-      await sb.from("reactions").delete().eq("user_id",S.user.id).eq("reply_id",tid).eq("emoji",current);
-      if(S.reactions[tid][current])S.reactions[tid][current].count=Math.max(0,S.reactions[tid][current].count-1);
+      // 既存を削除してから
+      await sb.from("reactions").delete()
+        .eq("user_id",S.user.id).eq("reply_id",tid).eq("emoji",current);
     }
-    await sb.from("reactions").insert({user_id:S.user.id,reply_id:tid,emoji});
-    if(!S.reactions[tid][emoji])S.reactions[tid][emoji]={count:0};
-    S.reactions[tid][emoji].count++;
-    S.myReactions[tid]=emoji;
+    // 追加（重複防止のためupsert）
+    await sb.from("reactions").upsert(
+      {user_id:S.user.id,reply_id:tid,emoji},
+      {onConflict:"user_id,reply_id,emoji",ignoreDuplicates:true}
+    );
   }
+  // DB から最新を取り直してキャッシュ更新
+  await loadReactions([tid]);
   if(cb)cb();
 }
 function buildReactSm(tid){
@@ -602,19 +605,20 @@ function bindReactsSm(container){
 async function loadNotifications(){
   if(!S.user)return;
   // notif_typeを含まないシンプルSELECTでまず取得
+  // notif_type込みのシンプルSELECTでバッジ更新
   const{data:simple,error:e1}=await sb.from("notifications")
-    .select("id,is_read,created_at,thread_id,reply_id")
+    .select("id,is_read,created_at,thread_id,reply_id,notif_type")
     .eq("user_id",S.user.id)
     .order("created_at",{ascending:false}).limit(50);
   if(e1){console.error("loadNotifications error:",JSON.stringify(e1));return;}
-  // join付きで詳細も取得（失敗してもシンプル結果を使う）
+  // join付きで詳細取得（ドロワー表示用。失敗してもシンプル結果を使う）
   const{data:full,error:e2}=await sb.from("notifications")
-    .select(`id,is_read,created_at,thread_id,reply_id,
+    .select(`id,is_read,created_at,thread_id,reply_id,notif_type,
       threads!thread_id(title,body,type),
       replies!reply_id(body,profiles!user_id(display_name))`)
     .eq("user_id",S.user.id)
     .order("created_at",{ascending:false}).limit(50);
-  if(e2){console.warn("loadNotifications full error (non-critical):",JSON.stringify(e2));}
+  if(e2){console.warn("loadNotifications full error:",JSON.stringify(e2));}
   S.notifications=(full||simple||[]);
   S.unreadCount=(simple||[]).filter(n=>!n.is_read).length;
   updateNotifBadge();
@@ -652,7 +656,7 @@ function renderNotifDrawer(){
     const who=n.replies?.profiles?.display_name||"誰か";
     const th=n.threads;
     const title=th?.title||(th?.body?.slice(0,20)+"…")||"投稿";
-    const isBest=(n.notif_type||"reply")==="best_answer";
+    const isBest=(n.notif_type||"")==="best_answer";
     return`<div class="notif-card${n.is_read?"":" unread"}" data-tid="${n.thread_id}" data-type="${th?.type||'question'}">
       <div class="notif-icon">${isBest?"🏆":"💬"}</div>
       <div class="notif-body-inner">
