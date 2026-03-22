@@ -575,8 +575,11 @@ async function toggleReaction(tid,emoji,cb){
       if(otherRow){
         await sb.from("reactions").delete().eq("id",otherRow.id);
       }
-      // insert（409になっても無視）
-      await sb.from("reactions").insert({user_id:S.user.id,reply_id:tid,emoji});
+      // upsert（ユニーク制約があるので409にならない）
+      await sb.from("reactions").upsert(
+        {user_id:S.user.id,reply_id:tid,emoji},
+        {onConflict:"user_id,reply_id,emoji"}
+      );
     }
     // DBから最新を取り直し
     await loadReactions([tid]);
@@ -1470,7 +1473,7 @@ function renderAccount(){
   if(S.isStd){
     pa.innerHTML=`
       <button id="btnCancel" class="btn-d">サブスクを解約する</button>
-      <p style="font-size:12px;color:var(--mist);font-weight:300;line-height:1.7;margin-top:10px">解約後は無料期間終了までStandardプランをご利用いただけます。無料期間終了後は自動的にFreeプランに移行します。</p>`;
+      <p style="font-size:12px;color:var(--mist);font-weight:300;line-height:1.7;margin-top:10px">解約後は無料期間終了までStandardプランをご利用いただけます。無料期間終了後は自動的にFreeプランに移行します。アカウントの削除はFreeプランへ移行後に設定画面から行えます。</p>`;
     $("#btnCancel").addEventListener("click",openPortal);
   }else{
     pa.innerHTML=`<p style="font-size:13px;color:var(--mist);font-weight:300;margin-bottom:12px;line-height:1.7">Standardプランで投稿・返信が無制限に使えます。</p>
