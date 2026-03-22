@@ -537,13 +537,14 @@ const EICONS={"わかる":"🤝","参考になった":"💡","応援してる":"
 
 async function loadReactions(ids){
   if(!ids.length)return;
-  // 対象IDのキャッシュをリセットしてから取得（重複カウント防止）
+  // 対象IDのキャッシュをリセット
   for(const id of ids){
     delete S.reactions[id];
     delete S.myReactions[id];
   }
   const{data,error}=await sb.from("reactions").select("reply_id,emoji,user_id").in("reply_id",ids);
-  if(error){console.error("loadReactions error:",error.message);return;}
+  // 409/403はRLSポリシー未設定。エラーでも画面は壊さない
+  if(error){return;} // エラー時は静かにスキップ
   for(const r of(data||[])){
     if(!S.reactions[r.reply_id])S.reactions[r.reply_id]={};
     if(!S.reactions[r.reply_id][r.emoji])S.reactions[r.reply_id][r.emoji]={count:0};
@@ -551,29 +552,39 @@ async function loadReactions(ids){
     if(S.user&&r.user_id===S.user.id)S.myReactions[r.reply_id]=r.emoji;
   }
 }
+// 連打防止フラグ
+const _reactLock={};
 async function toggleReaction(tid,emoji,cb){
   if(!S.user)return;
-  // 現在の自分のリアクションをDBから確認
-  const{data:existing}=await sb.from("reactions")
-    .select("id,emoji")
-    .eq("user_id",S.user.id)
-    .eq("reply_id",tid);
-  const myRow=existing?.find(r=>r.emoji===emoji);
-  const otherRow=existing?.find(r=>r.emoji!==emoji);
-
-  if(myRow){
-    // 同じリアクションを押した→削除
-    await sb.from("reactions").delete().eq("id",myRow.id);
-  }else{
-    // 別のリアクションがあれば先に削除
-    if(otherRow){
-      await sb.from("reactions").delete().eq("id",otherRow.id);
+  const lockKey=`${tid}_${emoji}`;
+  if(_reactLock[lockKey])return; // 連打防止
+  _reactLock[lockKey]=true;
+  try{
+    // DBから現在の自分のリアクションを取得
+    const{data:existing}=await sb.from("reactions")
+      .select("id,emoji")
+      .eq("user_id",S.user.id)
+      .eq("reply_id",tid);
+    const myRow=(existing||[]).find(r=>r.emoji===emoji);
+    const otherRow=(existing||[]).find(r=>r.emoji!==emoji);
+    if(myRow){
+      // 同じ絵文字→削除（トグルoff）
+      await sb.from("reactions").delete().eq("id",myRow.id);
+    }else{
+      // 別の絵文字があれば先に削除
+      if(otherRow){
+        await sb.from("reactions").delete().eq("id",otherRow.id);
+      }
+      // insert（409になっても無視）
+      await sb.from("reactions").insert({user_id:S.user.id,reply_id:tid,emoji});
     }
-    // 新しくinsert
-    await sb.from("reactions").insert({user_id:S.user.id,reply_id:tid,emoji});
+    // DBから最新を取り直し
+    await loadReactions([tid]);
+  }catch(e){
+    console.warn("toggleReaction error:",e.message);
+  }finally{
+    delete _reactLock[lockKey];
   }
-  // DB から最新を取り直してキャッシュ更新
-  await loadReactions([tid]);
   if(cb)cb();
 }
 function buildReactSm(tid){
