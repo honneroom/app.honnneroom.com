@@ -1509,12 +1509,18 @@ function renderAccount(){
 
   const pa=$("#planActions");
   if(S.isStd){
-    pa.innerHTML=`<button id="btnCancel" class="btn-d">サブスクを解約する</button>`;
+    pa.innerHTML=`
+      <button id="btnCancel" class="btn-d">サブスクを解約する</button>
+      <p style="font-size:12px;color:var(--mist);font-weight:300;line-height:1.7;margin-top:8px">※無料期間中に解約した場合、再登録時に無料トライアルは適用されません。</p>`;
     $("#btnCancel").addEventListener("click",openPortal);
   }else{
+    const hasStripeCustomer=!!(S.profile?.stripe_customer_id);
+    const btnSubLabel=hasStripeCustomer
+      ? "Standardプランに登録する（¥390/月）"
+      : "14日間無料で試す";
     pa.innerHTML=`
       <p style="font-size:13px;color:var(--mist);font-weight:300;margin-bottom:12px;line-height:1.7">Standardプランで投稿・返信が無制限に使えます。</p>
-      <button id="btnSub" class="btn-p">Standardプランに登録する（¥390/月）</button>`;
+      <button id="btnSub" class="btn-p">${btnSubLabel}</button>`;
     $("#btnSub").addEventListener("click",createCheckout);
 
     // アカウント削除エリア（参照コードと同じ構造）
@@ -1627,7 +1633,11 @@ async function loadBilling(){
   try{const r=await fetch(BILLING,{cache:"no-store"});S.billingCfg=await r.json();}catch(e){}
 }
 async function createCheckout(){
-  const base=S.billingCfg?.stripe?.standard?.payment_link_url;
+  // stripe_customer_id があれば（=過去に決済経験あり）トライアルなしリンクを使用
+  const hasStripeCustomer=!!(S.profile?.stripe_customer_id);
+  const base=hasStripeCustomer
+    ? (S.billingCfg?.stripe?.standard?.payment_link_no_trial_url||S.billingCfg?.stripe?.standard?.payment_link_url)
+    : S.billingCfg?.stripe?.standard?.payment_link_url;
   if(!base){alert("課金設定の読み込みに失敗しました。");return;}
   const p=new URLSearchParams();
   if(S.user?.email)p.set("prefilled_email",S.user.email);
