@@ -143,11 +143,57 @@
   @keyframes fadeDown { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
   @media (max-width: 480px) { body { padding: 32px 16px; } .card { padding: 28px 24px 28px; } .logo { margin-bottom: 32px; } }
+
+/* PWA インストールバナー */
+.pwa-banner{display:none;align-items:center;gap:12px;background:white;border:1px solid rgba(196,98,45,.2);border-left:4px solid var(--primary);padding:14px 16px;margin-bottom:20px;position:relative;animation:fadeUp .4s ease}
+.pwa-banner.show{display:flex}
+.pwa-banner-icon{font-size:22px;flex-shrink:0}
+.pwa-banner-body{flex:1;min-width:0}
+.pwa-banner-title{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:2px}
+.pwa-banner-desc{font-size:12px;color:var(--mist);font-weight:300;line-height:1.5}
+.pwa-banner-btn{background:var(--primary);color:white;border:none;padding:8px 16px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background .2s}
+.pwa-banner-btn:hover{background:var(--ink)}
+.pwa-banner-close{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--mist);font-size:16px;cursor:pointer;padding:2px 6px;line-height:1;transition:color .2s}
+.pwa-banner-close:hover{color:var(--ink)}
+/* PWA 手順モーダル */
+.pwa-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:none;align-items:flex-end;justify-content:center;padding:0}
+.pwa-modal-overlay.show{display:flex}
+.pwa-modal{background:white;width:min(480px,100vw);padding:28px 24px 32px;border-top-left-radius:16px;border-top-right-radius:16px;border-top:4px solid var(--primary);animation:slideUp .3s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.pwa-modal-title{font-family:'Shippori Mincho',serif;font-size:18px;font-weight:600;color:var(--ink);margin-bottom:6px}
+.pwa-modal-sub{font-size:13px;color:var(--mist);font-weight:300;margin-bottom:20px;line-height:1.6}
+.pwa-steps{display:flex;flex-direction:column;gap:12px;margin-bottom:20px}
+.pwa-step{display:flex;align-items:flex-start;gap:12px}
+.pwa-step-num{width:24px;height:24px;border-radius:50%;background:var(--primary);color:white;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.pwa-step-text{font-size:13px;color:var(--ink);line-height:1.7;font-weight:300}
+.pwa-step-text strong{font-weight:500;color:var(--primary)}
+.pwa-modal-close{width:100%;padding:12px;background:var(--warm);border:none;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--mist);cursor:pointer;transition:background .2s}
+.pwa-modal-close:hover{background:var(--ink);color:white}
+  
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
 <body>
 <div class="noise"></div>
+<!-- PWA バナー -->
+<div id="pwaBanner" class="pwa-banner">
+  <div class="pwa-banner-icon">📱</div>
+  <div class="pwa-banner-body">
+    <div class="pwa-banner-title">アプリとして使う</div>
+    <div class="pwa-banner-desc">ホーム画面に追加するとアプリのように使えます</div>
+  </div>
+  <button class="pwa-banner-btn" id="pwaBannerBtn">追加する</button>
+  <button class="pwa-banner-close" id="pwaBannerClose">×</button>
+</div>
+<!-- PWA 手順モーダル -->
+<div id="pwaModal" class="pwa-modal-overlay">
+  <div class="pwa-modal">
+    <div class="pwa-modal-title">📱 ホーム画面に追加</div>
+    <div class="pwa-modal-sub" id="pwaModalSub"></div>
+    <div class="pwa-steps" id="pwaSteps"></div>
+    <button class="pwa-modal-close" id="pwaModalClose">閉じる</button>
+  </div>
+</div>
 <div class="container">
   <a href="/" class="logo">
     <img src="https://app.honneroom.com/assets/icon.png" alt="本音ルーム" style="width:56px;height:56px;object-fit:contain">
@@ -258,8 +304,9 @@
   };
 </script>
   
-<!-- Service Worker 登録 -->
+<!-- Service Worker 登録 + PWAバナー -->
 <script>
+  // Service Worker
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('/sw.js')
@@ -267,6 +314,61 @@
         .catch(err => console.warn('SW registration failed:', err));
     });
   }
+
+  // PWAバナー制御
+  let deferredPrompt = null;
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isInStandaloneMode = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  const dismissed = sessionStorage.getItem('pwaBannerDismissed');
+
+  if (!isInStandaloneMode && !dismissed) {
+    // Android/PC: インストールイベントを捕捉
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('pwaBanner').classList.add('show');
+    });
+    // iOS: 常にバナー表示
+    if (isIOS) {
+      document.getElementById('pwaBanner').classList.add('show');
+    }
+  }
+
+  document.getElementById('pwaBannerBtn').addEventListener('click', () => {
+    if (deferredPrompt) {
+      // Android/PC: ネイティブインストールダイアログ
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+    } else {
+      // iOS: 手順モーダルを表示
+      const isChrome = /chrome/i.test(navigator.userAgent) && !/edg/i.test(navigator.userAgent);
+      document.getElementById('pwaModalSub').textContent = isIOS
+        ? 'Safariで以下の手順でホーム画面に追加できます。'
+        : 'ブラウザの手順でホーム画面に追加できます。';
+      document.getElementById('pwaSteps').innerHTML = isIOS ? `
+        <div class="pwa-step"><div class="pwa-step-num">1</div><div class="pwa-step-text">画面下の<strong>共有ボタン（□↑）</strong>をタップ</div></div>
+        <div class="pwa-step"><div class="pwa-step-num">2</div><div class="pwa-step-text">メニューをスクロールして<strong>「ホーム画面に追加」</strong>をタップ</div></div>
+        <div class="pwa-step"><div class="pwa-step-num">3</div><div class="pwa-step-text"><strong>「追加」</strong>をタップして完了！</div></div>
+      ` : `
+        <div class="pwa-step"><div class="pwa-step-num">1</div><div class="pwa-step-text">ブラウザ右上の<strong>メニュー（⋮）</strong>をタップ</div></div>
+        <div class="pwa-step"><div class="pwa-step-num">2</div><div class="pwa-step-text"><strong>「アプリをインストール」</strong>をタップ</div></div>
+        <div class="pwa-step"><div class="pwa-step-num">3</div><div class="pwa-step-text"><strong>「インストール」</strong>をタップして完了！</div></div>
+      `;
+      document.getElementById('pwaModal').classList.add('show');
+    }
+  });
+
+  document.getElementById('pwaBannerClose').addEventListener('click', () => {
+    document.getElementById('pwaBanner').classList.remove('show');
+    sessionStorage.setItem('pwaBannerDismissed', '1');
+  });
+  document.getElementById('pwaModalClose').addEventListener('click', () => {
+    document.getElementById('pwaModal').classList.remove('show');
+  });
+  document.getElementById('pwaModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('pwaModal'))
+      document.getElementById('pwaModal').classList.remove('show');
+  });
 </script>
   
 </body>
