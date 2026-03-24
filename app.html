@@ -326,16 +326,6 @@ img.av{object-fit:cover;display:block}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
 <body>
-<!-- PWA バナー -->
-<div id="pwaBanner" class="pwa-banner">
-  <div class="pwa-banner-icon">📱</div>
-  <div class="pwa-banner-body">
-    <div class="pwa-banner-title">アプリとして使う</div>
-    <div class="pwa-banner-desc">ホーム画面に追加するとアプリのように使えます</div>
-  </div>
-  <button class="pwa-banner-btn" id="pwaBannerBtn">追加する</button>
-  <button class="pwa-banner-close" id="pwaBannerClose">×</button>
-</div>
 <!-- PWA 手順モーダル -->
 <div id="pwaModal" class="pwa-modal-overlay">
   <div class="pwa-modal">
@@ -376,6 +366,17 @@ img.av{object-fit:cover;display:block}
 </div>
 
 <div class="page">
+<!-- PWA バナー -->
+<div id="pwaBanner" class="pwa-banner">
+  <div class="pwa-banner-icon">📱</div>
+  <div class="pwa-banner-body">
+    <div class="pwa-banner-title">アプリとして使う</div>
+    <div class="pwa-banner-desc">ホーム画面に追加するとアプリのように使えます</div>
+  </div>
+  <button class="pwa-banner-btn" id="pwaBannerBtn">追加する</button>
+  <button class="pwa-banner-close" id="pwaBannerClose">×</button>
+</div>
+  
   <!-- HOME タブ -->
   <section id="tab-home" class="tab-pane active">
     <div id="homeListView">
