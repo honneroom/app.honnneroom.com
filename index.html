@@ -29,7 +29,6 @@
   :root {
     --ink: #1a1714; --cream: #f5f0e8; --warm: #e8dfd0;
     --primary: #c4622d; --primary-light: #d4845a; --primary-pale: #f0ddd3;
-    
     --mist: #8a7a72; --error: #b3261e; --success: #c4622d;
   }
   html, body { min-height: 100vh; }
@@ -60,12 +59,6 @@
     display: flex; flex-direction: column; align-items: center; gap: 12px;
     margin-bottom: 40px; text-decoration: none;
     animation: fadeDown 0.6s ease forwards;
-  }
-  .logo-icon {
-    width: 56px; height: 56px; background: var(--primary); border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'Shippori Mincho', serif; font-size: 22px; font-weight: 700;
-    color: white; letter-spacing: -0.02em;
   }
   .logo-name {
     font-family: 'Shippori Mincho', serif; font-size: 22px; font-weight: 700;
@@ -144,38 +137,34 @@
   @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
   @media (max-width: 480px) { body { padding: 32px 16px; } .card { padding: 28px 24px 28px; } .logo { margin-bottom: 32px; } }
 
-/* PWA インストールバナー */
-.pwa-banner{display:none;align-items:center;gap:12px;background:white;border:1px solid rgba(196,98,45,.2);border-left:4px solid var(--primary);padding:14px 16px;margin-bottom:20px;position:relative;animation:fadeUp .4s ease}
-.pwa-banner.show{display:flex}
-.pwa-banner-icon{font-size:22px;flex-shrink:0}
-.pwa-banner-body{flex:1;min-width:0}
-.pwa-banner-title{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:2px}
-.pwa-banner-desc{font-size:12px;color:var(--mist);font-weight:300;line-height:1.5}
-.pwa-banner-btn{background:var(--primary);color:white;border:none;padding:8px 16px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background .2s}
-.pwa-banner-btn:hover{background:var(--ink)}
-.pwa-banner-close{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--mist);font-size:16px;cursor:pointer;padding:2px 6px;line-height:1;transition:color .2s}
-.pwa-banner-close:hover{color:var(--ink)}
-/* PWA 手順モーダル */
-.pwa-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:none;align-items:flex-end;justify-content:center;padding:0}
-.pwa-modal-overlay.show{display:flex}
-.pwa-modal{background:white;width:min(480px,100vw);padding:28px 24px 32px;border-top-left-radius:16px;border-top-right-radius:16px;border-top:4px solid var(--primary);animation:slideUp .3s ease}
-@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-.pwa-modal-title{font-family:'Shippori Mincho',serif;font-size:18px;font-weight:600;color:var(--ink);margin-bottom:6px}
-.pwa-modal-sub{font-size:13px;color:var(--mist);font-weight:300;margin-bottom:20px;line-height:1.6}
-.pwa-steps{display:flex;flex-direction:column;gap:12px;margin-bottom:20px}
-.pwa-step{display:flex;align-items:flex-start;gap:12px}
-.pwa-step-num{width:24px;height:24px;border-radius:50%;background:var(--primary);color:white;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
-.pwa-step-text{font-size:13px;color:var(--ink);line-height:1.7;font-weight:300}
-.pwa-step-text strong{font-weight:500;color:var(--primary)}
-.pwa-modal-close{width:100%;padding:12px;background:var(--warm);border:none;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--mist);cursor:pointer;transition:background .2s}
-.pwa-modal-close:hover{background:var(--ink);color:white}
-  
+  .pwa-banner{display:none;align-items:center;gap:12px;background:white;border:1px solid rgba(196,98,45,.2);border-left:4px solid var(--primary);padding:14px 16px;margin-bottom:20px;position:relative;animation:fadeUp .4s ease}
+  .pwa-banner.show{display:flex}
+  .pwa-banner-icon{font-size:22px;flex-shrink:0}
+  .pwa-banner-body{flex:1;min-width:0}
+  .pwa-banner-title{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:2px}
+  .pwa-banner-desc{font-size:12px;color:var(--mist);font-weight:300;line-height:1.5}
+  .pwa-banner-btn{background:var(--primary);color:white;border:none;padding:8px 16px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background .2s}
+  .pwa-banner-btn:hover{background:var(--ink)}
+  .pwa-banner-close{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--mist);font-size:16px;cursor:pointer;padding:2px 6px;line-height:1;transition:color .2s}
+  .pwa-banner-close:hover{color:var(--ink)}
+  .pwa-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:none;align-items:flex-end;justify-content:center;padding:0}
+  .pwa-modal-overlay.show{display:flex}
+  .pwa-modal{background:white;width:min(480px,100vw);padding:28px 24px 32px;border-top-left-radius:16px;border-top-right-radius:16px;border-top:4px solid var(--primary);animation:slideUp .3s ease}
+  @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  .pwa-modal-title{font-family:'Shippori Mincho',serif;font-size:18px;font-weight:600;color:var(--ink);margin-bottom:6px}
+  .pwa-modal-sub{font-size:13px;color:var(--mist);font-weight:300;margin-bottom:20px;line-height:1.6}
+  .pwa-steps{display:flex;flex-direction:column;gap:12px;margin-bottom:20px}
+  .pwa-step{display:flex;align-items:flex-start;gap:12px}
+  .pwa-step-num{width:24px;height:24px;border-radius:50%;background:var(--primary);color:white;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+  .pwa-step-text{font-size:13px;color:var(--ink);line-height:1.7;font-weight:300}
+  .pwa-step-text strong{font-weight:500;color:var(--primary)}
+  .pwa-modal-close{width:100%;padding:12px;background:var(--warm);border:none;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--mist);cursor:pointer;transition:background .2s}
+  .pwa-modal-close:hover{background:var(--ink);color:white}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
 <body>
 <div class="noise"></div>
-<!-- PWA バナー -->
 <div id="pwaBanner" class="pwa-banner">
   <div class="pwa-banner-icon">📱</div>
   <div class="pwa-banner-body">
@@ -185,7 +174,6 @@
   <button class="pwa-banner-btn" id="pwaBannerBtn">追加する</button>
   <button class="pwa-banner-close" id="pwaBannerClose">×</button>
 </div>
-<!-- PWA 手順モーダル -->
 <div id="pwaModal" class="pwa-modal-overlay">
   <div class="pwa-modal">
     <div class="pwa-modal-title">📱 ホーム画面に追加</div>
@@ -246,15 +234,16 @@
 <script>
   const SUPABASE_URL = "https://rhynpigqhnbwjyudvvfw.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoeW5waWdxaG5id2p5dWR2dmZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3ODcyNTMsImV4cCI6MjA4MzM2MzI1M30.S9h-SH0JB0cEhMukUUaOuYEetx2I8qecZapIeCpk57M";
+
+  // ★ storageKey・storage を削除してMoririsと同じシンプルな初期化
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
-      storageKey:'sb-rhynpigqhnbwjyudvvfw-auth-token',
-      storage: window.localStorage
     }
   });
+
   const TXT = {
     needEmail: "メールアドレスを入力してください。",
     needPassword: "パスワードを入力してください。",
@@ -270,6 +259,7 @@
   const pwLoginBtn = $("#btn-login-pw");
   const pwMsg = $("#pw-message");
   const magicMsg = $("#magic-message");
+
   function showMsg(el, text, type = "error") {
     if (!el) return; el.textContent = text || "";
     el.classList.remove("error", "success"); if (text) el.classList.add(type);
@@ -281,8 +271,10 @@
   $("#pw-email").addEventListener("input", () => showMsg(pwMsg, ""));
   $("#pw-password").addEventListener("input", () => showMsg(pwMsg, ""));
   $("#magic-email").addEventListener("input", () => showMsg(magicMsg, ""));
+
   pwLoginBtn.onclick = async () => {
-    const email = $("#pw-email").value.trim(); const password = $("#pw-password").value;
+    const email = $("#pw-email").value.trim();
+    const password = $("#pw-password").value;
     showMsg(pwMsg, "");
     if (!email) { showMsg(pwMsg, TXT.needEmail); return; }
     if (!validateEmail(email)) { showMsg(pwMsg, TXT.invalidEmail); return; }
@@ -292,9 +284,9 @@
     pwLoginBtn.disabled = false;
     if (error) { showMsg(pwMsg, TXT.pwLoginFailed); return; }
     try { gtag('event', 'login_success', { method: 'password' }); } catch(e) {}
-    await new Promise(r=>setTimeout(r,300));
     window.location.href = `/app.html`;
   };
+
   magicBtn.onclick = async () => {
     const email = $("#magic-email").value.trim();
     showMsg(magicMsg, "");
@@ -310,10 +302,8 @@
     else { showMsg(magicMsg, TXT.sent, "success"); }
   };
 </script>
-  
-<!-- Service Worker 登録 + PWAバナー -->
+
 <script>
-  // Service Worker
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('/sw.js')
@@ -322,20 +312,17 @@
     });
   }
 
-  // PWAバナー制御
   let deferredPrompt = null;
   const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
   const isInStandaloneMode = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
   const dismissed = sessionStorage.getItem('pwaBannerDismissed');
 
   if (!isInStandaloneMode && !dismissed) {
-    // Android/PC: インストールイベントを捕捉
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
       document.getElementById('pwaBanner').classList.add('show');
     });
-    // iOS: 常にバナー表示
     if (isIOS) {
       document.getElementById('pwaBanner').classList.add('show');
     }
@@ -343,12 +330,9 @@
 
   document.getElementById('pwaBannerBtn').addEventListener('click', () => {
     if (deferredPrompt) {
-      // Android/PC: ネイティブインストールダイアログ
       deferredPrompt.prompt();
       deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
     } else {
-      // iOS: 手順モーダルを表示
-      const isChrome = /chrome/i.test(navigator.userAgent) && !/edg/i.test(navigator.userAgent);
       document.getElementById('pwaModalSub').textContent = isIOS
         ? 'Safariで以下の手順でホーム画面に追加できます。'
         : 'ブラウザの手順でホーム画面に追加できます。';
@@ -377,6 +361,6 @@
       document.getElementById('pwaModal').classList.remove('show');
   });
 </script>
-  
+
 </body>
 </html>
