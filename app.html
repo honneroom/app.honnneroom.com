@@ -1816,17 +1816,36 @@ $("#btnLogout").addEventListener("click",async()=>{await sb.auth.signOut();locat
 /* ===== MAIN ===== */
 async function main(){
   await Promise.all([loadBilling(),loadMasterData()]);
-  const user=await getUser();
-  if(!user){location.replace("/");return;}
-  S.user=user;
-  $("#userEmail").textContent=user.email||"";
-  const prof=await loadProfile(user.id);
-  S.profile=prof;
-  const tier=String(prof?.tier||"free").toLowerCase();
-  S.isStd=!!prof?.is_active&&tier==="standard";
-  const badge=$("#planBadge");
-  if(S.isStd){badge.textContent="Standard";badge.classList.add("std");}
-  await Promise.all([loadThreads(),loadNotifications(),loadTodayPostCount()]);
+
+  // onAuthStateChangeでセッション復元を確実に待つ
+  const user = await new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      unsub?.();
+      resolve(null);
+    }, 10000);
+
+    let unsub;
+    const { data: { subscription } } = sb.auth.onAuthStateChange((event, session) => {
+      if (event === 'INITIAL_SESSION') {
+        clearTimeout(timer);
+        unsub = () => subscription.unsubscribe();
+        resolve(session?.user ?? null);
+      }
+    });
+    unsub = () => subscription.unsubscribe();
+  });
+
+  if(!user){ location.replace("/"); return; }
+
+  S.user = user;
+  $("#userEmail").textContent = user.email || "";
+  const prof = await loadProfile(user.id);
+  S.profile = prof;
+  const tier = String(prof?.tier || "free").toLowerCase();
+  S.isStd = !!prof?.is_active && tier === "standard";
+  const badge = $("#planBadge");
+  if(S.isStd){ badge.textContent = "Standard"; badge.classList.add("std"); }
+  await Promise.all([loadThreads(), loadNotifications(), loadTodayPostCount()]);
   switchTab("home");
 }
 main();
