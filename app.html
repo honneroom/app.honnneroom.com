@@ -577,37 +577,31 @@ function buildCatFilter(containerId){
 
 /* ===== AUTH ===== */
 async function getUser(){
-  // まずlocalStorageからセッションを直接復元を試みる
-  try{
-    const{data:{session},error}=await sb.auth.getSession();
-    if(session?.user){
-      // セッションが有効ならそのまま返す
-      const{data:{user}}=await sb.auth.getUser();
-      if(user)return user;
-    }
-  }catch(e){}
+  // onAuthStateChangeで確実にセッション復元を待つ
+  return new Promise((resolve) => {
+    // まず即時確認
+    sb.auth.getSession().then(({data:{session}}) => {
+      if(session?.user){
+        resolve(session.user);
+        return;
+      }
+    }).catch(()=>{});
 
-  // セッションがない場合はURLからコード交換を試みる
-  try{ await sb.auth.exchangeCodeForSession(window.location.href); }catch(e){}
+    // onAuthStateChangeで復元を待つ（最大12秒）
+    const timeout = setTimeout(() => resolve(null), 12000);
 
-  // リトライ
-  for(let i=0;i<60;i++){
-    try{
-      const{data:{user}}=await sb.auth.getUser();
-      if(user)return user;
-    }catch(e){}
-    await new Promise(r=>setTimeout(r,200));
-  }
-  return null;
-}
-async function loadProfile(uid){
-  let{data,error}=await sb.from("profiles").select("*").eq("id",uid).single();
-  const nf=error&&(error.code==="PGRST116"||String(error.details||"").includes("0 rows"));
-  if(nf){
-    await sb.from("profiles").upsert({id:uid,tier:"free",is_active:false,has_password:false},{onConflict:"id"});
-    ({data,error}=await sb.from("profiles").select("*").eq("id",uid).single());
-  }
-  return data;
+    const { data: { subscription } } = sb.auth.onAuthStateChange((event, session) => {
+      if(session?.user){
+        clearTimeout(timeout);
+        subscription.unsubscribe();
+        resolve(session.user);
+      } else if(event === 'SIGNED_OUT'){
+        clearTimeout(timeout);
+        subscription.unsubscribe();
+        resolve(null);
+      }
+    });
+  });
 }
 
 /* ===== TABS ===== */
