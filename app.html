@@ -1433,12 +1433,5 @@ main();
       document.getElementById('pwaModal').classList.remove('show');
   });
 </script>
-<script>
-  // ★一時的に追加（Service Worker削除用）
-  navigator.serviceWorker.getRegistrations().then(regs => {
-    regs.forEach(reg => reg.unregister());
-    console.log('Service Worker 削除完了');
-  });
-</script>
 </body>
 </html>
