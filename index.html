@@ -292,6 +292,7 @@
     pwLoginBtn.disabled = false;
     if (error) { showMsg(pwMsg, TXT.pwLoginFailed); return; }
     try { gtag('event', 'login_success', { method: 'password' }); } catch(e) {}
+    await new Promise(r=>setTimeout(r,300));
     window.location.href = `/app.html`;
   };
   magicBtn.onclick = async () => {
