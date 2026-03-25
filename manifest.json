@@ -2,7 +2,7 @@
   "name": "本音ルーム",
   "short_name": "本音ルーム",
   "description": "女性限定・本音で語れるコミュニティ",
-  "start_url": "/index.html",
+  "start_url": "/app.html",
   "display": "standalone",
   "background_color": "#f5f0e8",
   "theme_color": "#c4622d",
