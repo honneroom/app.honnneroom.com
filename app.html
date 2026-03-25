@@ -288,11 +288,6 @@ img.av{object-fit:cover;display:block}
 .mp-pane{display:none}
 .mp-pane.active{display:block}
 
-/* 広告バナー */
-.ad-banner{background:white;border:1px solid rgba(26,23,20,.08);padding:12px 16px;margin-bottom:14px;text-align:center;font-size:11px;color:var(--mist);letter-spacing:.04em}
-.ad-banner-label{font-size:10px;color:#b0a898;letter-spacing:.08em;margin-bottom:6px}
-.ad-placeholder{background:var(--warm);height:60px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--mist);letter-spacing:.06em}
-
 @media(max-width:560px){
   .uemail{display:none}
   .pgrid{grid-template-columns:1fr}
@@ -381,10 +376,6 @@ img.av{object-fit:cover;display:block}
   <section id="tab-home" class="tab-pane active">
     <div id="homeListView">
       <div id="pwNoticeBanner"></div>
-      <div id="adBannerTop" class="ad-banner" style="display:none">
-        <div class="ad-banner-label">広告</div>
-        <div class="ad-placeholder">AD</div>
-      </div>
       <div class="home-post-btns">
         <button class="home-post-btn-post" id="btnGoPost">✏️ つぶやく</button>
         <button class="home-post-btn-q" id="btnGoQuestion">💬 相談する</button>
@@ -451,13 +442,8 @@ const PORTAL  = "https://rhynpigqhnbwjyudvvfw.functions.supabase.co/create-porta
 const APP_URL = "https://app.honneroom.com/app.html";
 const FREE_DAILY_POST_LIMIT = 3;
 
-// ★ storageKey・storage を削除してMoririsと同じシンプルな初期化
 const sb = window.supabase.createClient(SB_URL, SB_KEY, {
-  auth:{
-    persistSession:true,
-    autoRefreshToken:true,
-    detectSessionInUrl:true,
-  }
+  auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
 });
 
 const S = {
@@ -488,22 +474,19 @@ function attrHtml(p){
     .filter(Boolean).map(t=>`<span class="attr-tag">${esc(t)}</span>`).join("");
 }
 function avatarHtml(p,size=28){
-  const uid=p?._uid||"x";
-  const color=avc(uid);
-  const label=p?.display_name||(p?.age?`${p.age}歳`:"?");
-  const init=label[0]||"?";
-  if(p?.avatar_url){
-    return`<img class="av" src="${esc(p.avatar_url)}" style="width:${size}px;height:${size}px;border-radius:50%" alt="">`;
-  }
+  const uid=p?._uid||"x";const color=avc(uid);
+  const label=p?.display_name||(p?.age?`${p.age}歳`:"?");const init=label[0]||"?";
+  if(p?.avatar_url)return`<img class="av" src="${esc(p.avatar_url)}" style="width:${size}px;height:${size}px;border-radius:50%" alt="">`;
   return`<div class="av" style="background:${color};width:${size}px;height:${size}px;font-size:${Math.floor(size*0.4)}px">${esc(init)}</div>`;
 }
 function msg(el,txt,type="err"){if(!el)return;el.textContent=txt;el.className="fmsg"+(type?" "+type:"")}
 
 async function loadTodayPostCount(){
-  if(!S.user||S.isStd)return;
+  if(!S.user||S.isStd){S.todayPostCount=0;return;}
   const today=new Date();today.setHours(0,0,0,0);
-  const{count}=await sb.from("threads").select("id",{count:"exact",head:true}).eq("user_id",S.user.id).gte("created_at",today.toISOString());
-  S.todayPostCount=count||0;
+  const{data,error}=await sb.from("threads").select("id").eq("user_id",S.user.id).gte("created_at",today.toISOString());
+  if(error){console.warn("loadTodayPostCount error:",error.message);S.todayPostCount=0;return;}
+  S.todayPostCount=(data||[]).length;
 }
 function isPostLimitReached(){
   if(S.isStd)return false;
@@ -513,8 +496,7 @@ function isPostLimitReached(){
 async function loadMasterData(){
   try{
     const [catRes,attrRes]=await Promise.all([fetch(CATEGORIES_URL,{cache:"no-store"}),fetch(ATTRIBUTES_URL,{cache:"no-store"})]);
-    S.CATEGORIES=await catRes.json();
-    S.ATTRIBUTES=await attrRes.json();
+    S.CATEGORIES=await catRes.json();S.ATTRIBUTES=await attrRes.json();
   }catch(e){
     S.CATEGORIES=[
       {label:"すべて",value:"",types:["all"]},{label:"キャリア",value:"キャリア",types:["question","all"]},
@@ -543,14 +525,10 @@ function buildCatFilter(containerId){
   });
 }
 
-// ★ Moririsと全く同じgetUser関数
 async function getUser(){
-  try{ await sb.auth.exchangeCodeForSession(window.location.href); }catch(e){}
+  try{await sb.auth.exchangeCodeForSession(window.location.href);}catch(e){}
   for(let i=0;i<40;i++){
-    try{
-      const{data:{user}}=await sb.auth.getUser();
-      if(user)return user;
-    }catch(e){}
+    try{const{data:{user}}=await sb.auth.getUser();if(user)return user;}catch(e){}
     await new Promise(r=>setTimeout(r,150));
   }
   return null;
@@ -603,18 +581,12 @@ async function loadReactions(ids){
 const _reactLock={};
 async function toggleReaction(tid,emoji,cb){
   if(!S.user)return;
-  const lockKey=`${tid}_${emoji}`;
-  if(_reactLock[lockKey])return;
-  _reactLock[lockKey]=true;
+  const lockKey=`${tid}_${emoji}`;if(_reactLock[lockKey])return;_reactLock[lockKey]=true;
   try{
     const{data:existing}=await sb.from("reactions").select("id,emoji").eq("user_id",S.user.id).eq("reply_id",tid);
-    const myRow=(existing||[]).find(r=>r.emoji===emoji);
-    const otherRow=(existing||[]).find(r=>r.emoji!==emoji);
+    const myRow=(existing||[]).find(r=>r.emoji===emoji);const otherRow=(existing||[]).find(r=>r.emoji!==emoji);
     if(myRow){await sb.from("reactions").delete().eq("id",myRow.id);}
-    else{
-      if(otherRow)await sb.from("reactions").delete().eq("id",otherRow.id);
-      await sb.from("reactions").upsert({user_id:S.user.id,reply_id:tid,emoji},{onConflict:"user_id,reply_id,emoji"});
-    }
+    else{if(otherRow)await sb.from("reactions").delete().eq("id",otherRow.id);await sb.from("reactions").upsert({user_id:S.user.id,reply_id:tid,emoji},{onConflict:"user_id,reply_id,emoji"});}
     await loadReactions([tid]);
   }catch(e){console.warn("toggleReaction error:",e.message);}
   finally{delete _reactLock[lockKey];}
@@ -680,9 +652,8 @@ function renderNotifDrawer(){
   if(!S.notifications.length){body.innerHTML=`<div class="empty"><div class="empty-h">通知はありません</div></div>`;return;}
   let html=`<div class="notif-list">`;
   html+=S.notifications.map(n=>{
-    const who=n.replies?.profiles?.display_name||"誰か";
-    const th=n.threads;const title=th?.title||(th?.body?.slice(0,20)+"…")||"投稿";
-    const isBest=(n.notif_type||"")==="best_answer";
+    const who=n.replies?.profiles?.display_name||"誰か";const th=n.threads;
+    const title=th?.title||(th?.body?.slice(0,20)+"…")||"投稿";const isBest=(n.notif_type||"")==="best_answer";
     return`<div class="notif-card${n.is_read?"":" unread"}" data-tid="${n.thread_id}" data-type="${th?.type||'question'}">
       <div class="notif-icon">${isBest?"🏆":"💬"}</div>
       <div class="notif-body-inner">
@@ -709,8 +680,7 @@ function filterT(arr,q){
 function cardHtml(t,showBadge){
   const p=t.profiles||{};p._uid=t.user_id;
   const label=p.display_name||(p.age?`${p.age}歳`:"匿名");
-  const rc=t.replies?.[0]?.count??0;
-  const isPost=t.type==="post";const isOwn=S.user?.id===t.user_id;
+  const rc=t.replies?.[0]?.count??0;const isPost=t.type==="post";const isOwn=S.user?.id===t.user_id;
   return`<div class="post-card${isPost?" is-post":" is-question"}" data-id="${t.id}" data-type="${t.type}">
     <div class="card-meta">
       <div class="card-meta-r1">
@@ -752,7 +722,6 @@ function renderHomeTab(){
     b.onclick=()=>{document.querySelectorAll(".type-btn").forEach(x=>x.classList.remove("active"));b.classList.add("active");S.homeType=b.dataset.type;renderHomeList();};
   });
   const si=$("#homeSearch");si.oninput=()=>{S.search=si.value.trim();renderHomeList();};
-  const adBanner=$("#adBannerTop");if(adBanner)adBanner.style.display=S.isStd?"none":"block";
   $("#btnGoPost")?.addEventListener("click",()=>{
     switchTab("mypage");
     setTimeout(()=>{const btn=document.querySelector(".form-tab-btn[data-panel='panelPost']");if(btn)btn.click();document.getElementById("postFormArea")?.scrollIntoView({behavior:"smooth",block:"start"});},80);
@@ -868,7 +837,7 @@ async function submitPost(){
   const btn=$("#btnPostSubmit");btn.disabled=true;
   const{error}=await sb.from("threads").insert({user_id:S.user.id,type:"post",body,title:"",category});
   btn.disabled=false;
-  if(error){msg(m,"投稿に失敗しました。");return;}
+  if(error){console.error("submitPost error:",error.code,error.message,error.details);msg(m,"投稿に失敗しました。");return;}
   msg(m,"投稿しました！","ok");
   $("#ptBody").value="";$("#ptCat").value="";$("#ptCount").textContent="0";
   S.todayPostCount++;await loadThreads();renderHomeList();renderPostFormInHome();
@@ -885,7 +854,7 @@ async function submitQuestion(){
   const btn=$("#btnQSubmit");btn.disabled=true;
   const{error}=await sb.from("threads").insert({user_id:S.user.id,type:"question",category,title,body});
   btn.disabled=false;
-  if(error){msg(m,"投稿に失敗しました。");return;}
+  if(error){console.error("submitQuestion error:",error.code,error.message,error.details);msg(m,"投稿に失敗しました。");return;}
   msg(m,"投稿しました！","ok");
   $("#qCatSel").value="";$("#qTitle").value="";$("#qBody").value="";
   $("#qTCount").textContent="0";$("#qBCount").textContent="0";
@@ -1069,9 +1038,7 @@ async function openUserProfile(userId){
   }
   up.innerHTML=html;
   up.querySelector("#upBack2").addEventListener("click",showHomeList);
-  up.querySelectorAll(".post-card").forEach(c=>{
-    c.addEventListener("click",e=>{if(e.target.closest(".del-btn")||e.target.closest(".rbtn-sm")||e.target.closest(".av-click"))return;openDetail(c.dataset.id,c.dataset.type);});
-  });
+  up.querySelectorAll(".post-card").forEach(c=>{c.addEventListener("click",e=>{if(e.target.closest(".del-btn")||e.target.closest(".rbtn-sm")||e.target.closest(".av-click"))return;openDetail(c.dataset.id,c.dataset.type);});});
   up.querySelectorAll(".av-click").forEach(el=>{el.addEventListener("click",e=>{e.stopPropagation();openUserProfile(el.dataset.uid);});});
   up.querySelectorAll(".del-btn").forEach(b=>{b.addEventListener("click",async e=>{e.stopPropagation();await deleteThread(b.dataset.id,()=>openUserProfile(userId));});});
   const pids=(threads||[]).filter(t=>t.type==="post").map(t=>t.id);
@@ -1236,7 +1203,7 @@ function renderAccount(){
     const hasStripeCustomer=!!(S.profile?.stripe_customer_id);
     const btnSubLabel=hasStripeCustomer?"Standardプランに登録する（¥390/月）":"14日間無料で試す";
     pa.innerHTML=`
-      <p style="font-size:13px;color:var(--mist);font-weight:300;margin-bottom:12px;line-height:1.7">Standardプランで新規投稿・返信が無制限に使えます。広告も非表示になります。</p>
+      <p style="font-size:13px;color:var(--mist);font-weight:300;margin-bottom:12px;line-height:1.7">Standardプランで新規投稿・返信が無制限に使えます。</p>
       <button id="btnSub" class="btn-p">${btnSubLabel}</button>`;
     $("#btnSub").addEventListener("click",createCheckout);
     const deleteArea=document.createElement("div");
@@ -1256,7 +1223,6 @@ function renderAccount(){
     document.getElementById("btnDeleteCancel").onclick=()=>{document.getElementById("deleteConfirmBox").style.display="none";};
     document.getElementById("btnDeleteConfirm").onclick=()=>{document.getElementById("btnDeleteConfirm").disabled=true;document.getElementById("btnDeleteCancel").disabled=true;handleDeleteAccount();};
   }
-
   if(pr?.has_password){$("#pwSecH").textContent="パスワードの変更";$("#pwSecD").textContent="現在のアカウントのパスワードを変更できます。";$("#btnPw").textContent="変更する";}
   $("#btnSaveProf").addEventListener("click",saveProfile);
   $("#btnEmail").addEventListener("click",changeEmail);
@@ -1355,7 +1321,6 @@ $("#btnReport").addEventListener("click",async()=>{
 
 $("#btnLogout").addEventListener("click",async()=>{await sb.auth.signOut();location.replace("/");});
 
-// ★ Moririsと全く同じmain関数
 async function main(){
   await Promise.all([loadBilling(),loadMasterData()]);
   const user=await getUser();
