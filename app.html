@@ -571,12 +571,12 @@ function buildCatFilter(containerId){
 
 /* ===== AUTH ===== */
 async function getUser(){
-  try{const{data}=await sb.auth.getSession();if(data?.session?.user)return data.session.user;}catch(e){}
-  const u=new URL(location.href);
-  if(u.searchParams.has("code")||u.hash.includes("access_token"))
-    try{await sb.auth.exchangeCodeForSession(location.href);}catch(e){}
-  for(let i=0;i<30;i++){
-    try{const{data:{user}}=await sb.auth.getUser();if(user)return user;}catch(e){}
+  try{ await sb.auth.exchangeCodeForSession(window.location.href); }catch(e){}
+  for(let i=0;i<40;i++){
+    try{
+      const{data:{user}}=await sb.auth.getUser();
+      if(user)return user;
+    }catch(e){}
     await new Promise(r=>setTimeout(r,150));
   }
   return null;
