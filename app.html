@@ -91,18 +91,14 @@ img.av{object-fit:cover;display:block}
 
 /* ── card-meta: 2行レイアウト ── */
 .card-meta{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
-/* 1行目: アバター + 名前 + 属性タグ */
 .card-meta-r1{display:flex;align-items:center;gap:7px;min-width:0;overflow:hidden}
-/* 2行目: タイプバッジ + カテゴリ + 削除ボタン */
 .card-meta-r2{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
 .av-info{min-width:0;flex-shrink:0;max-width:30%}
 .uname{font-size:12px;color:var(--ink)}
 .uname-link{font-size:12px;color:var(--primary);cursor:pointer;text-decoration:none;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
 .uname-link:hover{text-decoration:underline}
-/* 属性タグ: 横並び固定、はみ出し非表示 */
 .attr-tags{display:flex;gap:3px;flex-wrap:nowrap;overflow:hidden;min-width:0;flex:1}
 .attr-tag{font-size:10px;padding:2px 6px;background:var(--warm);color:var(--mist);white-space:nowrap;flex-shrink:0}
-/* タイプバッジ（2行目） */
 .type-badge-post{font-size:10px;font-weight:600;padding:2px 8px;letter-spacing:.04em;background:var(--primary);color:white;white-space:nowrap;flex-shrink:0}
 .type-badge-q{font-size:10px;font-weight:600;padding:2px 8px;letter-spacing:.04em;border:1px solid #7a5c4a;color:#7a5c4a;white-space:nowrap;flex-shrink:0}
 .cat-tag{font-size:10px;padding:2px 8px;background:var(--warm);color:var(--mist);letter-spacing:.04em;white-space:nowrap;flex-shrink:0}
@@ -163,6 +159,12 @@ img.av{object-fit:cover;display:block}
 .form-panel.active{display:block}
 .upgrade-box{background:var(--warm);padding:16px 20px;font-size:13px;color:var(--ink);font-weight:300;line-height:1.7;border:1px solid rgba(26,23,20,.06);border-top:none}
 .upgrade-box a{color:var(--primary);text-decoration:none;font-weight:400}
+
+/* 投稿制限バナー */
+.post-limit-banner{background:#fff8f5;border:1px solid rgba(196,98,45,.25);border-left:3px solid var(--primary);padding:12px 16px;margin-bottom:12px;font-size:13px;color:var(--ink);font-weight:300;line-height:1.7;display:none}
+.post-limit-banner.show{display:block}
+.post-limit-banner strong{font-weight:500;color:var(--primary)}
+.post-limit-banner .upg-link{color:var(--primary);cursor:pointer;text-decoration:underline;font-weight:400}
 
 /* FORMS */
 .pform-wrap{background:white;border:1px solid rgba(26,23,20,.06);padding:26px;margin-bottom:2px}
@@ -283,7 +285,6 @@ img.av{object-fit:cover;display:block}
 .empty{text-align:center;padding:48px 20px;color:var(--mist);font-size:13px;font-weight:300;line-height:1.8}
 .empty-h{font-family:'Shippori Mincho',serif;font-size:17px;color:var(--ink);margin-bottom:8px}
 .sec-divider{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mist);margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid rgba(26,23,20,.08)}
-/* マイページ 投稿タブ */
 .mp-tabs{display:flex;border:1px solid rgba(26,23,20,.10);background:white;margin-bottom:2px}
 .mp-tab{flex:1;padding:10px;font-size:12px;letter-spacing:.06em;text-align:center;cursor:pointer;border:none;background:none;color:var(--mist);font-family:'DM Sans',sans-serif;transition:all .2s;border-right:1px solid rgba(26,23,20,.08)}
 .mp-tab:last-child{border-right:none}
@@ -291,12 +292,18 @@ img.av{object-fit:cover;display:block}
 .mp-pane{display:none}
 .mp-pane.active{display:block}
 
+/* 広告バナー */
+.ad-banner{background:white;border:1px solid rgba(26,23,20,.08);padding:12px 16px;margin-bottom:14px;text-align:center;font-size:11px;color:var(--mist);letter-spacing:.04em}
+.ad-banner-label{font-size:10px;color:#b0a898;letter-spacing:.08em;margin-bottom:6px}
+.ad-placeholder{background:var(--warm);height:60px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--mist);letter-spacing:.06em}
+
 @media(max-width:560px){
   .uemail{display:none}
   .pgrid{grid-template-columns:1fr}
   .pform-wrap,.dcard,.rcard,.reply-form-box,.asec{padding:16px}
 }
-/* PWA インストールバナー */
+
+/* PWAインストールバナー */
 .pwa-banner{display:none;align-items:center;gap:12px;background:white;border:1px solid rgba(196,98,45,.2);border-left:4px solid var(--primary);padding:14px 16px;margin-bottom:20px;position:relative;animation:fadeUp .4s ease}
 .pwa-banner.show{display:flex}
 .pwa-banner-icon{font-size:22px;flex-shrink:0}
@@ -307,6 +314,7 @@ img.av{object-fit:cover;display:block}
 .pwa-banner-btn:hover{background:var(--ink)}
 .pwa-banner-close{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--mist);font-size:16px;cursor:pointer;padding:2px 6px;line-height:1;transition:color .2s}
 .pwa-banner-close:hover{color:var(--ink)}
+
 /* PWA 手順モーダル */
 .pwa-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:none;align-items:flex-end;justify-content:center;padding:0}
 .pwa-modal-overlay.show{display:flex}
@@ -321,7 +329,6 @@ img.av{object-fit:cover;display:block}
 .pwa-step-text strong{font-weight:500;color:var(--primary)}
 .pwa-modal-close{width:100%;padding:12px;background:var(--warm);border:none;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--mist);cursor:pointer;transition:background .2s}
 .pwa-modal-close:hover{background:var(--ink);color:white}
-  
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
@@ -348,7 +355,6 @@ img.av{object-fit:cover;display:block}
   </div>
 </header>
 
-<!-- 3タブ: HOME / マイページ / 設定 -->
 <nav class="tab-nav">
   <button class="tab-btn active" data-tab="home">HOME</button>
   <button class="tab-btn" data-tab="mypage">マイページ</button>
@@ -376,19 +382,23 @@ img.av{object-fit:cover;display:block}
   <button class="pwa-banner-btn" id="pwaBannerBtn">追加する</button>
   <button class="pwa-banner-close" id="pwaBannerClose">×</button>
 </div>
-  
+
   <!-- HOME タブ -->
   <section id="tab-home" class="tab-pane active">
     <div id="homeListView">
       <div id="pwNoticeBanner"></div>
 
-      <!-- 投稿誘導ボタン -->
+      <!-- 広告スペース（フリープランのみ表示） -->
+      <div id="adBannerTop" class="ad-banner" style="display:none">
+        <div class="ad-banner-label">広告</div>
+        <div class="ad-placeholder">AD</div>
+      </div>
+
       <div class="home-post-btns">
         <button class="home-post-btn-post" id="btnGoPost">✏️ つぶやく</button>
         <button class="home-post-btn-q" id="btnGoQuestion">💬 相談する</button>
       </div>
 
-      <!-- フィルター -->
       <div class="search-bar">
         <input id="homeSearch" class="s-input" type="text" placeholder="キーワードで検索…" autocomplete="off">
         <button class="s-clear" onclick="clearSearch()">クリア</button>
@@ -402,14 +412,11 @@ img.av{object-fit:cover;display:block}
       <div id="homeList" class="card-list"><div class="loading">読み込み中…</div></div>
     </div>
     <div id="homeDetail" class="detail-view"></div>
-
-    <!-- ユーザープロフィールページ（HOME内で表示） -->
     <div id="userProfilePage" class="user-profile-page"></div>
   </section>
 
   <!-- マイページ タブ -->
   <section id="tab-mypage" class="tab-pane">
-    <!-- 投稿フォーム（つぶやき / 相談） -->
     <div class="post-form-area" id="postFormArea"></div>
     <div id="mypageWrap"></div>
   </section>
@@ -453,6 +460,9 @@ const ATTRIBUTES_URL = "https://app.honneroom.com/data/attributes.json";
 const PORTAL  = "https://rhynpigqhnbwjyudvvfw.functions.supabase.co/create-portal-session";
 const APP_URL = "https://app.honneroom.com/app.html";
 
+// フリープランの1日あたり新規投稿上限
+const FREE_DAILY_POST_LIMIT = 3;
+
 const sb = window.supabase.createClient(SB_URL, SB_KEY, {
   auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
 });
@@ -465,6 +475,7 @@ const S = {
   notifications:[], unreadCount:0,
   CATEGORIES:[], ATTRIBUTES:{work_style:[],marital_status:[],living_situation:[]},
   viewStack:[],
+  todayPostCount: 0, // フリープランの今日の投稿数キャッシュ
 };
 
 /* ===== UTILS ===== */
@@ -495,6 +506,23 @@ function avatarHtml(p,size=28){
   return`<div class="av" style="background:${color};width:${size}px;height:${size}px;font-size:${Math.floor(size*0.4)}px">${esc(init)}</div>`;
 }
 function msg(el,txt,type="err"){if(!el)return;el.textContent=txt;el.className="fmsg"+(type?" "+type:"")}
+
+/* ===== 今日の投稿数チェック（フリープラン用） ===== */
+async function loadTodayPostCount(){
+  if(!S.user||S.isStd)return;
+  const today=new Date();
+  today.setHours(0,0,0,0);
+  const{count}=await sb.from("threads")
+    .select("id",{count:"exact",head:true})
+    .eq("user_id",S.user.id)
+    .gte("created_at",today.toISOString());
+  S.todayPostCount=count||0;
+}
+
+function isPostLimitReached(){
+  if(S.isStd)return false;
+  return S.todayPostCount>=FREE_DAILY_POST_LIMIT;
+}
 
 /* ===== MASTER DATA ===== */
 async function loadMasterData(){
@@ -817,6 +845,12 @@ function renderHomeTab(){
   const si=$("#homeSearch");
   si.oninput=()=>{S.search=si.value.trim();renderHomeList();};
 
+  // 広告バナー：フリープランのみ表示
+  const adBanner=$("#adBannerTop");
+  if(adBanner){
+    adBanner.style.display=S.isStd?"none":"block";
+  }
+
   $("#btnGoPost")?.addEventListener("click",()=>{
     switchTab("mypage");
     setTimeout(()=>{
@@ -879,19 +913,28 @@ function renderHomeList(){
 /* ===== マイページ内投稿フォーム ===== */
 function renderPostFormInHome(){
   const wrap=$("#postFormArea");
-  if(!S.isStd){
-    wrap.innerHTML=`
-      <div class="form-tabs">
-        <button class="form-tab-btn active">つぶやく</button>
-        <button class="form-tab-btn">相談する</button>
-      </div>
-      <div class="upgrade-box">投稿するには <a href="#" class="upg-link">Standardプランへのアップグレード</a>が必要です。閲覧は無料でできます。</div>`;
-    wrap.querySelector(".upg-link")?.addEventListener("click",e=>{e.preventDefault();switchTab("account");});
-    return;
-  }
+
+  // フリープランの場合：投稿フォームを表示するが制限バナーを出す
   const postCats=S.CATEGORIES.filter(c=>c.value&&(c.types.includes("post")||c.types.includes("all")));
   const qCats=S.CATEGORIES.filter(c=>c.value&&(c.types.includes("question")||c.types.includes("all")));
+
+  const limitReached=isPostLimitReached();
+  const remaining=FREE_DAILY_POST_LIMIT-S.todayPostCount;
+
+  // フリープランの制限バナーHTML
+  const freeLimitBannerHtml=!S.isStd?`
+    <div id="postLimitBanner" class="post-limit-banner${limitReached?" show":""}">
+      ${limitReached
+        ? `<strong>本日の新規投稿数（${FREE_DAILY_POST_LIMIT}件）に達しました。</strong>
+           返信は引き続き無制限でできます。投稿し放題にするには
+           <span class="upg-link" id="upgLinkBanner">Standardプランへ</span>。`
+        : `本日の残り投稿数：<strong>${remaining}件</strong>（フリープランは1日${FREE_DAILY_POST_LIMIT}件まで）
+           　<span class="upg-link" id="upgLinkBanner">無制限にする →</span>`
+      }
+    </div>`:"";
+
   wrap.innerHTML=`
+    ${freeLimitBannerHtml}
     <div class="form-tabs">
       <button class="form-tab-btn active" data-panel="panelPost">つぶやく</button>
       <button class="form-tab-btn" data-panel="panelQuestion">相談する</button>
@@ -903,9 +946,9 @@ function renderPostFormInHome(){
         ${postCats.map(c=>`<option value="${esc(c.value)}">${esc(c.label)}</option>`).join("")}</select>
       </div>
       <div class="fg">
-        <textarea id="ptBody" class="fta" placeholder="いまどんな気持ち？自由につぶやいてみよう…" maxlength="500" style="min-height:90px"></textarea>
+        <textarea id="ptBody" class="fta" placeholder="いまどんな気持ち？自由につぶやいてみよう…" maxlength="500" style="min-height:90px"${limitReached?" disabled":""}></textarea>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
-          <button id="btnPostSubmit" class="btn-p">つぶやく</button>
+          <button id="btnPostSubmit" class="btn-p"${limitReached?" disabled":""}>つぶやく</button>
           <span class="ccount"><span id="ptCount">0</span> / 500</span>
         </div>
       </div>
@@ -919,15 +962,15 @@ function renderPostFormInHome(){
       </div>
       <div class="fg">
         <label class="flbl">タイトル <span class="req">*</span></label>
-        <input id="qTitle" class="fi" type="text" placeholder="例：転職するか迷っています" maxlength="60">
+        <input id="qTitle" class="fi" type="text" placeholder="例：転職するか迷っています" maxlength="60"${limitReached?" disabled":""}>
         <div class="ccount"><span id="qTCount">0</span> / 60</div>
       </div>
       <div class="fg">
         <label class="flbl">内容 <span class="req">*</span></label>
-        <textarea id="qBody" class="fta" placeholder="状況や悩みをできるだけ具体的に書いてみてください…" maxlength="2000"></textarea>
+        <textarea id="qBody" class="fta" placeholder="状況や悩みをできるだけ具体的に書いてみてください…" maxlength="2000"${limitReached?" disabled":""}></textarea>
         <div class="ccount"><span id="qBCount">0</span> / 2000</div>
       </div>
-      <button id="btnQSubmit" class="btn-p">相談を投稿する</button>
+      <button id="btnQSubmit" class="btn-p"${limitReached?" disabled":""}>相談を投稿する</button>
       <p id="qMsg" class="fmsg"></p>
     </div>`;
 
@@ -941,6 +984,8 @@ function renderPostFormInHome(){
     });
   });
 
+  wrap.querySelector("#upgLinkBanner")?.addEventListener("click",()=>switchTab("account"));
+
   $("#ptBody").addEventListener("input",e=>$("#ptCount").textContent=e.target.value.length);
   $("#btnPostSubmit").addEventListener("click",submitPost);
   $("#qTitle").addEventListener("input",e=>$("#qTCount").textContent=e.target.value.length);
@@ -952,6 +997,17 @@ async function submitPost(){
   const body=$("#ptBody")?.value?.trim();
   const category=$("#ptCat")?.value||"";
   const m=$("#ptMsg");
+
+  // フリープランの投稿制限チェック
+  if(!S.isStd){
+    await loadTodayPostCount();
+    if(isPostLimitReached()){
+      msg(m,`本日の投稿数（${FREE_DAILY_POST_LIMIT}件）に達しました。返信は引き続きできます。`);
+      renderPostFormInHome();
+      return;
+    }
+  }
+
   if(!S.profile?.display_name){
     msg(m,"投稿する前に「設定」から表示名を設定してください。");
     setTimeout(()=>switchTab("account"),1500);
@@ -964,12 +1020,27 @@ async function submitPost(){
   if(error){msg(m,"投稿に失敗しました。");return;}
   msg(m,"投稿しました！","ok");
   $("#ptBody").value="";$("#ptCat").value="";$("#ptCount").textContent="0";
+  S.todayPostCount++;
   await loadThreads();renderHomeList();
-  setTimeout(()=>{if(m)m.textContent="";},2000);
+  // フォームを再描画して残り件数バナーを更新
+  renderPostFormInHome();
+  setTimeout(()=>{const m2=$("#ptMsg");if(m2)m2.textContent="";},2000);
 }
+
 async function submitQuestion(){
   const category=$("#qCatSel")?.value,title=$("#qTitle")?.value?.trim(),body=$("#qBody")?.value?.trim();
   const m=$("#qMsg");
+
+  // フリープランの投稿制限チェック
+  if(!S.isStd){
+    await loadTodayPostCount();
+    if(isPostLimitReached()){
+      msg(m,`本日の投稿数（${FREE_DAILY_POST_LIMIT}件）に達しました。返信は引き続きできます。`);
+      renderPostFormInHome();
+      return;
+    }
+  }
+
   if(!S.profile?.display_name){
     msg(m,"投稿する前に「設定」から表示名を設定してください。");
     setTimeout(()=>switchTab("account"),1500);
@@ -985,8 +1056,11 @@ async function submitQuestion(){
   msg(m,"投稿しました！","ok");
   $("#qCatSel").value="";$("#qTitle").value="";$("#qBody").value="";
   $("#qTCount").textContent="0";$("#qBCount").textContent="0";
+  S.todayPostCount++;
   await loadThreads();renderHomeList();
-  setTimeout(()=>{if(m)m.textContent="";},2000);
+  // フォームを再描画して残り件数バナーを更新
+  renderPostFormInHome();
+  setTimeout(()=>{const m2=$("#qMsg");if(m2)m2.textContent="";},2000);
 }
 
 /* ===== 詳細 ===== */
@@ -1073,11 +1147,11 @@ async function openDetail(threadId,type){
   }
   html+=`</div>`;
 
+  // 返信フォーム：フリープランも返信は無制限
   if(!S.user){
     html+=`<div class="reply-form-box"><div class="upgrade-box">返信するには<a href="/">ログイン</a>が必要です。</div></div>`;
-  }else if(!S.isStd){
-    html+=`<div class="reply-form-box"><div class="upgrade-box">返信するには <span class="upg-link2" style="color:var(--primary);cursor:pointer;font-weight:400">Standardプランへのアップグレード</span>が必要です。</div></div>`;
   }else{
+    // フリープランもスタンダードも返信フォームを表示
     html+=`<div class="reply-form-box">
       <div class="reply-form-lbl">返信する</div>
       <textarea id="rBody" class="fta" placeholder="返信を入力してください…" maxlength="1000" style="min-height:100px"></textarea>
@@ -1166,9 +1240,9 @@ async function openDetail(threadId,type){
     });
   }
   bindDetailReacts();
-  dv.querySelectorAll(".upg-link2").forEach(el2=>el2.addEventListener("click",()=>switchTab("account")));
 
-  if(S.isStd){
+  // 返信ボタンのイベント（フリープランも返信は無制限）
+  if(S.user){
     const rBodyEl=dv.querySelector("#rBody"),rCountEl=dv.querySelector("#rCount"),rMsgEl=dv.querySelector("#rMsg");
     rBodyEl?.addEventListener("input",e=>{if(rCountEl)rCountEl.textContent=e.target.value.length;});
     dv.querySelector("#btnReply")?.addEventListener("click",async()=>{
@@ -1273,6 +1347,7 @@ async function openUserProfile(userId){
 
 /* ===== マイページ ===== */
 async function renderMypage(){
+  await loadTodayPostCount();
   renderPostFormInHome();
   const wrap=$("#mypageWrap");
   wrap.innerHTML=`<div class="loading">読み込み中…</div>`;
@@ -1380,8 +1455,6 @@ async function handleDeleteAccount(){
       }
       return;
     }
-    const doneMsg="アカウントを削除しました。ご利用ありがとうございました。";
-    if(statusEl){statusEl.textContent=doneMsg;statusEl.style.color="var(--mist)";}
     await sb.auth.signOut();
     location.href="/";
   }catch(e){
@@ -1409,17 +1482,14 @@ async function createNotification(threadId,replyId,threadOwnerId){
   ];
   for(const p of payloads){
     const{error}=await sb.from("notifications").insert(p);
-    if(!error){
-      console.log("createNotification ok:",Object.keys(p).join(","));
-      return;
-    }
+    if(!error){return;}
     console.warn("createNotification failed:",error.code,error.message);
   }
 }
 async function createBestAnswerNotification(threadId,replyId){
   const{data:r,error:re}=await sb.from("replies").select("user_id").eq("id",replyId).single();
   if(re||!r){console.error("bestAnswer: reply not found",re?.message);return;}
-  if(r.user_id===S.user.id){console.log("bestAnswer: skip self");return;}
+  if(r.user_id===S.user.id){return;}
   const payloads=[
     {user_id:r.user_id,thread_id:threadId,reply_id:replyId,notif_type:"best_answer"},
     {user_id:r.user_id,thread_id:threadId,reply_id:replyId},
@@ -1428,13 +1498,11 @@ async function createBestAnswerNotification(threadId,replyId){
   for(const p of payloads){
     const{error}=await sb.from("notifications").insert(p);
     if(!error){
-      console.log("bestAnswer notif success:",Object.keys(p).join(","));
       await loadNotifications();
       return;
     }
     console.warn("bestAnswer notif failed:",error.code,error.message);
   }
-  console.error("bestAnswer notif: all payloads failed");
 }
 
 /* ===== ACCOUNT ===== */
@@ -1555,7 +1623,9 @@ function renderAccount(){
       ? "Standardプランに登録する（¥390/月）"
       : "14日間無料で試す";
     pa.innerHTML=`
-      <p style="font-size:13px;color:var(--mist);font-weight:300;margin-bottom:12px;line-height:1.7">Standardプランで投稿・返信が無制限に使えます。</p>
+      <p style="font-size:13px;color:var(--mist);font-weight:300;margin-bottom:12px;line-height:1.7">
+        Standardプランで新規投稿・返信が無制限に使えます。広告も非表示になります。
+      </p>
       <button id="btnSub" class="btn-p">${btnSubLabel}</button>`;
     $("#btnSub").addEventListener("click",createCheckout);
 
@@ -1636,14 +1706,12 @@ async function changeEmail(){
   try{
     const{error}=await sb.auth.updateUser({email:ne},{emailRedirectTo:APP_URL});
     if(error){
-      console.error("changeEmail error:",error);
       msg(m,"メールアドレスの変更中にエラーが発生しました。時間をおいて再度お試しください。");
       return;
     }
     msg(m,"確認メールを送信しました。メール内のリンクから変更を完了してください。","ok");
     $("#emailNew").value="";
   }catch(e){
-    console.error("changeEmail exception:",e);
     msg(m,"メールアドレスの変更中にエラーが発生しました。時間をおいて再度お試しください。");
   }finally{
     btn.disabled=false;
@@ -1688,20 +1756,13 @@ async function openPortal(){
       body:JSON.stringify({user_id:S.user.id,return_url:APP_URL})
     });
     if(!r.ok){
-      const t=await r.text().catch(()=>"");
-      console.error("openPortal failed:",r.status,t);
       alert("サブスクリプション管理ページを開けませんでした。時間をおいて再度お試しください。");
       return;
     }
     const d=await r.json();
-    if(!d?.url){
-      console.error("openPortal: url missing",d);
-      alert("サブスクリプション管理ページを開けませんでした。");
-      return;
-    }
+    if(!d?.url){alert("サブスクリプション管理ページを開けませんでした。");return;}
     location.href=d.url;
   }catch(e){
-    console.error("openPortal error:",e);
     alert("エラーが発生しました。");
   }
 }
@@ -1752,12 +1813,12 @@ async function main(){
   S.isStd=!!prof?.is_active&&tier==="standard";
   const badge=$("#planBadge");
   if(S.isStd){badge.textContent="Standard";badge.classList.add("std");}
-  await Promise.all([loadThreads(),loadNotifications()]);
+  await Promise.all([loadThreads(),loadNotifications(),loadTodayPostCount()]);
   switchTab("home");
 }
 main();
 </script>
-  
+
 <!-- Service Worker 登録 + PWAバナー -->
 <script>
   if ('serviceWorker' in navigator) {
@@ -1817,6 +1878,6 @@ main();
       document.getElementById('pwaModal').classList.remove('show');
   });
 </script>
-  
+
 </body>
 </html>
