@@ -1,26 +1,24 @@
-// 本音ルーム Service Worker
-const CACHE_NAME = 'honneroom-v1';
+// 本音ルーム Service Worker（修正版）
 
-// キャッシュするファイル（オフライン時の最低限の表示用）
+const CACHE_NAME = 'honneroom-v2';
+
+// ❗HTMLはキャッシュしないので含めない
 const STATIC_ASSETS = [
-  '/index.html',
   '/manifest.json',
   '/assets/icon.png'
 ];
 
-// インストール時：静的ファイルをキャッシュ
+// インストール
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS).catch((err) => {
-        console.warn('Cache addAll failed (some files may not exist yet):', err);
-      });
+      return cache.addAll(STATIC_ASSETS).catch(() => {});
     })
   );
-  self.skipWaiting();
+  // ❗skipWaitingは不具合回避のため一旦外す
 });
 
-// アクティベート時：古いキャッシュを削除
+// アクティベート
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
@@ -34,42 +32,53 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// フェッチ時の戦略：
-// - Supabase / Stripe などのAPIリクエスト → 必ずネットワーク優先
-// - 静的アセット → キャッシュ優先、なければネットワーク
+// フェッチ
 self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
+  const request = event.request;
+  const url = new URL(request.url);
 
-  // APIリクエストはキャッシュしない
+  // ❗API系は絶対キャッシュしない
   const isApi =
     url.hostname.includes('supabase.co') ||
     url.hostname.includes('stripe.com') ||
     url.hostname.includes('googleapis.com') ||
     url.hostname.includes('googletagmanager.com');
 
-  if (isApi || event.request.method !== 'GET') {
-    return; // ブラウザデフォルト（ネットワーク直接）
+  if (isApi || request.method !== 'GET') {
+    return;
   }
 
-  // 静的アセット：キャッシュ優先
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request).then((response) => {
-        // 正常なレスポンスのみキャッシュ
-        if (response && response.status === 200 && response.type === 'basic') {
-          const toCache = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, toCache);
-          });
-        }
-        return response;
-      }).catch(() => {
-        // オフライン時はindex.htmlにフォールバック
-        if (event.request.destination === 'document') {
-          return caches.match('/index.html');
-        }
-      });
-    })
-  );
+  // ❗① HTML（document）は必ずネットワーク優先
+  if (request.destination === 'document') {
+    event.respondWith(
+      fetch(request).catch(() => caches.match('/index.html'))
+    );
+    return;
+  }
+
+  // ❗② 画像・静的ファイルのみキャッシュ
+  if (
+    request.destination === 'image' ||
+    request.url.includes('/assets/')
+  ) {
+    event.respondWith(
+      caches.match(request).then((cached) => {
+        if (cached) return cached;
+
+        return fetch(request).then((response) => {
+          if (response && response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, clone);
+            });
+          }
+          return response;
+        });
+      })
+    );
+    return;
+  }
+
+  // ❗それ以外はネットワーク優先（キャッシュしない）
+  event.respondWith(fetch(request));
 });
