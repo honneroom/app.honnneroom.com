@@ -464,7 +464,7 @@ const APP_URL = "https://app.honneroom.com/app.html";
 const FREE_DAILY_POST_LIMIT = 3;
 
 const sb = window.supabase.createClient(SB_URL, SB_KEY, {
-  auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
+  auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storage:window.localStorage}
 });
 
 const S = {
