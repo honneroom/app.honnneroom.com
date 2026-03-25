@@ -577,13 +577,26 @@ function buildCatFilter(containerId){
 
 /* ===== AUTH ===== */
 async function getUser(){
+  // まずlocalStorageからセッションを直接復元を試みる
+  try{
+    const{data:{session},error}=await sb.auth.getSession();
+    if(session?.user){
+      // セッションが有効ならそのまま返す
+      const{data:{user}}=await sb.auth.getUser();
+      if(user)return user;
+    }
+  }catch(e){}
+
+  // セッションがない場合はURLからコード交換を試みる
   try{ await sb.auth.exchangeCodeForSession(window.location.href); }catch(e){}
-  for(let i=0;i<40;i++){
+
+  // リトライ
+  for(let i=0;i<60;i++){
     try{
       const{data:{user}}=await sb.auth.getUser();
       if(user)return user;
     }catch(e){}
-    await new Promise(r=>setTimeout(r,150));
+    await new Promise(r=>setTimeout(r,200));
   }
   return null;
 }
