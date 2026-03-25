@@ -48,6 +48,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);p
 .notif-btn:hover{color:var(--primary)}
 .notif-badge{position:absolute;top:0;right:0;background:var(--primary);color:white;font-size:9px;font-weight:600;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 3px;pointer-events:none}
 .notif-badge.hidden{display:none}
+/* リロードボタン */
+.reload-btn{background:none;border:none;cursor:pointer;padding:4px 6px;color:var(--mist);font-size:16px;line-height:1;transition:all .2s}
+.reload-btn:hover{color:var(--primary)}
+.reload-btn.spinning{animation:spin .6s ease}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 
 /* TAB NAV */
 .tab-nav{position:fixed;top:var(--hh);left:0;right:0;height:var(--nh);z-index:99;background:white;border-bottom:1px solid rgba(26,23,20,.08);display:flex;align-items:stretch}
@@ -60,6 +65,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);p
 .page{max-width:680px;margin:0 auto;padding:24px 16px 80px}
 .tab-pane{display:none}
 .tab-pane.active{display:block}
+
+/* PULL TO REFRESH */
+.ptr-indicator{text-align:center;padding:0;overflow:hidden;height:0;transition:height .2s ease;color:var(--primary);font-size:12px;letter-spacing:.04em}
+.ptr-indicator.pulling{height:40px;padding:10px 0}
+.ptr-indicator.refreshing{height:40px;padding:10px 0}
+.ptr-spinner{display:inline-block;animation:spin .8s linear infinite;font-size:16px}
 
 /* SEARCH & FILTERS */
 .search-bar{display:flex;gap:8px;margin-bottom:14px}
@@ -81,41 +92,57 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);p
 .av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:white;flex-shrink:0;margin-top:1px;overflow:hidden}
 img.av{object-fit:cover;display:block}
 
+/* USER POPOVER */
+.user-popover{position:absolute;z-index:50;background:white;border:1px solid rgba(26,23,20,.10);box-shadow:0 4px 20px rgba(26,23,20,.12);padding:14px 16px;min-width:200px;max-width:280px;animation:popIn .15s ease}
+@keyframes popIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.popover-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.popover-name{font-family:'Shippori Mincho',serif;font-size:14px;font-weight:600;color:var(--ink)}
+.popover-attrs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px}
+.popover-attr{font-size:10px;padding:2px 7px;background:var(--warm);color:var(--mist)}
+.popover-link{display:block;font-size:12px;color:var(--primary);cursor:pointer;text-decoration:none;padding-top:8px;border-top:1px solid rgba(26,23,20,.06);transition:color .2s}
+.popover-link:hover{text-decoration:underline}
+
 /* CARDS */
 .card-list{display:flex;flex-direction:column;gap:2px}
-.post-card{background:white;padding:16px 20px;border:1px solid rgba(26,23,20,.06);border-left:4px solid transparent;cursor:pointer;transition:all .2s}
+.post-card{background:white;padding:14px 16px;border:1px solid rgba(26,23,20,.06);border-left:4px solid transparent;cursor:pointer;transition:all .2s}
 .post-card:hover{border-color:rgba(26,23,20,.14);transform:translateX(2px)}
 .post-card.is-post{border-left-color:var(--primary)}
 .post-card.is-question{border-left-color:#7a5c4a}
 
-.card-meta{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
-.card-meta-r1{display:flex;align-items:center;gap:7px;min-width:0;overflow:hidden}
-.card-meta-r2{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
-.av-info{min-width:0;flex-shrink:0;max-width:30%}
-.uname{font-size:12px;color:var(--ink)}
+.card-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.card-head-left{display:flex;align-items:center;gap:7px;min-width:0;flex:1}
+.card-head-right{flex-shrink:0}
 .uname-link{font-size:12px;color:var(--primary);cursor:pointer;text-decoration:none;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
 .uname-link:hover{text-decoration:underline}
-.attr-tags{display:flex;gap:3px;flex-wrap:nowrap;overflow:hidden;min-width:0;flex:1}
-.attr-tag{font-size:10px;padding:2px 6px;background:var(--warm);color:var(--mist);white-space:nowrap;flex-shrink:0}
-.type-badge-post{font-size:10px;font-weight:600;padding:2px 8px;letter-spacing:.04em;background:var(--primary);color:white;white-space:nowrap;flex-shrink:0}
-.type-badge-q{font-size:10px;font-weight:600;padding:2px 8px;letter-spacing:.04em;border:1px solid #7a5c4a;color:#7a5c4a;white-space:nowrap;flex-shrink:0}
+.type-badge-post{font-size:10px;font-weight:600;padding:2px 8px;letter-spacing:.04em;background:var(--primary);color:white;white-space:nowrap}
+.type-badge-q{font-size:10px;font-weight:600;padding:2px 8px;letter-spacing:.04em;border:1px solid #7a5c4a;color:#7a5c4a;white-space:nowrap}
+.card-sub{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:8px}
 .cat-tag{font-size:10px;padding:2px 8px;background:var(--warm);color:var(--mist);letter-spacing:.04em;white-space:nowrap;flex-shrink:0}
 
 .card-title{font-family:'Shippori Mincho',serif;font-size:15px;font-weight:600;line-height:1.5;margin-bottom:6px}
 .card-preview{font-size:13px;color:var(--mist);line-height:1.7;font-weight:300;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:0}
 .post-card.is-post .card-preview{-webkit-line-clamp:4;color:#4a4440;font-size:14px}
 .post-card.is-question .card-preview{-webkit-line-clamp:3;color:#4a4440}
-.card-footer{display:flex;align-items:center;gap:12px;margin-top:10px;font-size:11px;color:var(--mist);flex-wrap:wrap}
+.card-footer{display:flex;align-items:center;gap:12px;margin-top:8px;font-size:11px;color:var(--mist);flex-wrap:wrap}
 .solved{color:var(--primary)}
 
-/* REACTIONS */
-.react-row-sm{display:flex;gap:5px;flex-wrap:wrap;margin-top:10px;padding-top:10px;padding-bottom:14px;border-top:1px solid rgba(26,23,20,.05)}
-.rbtn-sm{display:inline-flex;align-items:center;gap:3px;font-size:12px;padding:4px 8px;background:var(--cream);border:1px solid rgba(26,23,20,.08);cursor:pointer;transition:all .15s;color:var(--mist);font-family:'DM Sans',sans-serif;line-height:1}
+/* REACTIONS - コンパクト版 */
+.react-row-sm{display:flex;gap:4px;flex-wrap:nowrap;margin-top:8px;padding-top:8px;border-top:1px solid rgba(26,23,20,.05);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.react-row-sm::-webkit-scrollbar{display:none}
+.rbtn-sm{display:inline-flex;align-items:center;gap:2px;font-size:13px;padding:3px 6px;background:var(--cream);border:1px solid rgba(26,23,20,.06);cursor:pointer;transition:all .15s;color:var(--mist);font-family:'DM Sans',sans-serif;line-height:1;white-space:nowrap;flex-shrink:0;border-radius:12px}
 .rbtn-sm:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-pale)}
 .rbtn-sm.on{background:var(--primary-pale);border-color:var(--primary);color:var(--primary)}
-.rcount{font-size:11px}
-.react-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid rgba(26,23,20,.06)}
-.rbtn{display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:5px 10px;background:var(--cream);border:1px solid rgba(26,23,20,.10);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;color:var(--ink)}
+.rbtn-sm .rlabel{font-size:10px;display:none}
+.rbtn-sm.on .rlabel,.rbtn-sm:hover .rlabel{display:inline}
+.rcount{font-size:10px}
+@media(hover:none){
+  .rbtn-sm .rlabel{display:none !important}
+  .rbtn-sm.on .rlabel{display:inline !important}
+}
+
+/* REACTIONS - 詳細ページ用 */
+.react-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid rgba(26,23,20,.06)}
+.rbtn{display:inline-flex;align-items:center;gap:3px;font-size:12px;padding:4px 10px;background:var(--cream);border:1px solid rgba(26,23,20,.10);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;color:var(--ink);border-radius:14px}
 .rbtn:hover{border-color:var(--primary);background:var(--primary-pale)}
 .rbtn.on{background:var(--primary-pale);border-color:var(--primary);color:var(--primary)}
 .rcount2{font-size:11px;color:var(--mist)}
@@ -256,6 +283,8 @@ img.av{object-fit:cover;display:block}
 .user-prof-av img{width:100%;height:100%;object-fit:cover}
 .user-prof-name{font-family:'Shippori Mincho',serif;font-size:18px;font-weight:600;color:var(--ink);margin-bottom:4px}
 .user-prof-bio{font-size:13px;color:var(--mist);line-height:1.7;font-weight:300;margin-top:10px;white-space:pre-wrap}
+.attr-tags{display:flex;gap:3px;flex-wrap:wrap}
+.attr-tag{font-size:10px;padding:2px 6px;background:var(--warm);color:var(--mist);white-space:nowrap;flex-shrink:0}
 
 /* PW NOTICE */
 .pw-notice{display:flex;align-items:flex-start;gap:12px;background:#fffbf5;border:1px solid #e8c97a;border-left:4px solid #d4a017;padding:14px 16px;margin-bottom:14px}
@@ -339,6 +368,7 @@ img.av{object-fit:cover;display:block}
   <div class="hright">
     <span id="userEmail" class="uemail"></span>
     <span id="planBadge" class="pbadge">Free</span>
+    <button id="btnReload" class="reload-btn" title="リロード">🔄</button>
     <button id="btnNotif" class="notif-btn" title="通知">🔔<span id="notifBadge" class="notif-badge hidden"></span></button>
     <button id="btnLogout" class="btn-out">ログアウト</button>
   </div>
@@ -375,6 +405,7 @@ img.av{object-fit:cover;display:block}
   <!-- HOME タブ -->
   <section id="tab-home" class="tab-pane active">
     <div id="homeListView">
+      <div id="ptrIndicator" class="ptr-indicator"></div>
       <div id="pwNoticeBanner"></div>
       <div class="home-post-btns">
         <button class="home-post-btn-post" id="btnGoPost">✏️ つぶやく</button>
@@ -480,6 +511,50 @@ function avatarHtml(p,size=28){
   return`<div class="av" style="background:${color};width:${size}px;height:${size}px;font-size:${Math.floor(size*0.4)}px">${esc(init)}</div>`;
 }
 function msg(el,txt,type="err"){if(!el)return;el.textContent=txt;el.className="fmsg"+(type?" "+type:"")}
+
+/* ===== ユーザーポップオーバー ===== */
+let _activePopover = null;
+function closePopover(){
+  if(_activePopover){_activePopover.remove();_activePopover=null;}
+}
+document.addEventListener("click",e=>{
+  if(_activePopover && !_activePopover.contains(e.target) && !e.target.closest(".av-click")){
+    closePopover();
+  }
+});
+
+function showUserPopover(el, uid, profile){
+  closePopover();
+  const p = profile || {};
+  const label = p.display_name || (p.age ? `${p.age}歳` : "匿名");
+  const attrs = [p.age?`${p.age}歳`:"",p.work_style||"",p.marital_status||"",p.living_situation||""].filter(Boolean);
+
+  const pop = document.createElement("div");
+  pop.className = "user-popover";
+  pop.innerHTML = `
+    <div class="popover-header">
+      ${avatarHtml({...p, _uid:uid}, 36)}
+      <span class="popover-name">${esc(label)}</span>
+    </div>
+    ${attrs.length ? `<div class="popover-attrs">${attrs.map(a=>`<span class="popover-attr">${esc(a)}</span>`).join("")}</div>` : ""}
+    <a class="popover-link" data-uid="${uid}">プロフィールを見る →</a>
+  `;
+
+  // 位置計算
+  const rect = el.getBoundingClientRect();
+  pop.style.position = "fixed";
+  pop.style.top = (rect.bottom + 6) + "px";
+  pop.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 290)) + "px";
+
+  document.body.appendChild(pop);
+  _activePopover = pop;
+
+  pop.querySelector(".popover-link").addEventListener("click", e => {
+    e.preventDefault();
+    closePopover();
+    openUserProfile(uid);
+  });
+}
 
 async function loadTodayPostCount(){
   if(!S.user||S.isStd){S.todayPostCount=0;return;}
@@ -592,13 +667,17 @@ async function toggleReaction(tid,emoji,cb){
   finally{delete _reactLock[lockKey];}
   if(cb)cb();
 }
+
+/* === リアクション（カード一覧用・コンパクト版） === */
 function buildReactSm(tid){
   const r=S.reactions[tid]||{};const my=S.myReactions[tid]||null;
   return`<div class="react-row-sm" data-rid="${tid}">`+
     EMOJIS.map(e=>{const i=r[e]||{count:0};const on=(my===e);
-      return`<button class="rbtn-sm${on?" on":""}" data-e="${e}" data-tid="${tid}">${EICONS[e]} ${e}${i.count>0?` <span class="rcount">${i.count}</span>`:""}</button>`;
+      return`<button class="rbtn-sm${on?" on":""}" data-e="${e}" data-tid="${tid}">${EICONS[e]}<span class="rlabel">${e}</span>${i.count>0?` <span class="rcount">${i.count}</span>`:""}</button>`;
     }).join("")+`</div>`;
 }
+
+/* === リアクション（詳細ページ用） === */
 function buildReactFull(tid){
   const r=S.reactions[tid]||{};const my=S.myReactions[tid]||null;
   return`<div class="react-row" data-rid="${tid}">`+
@@ -671,29 +750,83 @@ $("#btnNotif").addEventListener("click",openNotifDrawer);
 $("#notifCloseBtn").addEventListener("click",closeNotifDrawer);
 $("#notifOverlay").addEventListener("click",closeNotifDrawer);
 
+/* ===== リロードボタン ===== */
+$("#btnReload").addEventListener("click", async () => {
+  const btn = $("#btnReload");
+  btn.classList.add("spinning");
+  btn.disabled = true;
+  try {
+    await Promise.all([loadThreads(), loadNotifications(), loadTodayPostCount()]);
+    renderHomeList();
+  } catch(e) { console.warn("reload error", e); }
+  setTimeout(() => { btn.classList.remove("spinning"); btn.disabled = false; }, 600);
+});
+
+/* ===== プルトゥリフレッシュ ===== */
+(function initPTR(){
+  const page = document.querySelector(".page");
+  const indicator = document.getElementById("ptrIndicator");
+  let startY = 0, pulling = false, triggered = false;
+  const THRESHOLD = 70;
+
+  page.addEventListener("touchstart", e => {
+    if(page.scrollTop > 0 || document.querySelector(".detail-view.show") || document.querySelector(".user-profile-page.show")) return;
+    startY = e.touches[0].clientY;
+    pulling = true;
+    triggered = false;
+  }, {passive:true});
+
+  page.addEventListener("touchmove", e => {
+    if(!pulling) return;
+    const dy = e.touches[0].clientY - startY;
+    if(dy > 10 && dy < 150){
+      indicator.className = "ptr-indicator pulling";
+      indicator.textContent = dy > THRESHOLD ? "↑ 離してリロード" : "↓ 引っ張ってリロード";
+      if(dy > THRESHOLD) triggered = true;
+    }
+  }, {passive:true});
+
+  page.addEventListener("touchend", async () => {
+    if(!pulling) return;
+    pulling = false;
+    if(triggered){
+      indicator.className = "ptr-indicator refreshing";
+      indicator.innerHTML = '<span class="ptr-spinner">↻</span> 読み込み中…';
+      try {
+        await Promise.all([loadThreads(), loadNotifications(), loadTodayPostCount()]);
+        renderHomeList();
+      } catch(e){}
+      setTimeout(()=>{ indicator.className = "ptr-indicator"; indicator.textContent = ""; }, 400);
+    } else {
+      indicator.className = "ptr-indicator";
+      indicator.textContent = "";
+    }
+  }, {passive:true});
+})();
+
 function clearSearch(){S.search="";const el=$("#homeSearch");if(el)el.value="";renderHomeList();}
 function filterT(arr,q){
   if(!q)return arr;const lq=q.toLowerCase();
   return arr.filter(t=>(t.title||"").toLowerCase().includes(lq)||(t.body||"").toLowerCase().includes(lq)||(t.category||"").toLowerCase().includes(lq));
 }
 
+/* ===== カード HTML（レイアウト変更版） ===== */
 function cardHtml(t,showBadge){
   const p=t.profiles||{};p._uid=t.user_id;
   const label=p.display_name||(p.age?`${p.age}歳`:"匿名");
   const rc=t.replies?.[0]?.count??0;const isPost=t.type==="post";const isOwn=S.user?.id===t.user_id;
   return`<div class="post-card${isPost?" is-post":" is-question"}" data-id="${t.id}" data-type="${t.type}">
-    <div class="card-meta">
-      <div class="card-meta-r1">
-        <div class="av-click" data-uid="${t.user_id}" style="cursor:pointer;flex-shrink:0" title="${esc(label)}のプロフィールを見る">${avatarHtml(p,28)}</div>
-        <div class="av-info"><span class="uname-link av-click" data-uid="${t.user_id}">${esc(label)}</span></div>
-        <div class="attr-tags">${attrHtml(p)}</div>
-      </div>
-      <div class="card-meta-r2">
-        <span class="${isPost?"type-badge-post":"type-badge-q"}">${isPost?"つぶやき":"相談"}</span>
-        ${t.category?`<span class="cat-tag">${esc(t.category)}</span>`:""}
+    <div class="card-head">
+      <div class="card-head-left">
+        <div class="av-click" data-uid="${t.user_id}" data-profile='${esc(JSON.stringify({display_name:p.display_name,age:p.age,work_style:p.work_style,marital_status:p.marital_status,living_situation:p.living_situation,avatar_url:p.avatar_url}))}' style="cursor:pointer;flex-shrink:0" title="${esc(label)}">${avatarHtml(p,28)}</div>
+        <span class="uname-link av-click" data-uid="${t.user_id}" data-profile='${esc(JSON.stringify({display_name:p.display_name,age:p.age,work_style:p.work_style,marital_status:p.marital_status,living_situation:p.living_situation,avatar_url:p.avatar_url}))}'>${esc(label)}</span>
         ${isOwn?`<button class="del-btn" data-id="${t.id}" data-type="thread" title="削除">🗑</button>`:""}
       </div>
+      <div class="card-head-right">
+        <span class="${isPost?"type-badge-post":"type-badge-q"}">${isPost?"つぶやき":"相談"}</span>
+      </div>
     </div>
+    ${t.category?`<div class="card-sub"><span class="cat-tag">${esc(t.category)}</span></div>`:""}
     ${!isPost&&t.title?`<div class="card-title">${esc(t.title)}</div>`:""}
     <div class="card-preview">${esc(t.body)}</div>
     <div class="card-footer">
@@ -712,7 +845,17 @@ function bindCardList(container){
     });
   });
   bindReactsSm(container);
-  container.querySelectorAll(".av-click").forEach(el=>{el.addEventListener("click",e=>{e.stopPropagation();openUserProfile(el.dataset.uid);});});
+  /* アイコンクリック → ポップオーバー */
+  container.querySelectorAll(".av-click").forEach(el=>{
+    el.addEventListener("click",e=>{
+      e.stopPropagation();
+      const uid = el.dataset.uid;
+      let prof = {};
+      try { prof = JSON.parse(el.dataset.profile || "{}"); } catch(ex){}
+      prof._uid = uid;
+      showUserPopover(el, uid, prof);
+    });
+  });
   container.querySelectorAll(".del-btn").forEach(b=>{b.addEventListener("click",async e=>{e.stopPropagation();await deleteThread(b.dataset.id);});});
 }
 
@@ -863,6 +1006,7 @@ async function submitQuestion(){
 }
 
 async function openDetail(threadId,type){
+  closePopover();
   $("#homeListView").style.display="none";$("#userProfilePage").classList.remove("show");
   const dv=$("#homeDetail");dv.classList.add("show");
   dv.innerHTML=`<button class="back-btn" id="backBtn">← 一覧に戻る</button><div class="loading">読み込み中…</div>`;
@@ -874,13 +1018,13 @@ async function openDetail(threadId,type){
   await loadReactions([t.id]);
   let html=`<button class="back-btn" id="backBtn2">← 一覧に戻る</button>
   <div class="dcard">
-    <div class="card-meta">
-      <div class="card-meta-r1">
+    <div class="card-head">
+      <div class="card-head-left">
         <div class="av-click" data-uid="${t.user_id}" style="cursor:pointer;flex-shrink:0">${avatarHtml(p,32)}</div>
-        <div class="av-info"><span class="uname-link av-click" data-uid="${t.user_id}">${esc(label)}</span></div>
-        <div class="attr-tags">${attrHtml(p)}</div>
+        <span class="uname-link av-click" data-uid="${t.user_id}">${esc(label)}</span>
+        <div class="attr-tags" style="flex-wrap:nowrap;overflow:hidden;flex:1">${attrHtml(p)}</div>
       </div>
-      <div class="card-meta-r2">
+      <div class="card-head-right" style="display:flex;align-items:center;gap:6px">
         ${t.category?`<span class="cat-tag">${esc(t.category)}</span>`:""}
         ${S.user&&!isOwner&&S.isStd?`<button class="report-btn" data-type="thread" data-id="${t.id}">通報</button>`:""}
         ${isOwner?`<button class="del-btn" data-id="${t.id}" data-type="thread">🗑 削除</button>`:""}
@@ -903,15 +1047,14 @@ async function openDetail(threadId,type){
       const canBest=isOwner&&!hasBest&&S.user?.id!==r.user_id;const isReplyOwner=S.user?.id===r.user_id;
       return`<div class="rcard${isBest?" best":""}" data-rid="${r.id}">
         ${isBest?`<div class="best-badge">🏆 ベストアンサー</div>`:""}
-        <div class="card-meta">
-          <div class="card-meta-r1">
+        <div class="card-head">
+          <div class="card-head-left">
             <div class="av-click" data-uid="${r.user_id}" style="cursor:pointer;flex-shrink:0">${avatarHtml(rp,28)}</div>
-            <div class="av-info"><span class="uname-link av-click" data-uid="${r.user_id}">${esc(rl)}</span></div>
-            <div class="attr-tags">${attrHtml(rp)}</div>
+            <span class="uname-link av-click" data-uid="${r.user_id}">${esc(rl)}</span>
             <span style="font-size:11px;color:var(--mist);white-space:nowrap;flex-shrink:0;margin-left:auto">${rtime(r.created_at)}</span>
           </div>
-          <div class="card-meta-r2">
-            ${canBest&&!isPost?`<button class="btn-best" data-rid="${r.id}">🏆 ベストアンサー</button>`:""}
+          <div class="card-head-right" style="display:flex;align-items:center;gap:4px">
+            ${canBest&&!isPost?`<button class="btn-best" data-rid="${r.id}">🏆 ベスト</button>`:""}
             ${S.user&&!isReplyOwner&&S.isStd?`<button class="report-btn" data-type="reply" data-id="${r.id}">通報</button>`:""}
             ${isReplyOwner?`<button class="del-btn" data-id="${r.id}" data-type="reply">🗑</button>`:""}
           </div>
@@ -937,6 +1080,7 @@ async function openDetail(threadId,type){
   dv.innerHTML=html;
   dv.querySelector("#backBtn2")?.addEventListener("click",showHomeList);
   dv.querySelectorAll(".report-btn").forEach(b=>bindReport(b));
+  /* 詳細ページのアイコンクリック → ユーザーページへ直接遷移 */
   dv.querySelectorAll(".av-click").forEach(el=>{el.addEventListener("click",e=>{e.stopPropagation();openUserProfile(el.dataset.uid);});});
   dv.querySelectorAll(".del-btn").forEach(b=>{
     b.addEventListener("click",async e=>{
@@ -1009,6 +1153,7 @@ async function openDetail(threadId,type){
 }
 
 async function openUserProfile(userId){
+  closePopover();
   $("#homeListView").style.display="none";$("#homeDetail").classList.remove("show");
   const up=$("#userProfilePage");up.classList.add("show");
   up.innerHTML=`<button class="back-btn" id="upBack">← 戻る</button><div class="loading">読み込み中…</div>`;
@@ -1039,7 +1184,15 @@ async function openUserProfile(userId){
   up.innerHTML=html;
   up.querySelector("#upBack2").addEventListener("click",showHomeList);
   up.querySelectorAll(".post-card").forEach(c=>{c.addEventListener("click",e=>{if(e.target.closest(".del-btn")||e.target.closest(".rbtn-sm")||e.target.closest(".av-click"))return;openDetail(c.dataset.id,c.dataset.type);});});
-  up.querySelectorAll(".av-click").forEach(el=>{el.addEventListener("click",e=>{e.stopPropagation();openUserProfile(el.dataset.uid);});});
+  up.querySelectorAll(".av-click").forEach(el=>{
+    el.addEventListener("click",e=>{
+      e.stopPropagation();
+      const uid=el.dataset.uid;
+      let prof2={};try{prof2=JSON.parse(el.dataset.profile||"{}");} catch(ex){}
+      prof2._uid=uid;
+      showUserPopover(el,uid,prof2);
+    });
+  });
   up.querySelectorAll(".del-btn").forEach(b=>{b.addEventListener("click",async e=>{e.stopPropagation();await deleteThread(b.dataset.id,()=>openUserProfile(userId));});});
   const pids=(threads||[]).filter(t=>t.type==="post").map(t=>t.id);
   if(pids.length){
