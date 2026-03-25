@@ -463,15 +463,17 @@ const APP_URL = "https://app.honneroom.com/app.html";
 // フリープランの1日あたり新規投稿上限
 const FREE_DAILY_POST_LIMIT = 3;
 
-const sb = window.supabase.createClient(SB_URL, SB_KEY, {
-  auth:{
-    persistSession:true,
-    autoRefreshToken:true,
-    detectSessionInUrl:true,
-    storageKey:'sb-rhynpigqhnbwjyudvvfw-auth-token',
-    storage:window.localStorage
+const sb = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY,
+  {
+    auth:{
+      persistSession:true,
+      autoRefreshToken:true,
+      detectSessionInUrl:true
+    }
   }
-});
+);
 
 const S = {
   user:null, profile:null, isStd:false,
