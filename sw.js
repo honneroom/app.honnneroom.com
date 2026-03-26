@@ -97,12 +97,14 @@ self.addEventListener('push', (event) => {
 
   event.waitUntil(
     self.registration.showNotification(title, options).then(() => {
-      // 表示中の通知数をバッジに反映（未消化の通知 = 未読数の近似値）
-      if ('setAppBadge' in navigator) {
-        return self.registration.getNotifications().then((notifications) => {
-          return navigator.setAppBadge(notifications.length).catch(() => {});
-        });
-      }
+      // アプリが開いていればDBから未読数を再取得させる
+      return clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+        for (const client of clientList) {
+          if (client.url.includes('app.honneroom.com')) {
+            client.postMessage({ type: 'PUSH_RECEIVED' });
+          }
+        }
+      });
     })
   );
 });
@@ -115,24 +117,13 @@ self.addEventListener('notificationclick', (event) => {
   const fullUrl = new URL(url, self.location.origin).href;
 
   event.waitUntil(
-    // 残りの通知数でバッジを更新（0ならクリア）
-    self.registration.getNotifications().then((notifications) => {
-      if ('setAppBadge' in navigator) {
-        if (notifications.length > 0) {
-          navigator.setAppBadge(notifications.length).catch(() => {});
-        } else {
-          navigator.clearAppBadge().catch(() => {});
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url.includes('app.honneroom.com') && 'focus' in client) {
+          return client.focus();
         }
       }
-    }).then(() => {
-      return clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-        for (const client of clientList) {
-          if (client.url.includes('app.honneroom.com') && 'focus' in client) {
-            return client.focus();
-          }
-        }
-        return clients.openWindow(fullUrl);
-      });
+      return clients.openWindow(fullUrl);
     })
   );
 });
