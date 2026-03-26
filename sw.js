@@ -1,8 +1,5 @@
-// 本音ルーム Service Worker（修正版）
-
-const CACHE_NAME = 'honneroom-v2';
-
-// ❗HTMLはキャッシュしないので含めない
+// 本音ルーム Service Worker（プッシュ通知対応版）
+const CACHE_NAME = 'honneroom-v3';
 const STATIC_ASSETS = [
   '/manifest.json',
   '/assets/icon.png'
@@ -15,7 +12,6 @@ self.addEventListener('install', (event) => {
       return cache.addAll(STATIC_ASSETS).catch(() => {});
     })
   );
-  // ❗skipWaitingは不具合回避のため一旦外す
 });
 
 // アクティベート
@@ -37,7 +33,6 @@ self.addEventListener('fetch', (event) => {
   const request = event.request;
   const url = new URL(request.url);
 
-  // ❗API系は絶対キャッシュしない
   const isApi =
     url.hostname.includes('supabase.co') ||
     url.hostname.includes('stripe.com') ||
@@ -48,7 +43,6 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // ❗① HTML（document）は必ずネットワーク優先
   if (request.destination === 'document') {
     event.respondWith(
       fetch(request).catch(() => caches.match('/index.html'))
@@ -56,7 +50,6 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // ❗② 画像・静的ファイルのみキャッシュ
   if (
     request.destination === 'image' ||
     request.url.includes('/assets/')
@@ -64,7 +57,6 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       caches.match(request).then((cached) => {
         if (cached) return cached;
-
         return fetch(request).then((response) => {
           if (response && response.status === 200) {
             const clone = response.clone();
@@ -79,37 +71,52 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-// プッシュ通知受信
+  event.respondWith(fetch(request));
+});
+
+// ===== プッシュ通知受信 =====
 self.addEventListener('push', (event) => {
-  const data = event.data ? event.data.json() : {};
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch (e) {
+    data = { title: '本音ルーム', body: event.data ? event.data.text() : '新しい通知があります' };
+  }
+
   const title = data.title || '本音ルーム';
   const options = {
     body: data.body || '新しい通知があります',
     icon: '/assets/icon.png',
     badge: '/assets/icon.png',
-    tag: data.tag || 'honneroom-notif',
-    data: { url: data.url || '/app.html' }
+    tag: data.tag || 'honneroom-notif-' + Date.now(),
+    renotify: true,
+    data: {
+      url: data.url || '/app.html'
+    }
   };
+
   event.waitUntil(
     self.registration.showNotification(title, options)
   );
 });
 
-// 通知クリック時
+// ===== 通知クリック時 =====
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
+
   const url = event.notification.data?.url || '/app.html';
+  const fullUrl = new URL(url, self.location.origin).href;
+
   event.waitUntil(
-    clients.matchAll({ type: 'window' }).then((clientList) => {
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // 既に開いているタブがあればそこにフォーカス
       for (const client of clientList) {
         if (client.url.includes('app.honneroom.com') && 'focus' in client) {
           return client.focus();
         }
       }
-      return clients.openWindow(url);
+      // なければ新しいタブで開く
+      return clients.openWindow(fullUrl);
     })
   );
-});
-  // ❗それ以外はネットワーク優先（キャッシュしない）
-  event.respondWith(fetch(request));
 });
