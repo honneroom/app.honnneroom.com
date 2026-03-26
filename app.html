@@ -502,7 +502,8 @@ const ICONS_URL = "https://app.honneroom.com/data/icons.json";
 const DEFAULT_ICON = "https://app.honneroom.com/data/icon/icon00.png";
 const FREE_DAILY_POST_LIMIT = 3;
 
-const VAPID_PUBLIC_KEY = 'BH3tfdzq6i05jIUlojHfZ3NeMKC1dbxqWXjg0oGMfkCk6plfYH0iSQbQFumq7V2yxENcnPc5gPAETMaf5loZrbg';
+/* ★ VAPID公開鍵：Step1で生成したものに置き換えてください */
+const VAPID_PUBLIC_KEY = 'ここにStep1で生成した公開鍵を貼る';
 
 const sb = window.supabase.createClient(SB_URL, SB_KEY, {
   auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
@@ -680,11 +681,13 @@ function updateNotifBadge(){
   const badge=$("#notifBadge");if(!badge)return;
   if(S.unreadCount>0){
     badge.textContent=S.unreadCount>99?"99+":S.unreadCount;badge.classList.remove("hidden");
-    // PWAアイコンバッジ（対応ブラウザのみ）
     if('setAppBadge' in navigator){navigator.setAppBadge(S.unreadCount).catch(()=>{});}
+    // SWのバッジカウンターも同期
+    if(typeof syncBadgeToSW==='function') syncBadgeToSW(S.unreadCount);
   } else {
     badge.classList.add("hidden");
     if('clearAppBadge' in navigator){navigator.clearAppBadge().catch(()=>{});}
+    if(typeof resetBadgeSW==='function') resetBadgeSW();
   }
 }
 async function openNotifDrawer(){
@@ -1435,12 +1438,28 @@ main();
         .catch(err => console.warn('SW registration failed:', err));
     });
 
-    // SWからプッシュ受信の通知を受け取り、DBから未読数を再取得してバッジ更新
+    // SWからのメッセージ受信
     navigator.serviceWorker.addEventListener('message', async (event) => {
       if (event.data && event.data.type === 'PUSH_RECEIVED') {
+        // プッシュ通知受信 → DBから未読数を再取得
+        await loadNotifications();
+      } else if (event.data && event.data.type === 'PUSH_CLICKED') {
+        // 通知クリック → 未読数を再取得してバッジ同期
         await loadNotifications();
       }
     });
+  }
+
+  // SWにバッジ数を同期する関数
+  function syncBadgeToSW(count) {
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({ type: 'SET_BADGE', count: count });
+    }
+  }
+  function resetBadgeSW() {
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({ type: 'RESET_BADGE' });
+    }
   }
 
   let deferredPrompt = null;
