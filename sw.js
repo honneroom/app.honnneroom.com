@@ -96,16 +96,7 @@ self.addEventListener('push', (event) => {
   };
 
   event.waitUntil(
-    Promise.all([
-      self.registration.showNotification(title, options),
-      // PWAアイコンバッジを更新（対応ブラウザのみ）
-      self.registration.getNotifications().then((notifications) => {
-        const count = notifications.length + 1;
-        if ('setAppBadge' in navigator) {
-          return navigator.setAppBadge(count).catch(() => {});
-        }
-      })
-    ])
+    self.registration.showNotification(title, options)
   );
 });
 
@@ -117,21 +108,13 @@ self.addEventListener('notificationclick', (event) => {
   const fullUrl = new URL(url, self.location.origin).href;
 
   event.waitUntil(
-    Promise.all([
-      // PWAバッジをクリア
-      self.registration.getNotifications().then((notifications) => {
-        if (notifications.length === 0 && 'clearAppBadge' in navigator) {
-          return navigator.clearAppBadge().catch(() => {});
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url.includes('app.honneroom.com') && 'focus' in client) {
+          return client.focus();
         }
-      }),
-      clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-        for (const client of clientList) {
-          if (client.url.includes('app.honneroom.com') && 'focus' in client) {
-            return client.focus();
-          }
-        }
-        return clients.openWindow(fullUrl);
-      })
-    ])
+      }
+      return clients.openWindow(fullUrl);
+    })
   );
 });
