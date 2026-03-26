@@ -466,7 +466,7 @@ img.av{object-fit:cover;display:block}
   </section>
 </div>
 
-<!-- 通報モーダル -->
+<!-- 通報モーダル ★変更1: フリーテキスト欄を追加 -->
 <div id="reportModal" class="mback">
   <div class="modal">
     <button class="mclose" id="reportClose">×</button>
@@ -481,6 +481,11 @@ img.av{object-fit:cover;display:block}
         <option value="fake">男性による虚偽登録の疑い</option>
         <option value="other">その他</option>
       </select>
+    </div>
+    <div class="fg">
+      <label class="flbl">補足（任意）</label>
+      <textarea id="reportDetail" class="fta" placeholder="具体的な内容があれば記入してください…" maxlength="200" style="min-height:80px"></textarea>
+      <div class="ccount"><span id="reportDetailCount">0</span> / 200</div>
     </div>
     <div style="display:flex;gap:8px;margin-top:14px">
       <button id="btnReport" class="btn-p">通報する</button>
@@ -682,7 +687,6 @@ function updateNotifBadge(){
   if(S.unreadCount>0){
     badge.textContent=S.unreadCount>99?"99+":S.unreadCount;badge.classList.remove("hidden");
     if('setAppBadge' in navigator){navigator.setAppBadge(S.unreadCount).catch(()=>{});}
-    // SWのバッジカウンターも同期
     if(typeof syncBadgeToSW==='function') syncBadgeToSW(S.unreadCount);
   } else {
     badge.classList.add("hidden");
@@ -882,7 +886,7 @@ async function openDetail(threadId,type){
       </div>
       <div class="card-head-right" style="display:flex;align-items:center;gap:6px">
         ${t.category?`<span class="cat-tag">${esc(t.category)}</span>`:""}
-        ${S.user&&!isOwner&&S.isStd?`<button class="report-btn" data-type="thread" data-id="${t.id}">通報</button>`:""}
+        ${S.user&&!isOwner?`<button class="report-btn" data-type="thread" data-id="${t.id}">通報</button>`:""}
         ${isOwner?`<button class="del-btn" data-id="${t.id}" data-type="thread">🗑 削除</button>`:""}
       </div>
     </div>
@@ -917,7 +921,7 @@ async function openDetail(threadId,type){
           </div>
           <div class="card-head-right" style="display:flex;align-items:center;gap:4px">
             ${canBest&&!isPost?`<button class="btn-best" data-rid="${r.id}">🏆 ベスト</button>`:""}
-            ${S.user&&!isReplyOwner&&S.isStd?`<button class="report-btn" data-type="reply" data-id="${r.id}">通報</button>`:""}
+            ${S.user&&!isReplyOwner?`<button class="report-btn" data-type="reply" data-id="${r.id}">通報</button>`:""}
             ${isReplyOwner?`<button class="del-btn" data-id="${r.id}" data-type="reply">🗑</button>`:""}
           </div>
         </div>
@@ -1018,7 +1022,6 @@ async function renderMypage(){
   const ts=threadsRes.data||[];const posts=ts.filter(t=>t.type==="post");const questions=ts.filter(t=>t.type==="question");
   const myReplies=repliesRes.data||[];
 
-  // 自分の返信カードHTML
   const repliesHtml=myReplies.length
     ?`<div class="card-list">`+myReplies.map(r=>{
       const th=r.threads||{};
@@ -1085,7 +1088,6 @@ async function createNotification(threadId,replyId,threadOwnerId){
   if(ownerId===S.user.id)return;
   const payloads=[{user_id:ownerId,thread_id:threadId,reply_id:replyId,notif_type:"reply"},{user_id:ownerId,thread_id:threadId,reply_id:replyId},{user_id:ownerId,thread_id:threadId}];
   for(const p of payloads){const{error}=await sb.from("notifications").insert(p);if(!error){
-    // ★ プッシュ通知を送信
     sendPushNotification(ownerId, '新しい返信', '投稿に返信がありました。', '/app.html');
     return;
   }console.warn("createNotification failed:",error.code,error.message);}
@@ -1096,7 +1098,6 @@ async function createBestAnswerNotification(threadId,replyId){
   if(r.user_id===S.user.id)return;
   const payloads=[{user_id:r.user_id,thread_id:threadId,reply_id:replyId,notif_type:"best_answer"},{user_id:r.user_id,thread_id:threadId,reply_id:replyId},{user_id:r.user_id,thread_id:threadId}];
   for(const p of payloads){const{error}=await sb.from("notifications").insert(p);if(!error){
-    // ★ プッシュ通知を送信
     sendPushNotification(r.user_id, 'ベストアンサー', 'あなたの返信がベストアンサーに選ばれました！', '/app.html');
     await loadNotifications();return;
   }console.warn("bestAnswer notif failed:",error.code,error.message);}
@@ -1104,7 +1105,6 @@ async function createBestAnswerNotification(threadId,replyId){
 
 /* ===== プッシュ通知 ===== */
 function urlBase64ToUint8Array(base64String) {
-  // 余分なスペース・改行・引用符を除去
   const cleaned = base64String.replace(/[\s"']+/g, '');
   const padding = '='.repeat((4 - cleaned.length % 4) % 4);
   const base64 = (cleaned + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -1123,9 +1123,7 @@ async function getPushSubscription() {
 async function subscribePush() {
   if (!('PushManager' in window)) return false;
   const reg = await navigator.serviceWorker.ready;
-
   let sub = await reg.pushManager.getSubscription();
-
   if (!sub) {
     const permission = await Notification.requestPermission();
     if (permission !== 'granted') return false;
@@ -1139,7 +1137,6 @@ async function subscribePush() {
       return false;
     }
   }
-
   const subJson = sub.toJSON();
   try {
     const { error } = await sb.from('push_subscriptions').upsert({
@@ -1157,15 +1154,12 @@ async function subscribePush() {
 }
 
 async function unsubscribePush() {
-  // ブラウザのpush購読は解除しない（iOS で denied になる問題を回避）
-  // DBから購読レコードを削除するだけで、Edge Functionが送信先を見つけられなくなる = 通知が届かなくなる
   const reg = await navigator.serviceWorker.ready;
   const sub = await reg.pushManager.getSubscription();
   if (sub) {
     const endpoint = sub.endpoint;
     await sb.from('push_subscriptions').delete().eq('user_id', S.user.id).eq('endpoint', endpoint);
   } else {
-    // 購読がない場合でもDBに残っているレコードを全削除
     await sb.from('push_subscriptions').delete().eq('user_id', S.user.id);
   }
 }
@@ -1189,25 +1183,20 @@ async function initPushUI() {
   const toggle = $('#pushToggleInput');
   const msgEl = $('#pushMsg');
   if (!btn && !toggle) return;
-
   if (!('PushManager' in window)) {
     if (btn) btn.style.display = 'none';
     const area = $('#pushNotSupported');
     if (area) area.style.display = 'block';
     return;
   }
-
-  // DBに購読レコードがあるかでON/OFFを判定（ブラウザの権限状態には依存しない）
   const { data: dbSubs } = await sb.from('push_subscriptions').select('id').eq('user_id', S.user.id).limit(1);
   const isOn = !!(dbSubs && dbSubs.length > 0);
-
   if (toggle) toggle.checked = isOn;
   if (statusEl) {
     statusEl.textContent = isOn ? '通知はONです' : '通知はOFFです';
     statusEl.style.color = isOn ? 'var(--primary)' : 'var(--mist)';
   }
   if (msgEl) msgEl.textContent = '';
-
   if (toggle) {
     toggle.disabled = false;
     toggle.onchange = async () => {
@@ -1231,7 +1220,6 @@ async function initPushUI() {
         toggle.checked = !toggle.checked;
       }
       toggle.disabled = false;
-      // DBから再取得して状態更新
       const { data: dbSubs2 } = await sb.from('push_subscriptions').select('id').eq('user_id', S.user.id).limit(1);
       const isOn2 = !!(dbSubs2 && dbSubs2.length > 0);
       if (statusEl) { statusEl.textContent = isOn2 ? '通知はONです' : '通知はOFFです'; statusEl.style.color = isOn2 ? 'var(--primary)' : 'var(--mist)'; }
@@ -1360,8 +1348,6 @@ function renderAccount(){
   $("#btnEmail").addEventListener("click",changeEmail);
   $("#pwShow").addEventListener("change",e=>{const t=e.target.checked?"text":"password";$("#pwN").type=t;$("#pwN2").type=t;});
   $("#btnPw").addEventListener("click",savePassword);
-
-  // ★ プッシュ通知UIを初期化
   initPushUI();
 }
 
@@ -1416,23 +1402,31 @@ async function openPortal(){
   try{const r=await fetch(PORTAL,{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({user_id:S.user.id,return_url:APP_URL})});if(!r.ok){alert("サブスクリプション管理ページを開けませんでした。時間をおいて再度お試しください。");return;}const d=await r.json();if(!d?.url){alert("サブスクリプション管理ページを開けませんでした。");return;}location.href=d.url;}catch(e){alert("エラーが発生しました。");}
 }
 
+/* ★変更4: bindReport - プラン制限を撤廃 + モーダルリセット追加 */
 function bindReport(btn){
   btn.addEventListener("click",e=>{
     e.stopPropagation();
-    if(!S.isStd){alert("通報機能はStandardプランのみご利用いただけます。");return;}
     let snapshot="";if(btn.dataset.type==="reply")snapshot=btn.closest(".rcard")?.querySelector(".rbody")?.textContent||"";else snapshot=document.querySelector(".dbody")?.textContent||"";
     S.reportTarget={type:btn.dataset.type,id:btn.dataset.id,snapshot};
-    $("#reportModal").classList.add("show");$("#reportReason").value="";msg($("#reportMsg"),"");
+    $("#reportModal").classList.add("show");$("#reportReason").value="";
+    const detailEl=$("#reportDetail");if(detailEl){detailEl.value="";$("#reportDetailCount").textContent="0";}
+    msg($("#reportMsg"),"");
   });
 }
-$("#reportClose").addEventListener("click",()=>$("#reportModal").classList.remove("show"));
-$("#btnReportCancel").addEventListener("click",()=>$("#reportModal").classList.remove("show"));
+
+/* ★変更5: モーダル閉じる処理 + 文字カウント追加 */
+$("#reportClose").addEventListener("click",()=>{$("#reportModal").classList.remove("show");const d=$("#reportDetail");if(d)d.value="";});
+$("#btnReportCancel").addEventListener("click",()=>{$("#reportModal").classList.remove("show");const d=$("#reportDetail");if(d)d.value="";});
+document.addEventListener("input",e=>{if(e.target.id==="reportDetail"){const c=$("#reportDetailCount");if(c)c.textContent=e.target.value.length;}});
+
+/* ★変更6: 通報送信 - detailフィールドを含める */
 $("#btnReport").addEventListener("click",async()=>{
   const reason=$("#reportReason").value,m=$("#reportMsg");
   if(!reason){msg(m,"理由を選択してください。");return;}
   if(!S.reportTarget||!S.user)return;
   const btn=$("#btnReport");btn.disabled=true;
-  const{error}=await sb.from("reports").insert({reporter_id:S.user.id,target_type:S.reportTarget.type,target_id:S.reportTarget.id,reason,content_snapshot:S.reportTarget.snapshot||null});
+  const detail=$("#reportDetail")?.value?.trim()||null;
+  const{error}=await sb.from("reports").insert({reporter_id:S.user.id,target_type:S.reportTarget.type,target_id:S.reportTarget.id,reason,detail,content_snapshot:S.reportTarget.snapshot||null});
   btn.disabled=false;
   if(error){msg(m,"通報に失敗しました。");return;}
   msg(m,"通報しました。ご協力ありがとうございます。","ok");
@@ -1467,20 +1461,15 @@ main();
         .then(reg => console.log('SW registered:', reg.scope))
         .catch(err => console.warn('SW registration failed:', err));
     });
-
-    // SWからのメッセージ受信
     navigator.serviceWorker.addEventListener('message', async (event) => {
       if (event.data && event.data.type === 'PUSH_RECEIVED') {
-        // プッシュ通知受信 → DBから未読数を再取得
         await loadNotifications();
       } else if (event.data && event.data.type === 'PUSH_CLICKED') {
-        // 通知クリック → 未読数を再取得してバッジ同期
         await loadNotifications();
       }
     });
   }
 
-  // SWにバッジ数を同期する関数
   function syncBadgeToSW(count) {
     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
       navigator.serviceWorker.controller.postMessage({ type: 'SET_BADGE', count: count });
