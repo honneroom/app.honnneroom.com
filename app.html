@@ -1459,6 +1459,13 @@ async function main(){
   $("#userEmail").textContent=user.email||"";
   const prof=await loadProfile(user.id);
   S.profile=prof;
+
+  // ★ 凍結チェック
+  if(prof?.is_banned){
+    showBannedScreen(prof);
+    return;
+  }
+
   const tier=String(prof?.tier||"free").toLowerCase();
   S.isStd=!!prof?.is_active&&tier==="standard";
   const badge=$("#planBadge");
@@ -1466,6 +1473,30 @@ async function main(){
   await Promise.all([loadThreads(),loadNotifications(),loadTodayPostCount()]);
   switchTab("home");
 }
+
+function showBannedScreen(prof){
+  // ヘッダー・タブ・ページを全て非表示にして凍結画面を表示
+  document.querySelector(".site-header").style.display="none";
+  document.querySelector(".tab-nav").style.display="none";
+  document.querySelector(".page").innerHTML=`
+    <div style="min-height:80vh;display:flex;align-items:center;justify-content:center;padding:24px">
+      <div style="background:white;border:1px solid rgba(26,23,20,.06);border-top:4px solid var(--error);padding:32px;max-width:480px;width:100%;text-align:center">
+        <div style="font-size:40px;margin-bottom:16px">🚫</div>
+        <h1 style="font-family:'Shippori Mincho',serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:12px">アカウントが停止されています</h1>
+        <p style="font-size:14px;color:var(--mist);font-weight:300;line-height:1.8;margin-bottom:16px">
+          利用規約への違反が確認されたため、このアカウントは停止されました。
+        </p>
+        ${prof.ban_reason?`<div style="background:var(--cream);border-left:3px solid var(--error);padding:12px 16px;text-align:left;margin-bottom:16px;font-size:13px;color:var(--ink);line-height:1.7"><span style="font-weight:500">停止理由：</span>${esc(prof.ban_reason)}</div>`:""}
+        <p style="font-size:13px;color:var(--mist);font-weight:300;line-height:1.8;margin-bottom:24px">
+          ご不明な点がございましたら、以下のメールアドレスまでお問い合わせください。<br>
+          <a href="mailto:report@honneroom.com" style="color:var(--primary)">report@honneroom.com</a>
+        </p>
+        <button onclick="(async()=>{await sb.auth.signOut();location.replace('/');})()" class="btn-s" style="padding:10px 28px">ログアウト</button>
+      </div>
+    </div>`;
+  document.body.style.paddingTop="0";
+}
+
 main();
 </script>
 
