@@ -674,14 +674,45 @@ function bindReactsSm(container){
 
 async function loadNotifications(){
   if(!S.user)return;
-  const{data:simple,error:e1}=await sb.from("notifications").select("id,is_read,created_at,thread_id,reply_id,notif_type").eq("user_id",S.user.id).order("created_at",{ascending:false}).limit(50);
-  if(e1){console.error("loadNotifications error:",JSON.stringify(e1));return;}
-  const{data:full,error:e2}=await sb.from("notifications").select(`id,is_read,created_at,thread_id,reply_id,notif_type,broadcast_title,broadcast_body,threads!thread_id(title,body,type),replies!reply_id(body,profiles!user_id(display_name))`).eq("user_id",S.user.id).order("created_at",{ascending:false}).limit(50);
-  if(e2)console.warn("loadNotifications full error:",JSON.stringify(e2));
-  S.notifications=(full||simple||[]);
-  S.unreadCount=(simple||[]).filter(n=>!n.is_read).length;
+
+  // ① broadcast通知（JOINなし）
+  const { data: broadcasts, error: e1 } = await sb
+    .from("notifications")
+    .select("id,is_read,created_at,notif_type,broadcast_title,broadcast_body")
+    .eq("user_id", S.user.id)
+    .eq("notif_type", "broadcast");
+
+  if(e1){
+    console.error("broadcast error:", JSON.stringify(e1));
+    return;
+  }
+
+  // ② 通常通知（JOINあり）
+  const { data: replies, error: e2 } = await sb
+    .from("notifications")
+    .select(`
+      id,is_read,created_at,thread_id,reply_id,notif_type,
+      threads(title,body,type),
+      replies(body,profiles(display_name))
+    `)
+    .eq("user_id", S.user.id)
+    .neq("notif_type", "broadcast");
+
+  if(e2){
+    console.warn("reply error:", JSON.stringify(e2));
+  }
+
+  // ③ 結合してソート
+  const all = [...(broadcasts||[]), ...(replies||[])]
+    .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))
+    .slice(0,50);
+
+  S.notifications = all;
+  S.unreadCount = all.filter(n=>!n.is_read).length;
+
   updateNotifBadge();
 }
+  
 function updateNotifBadge(){
   const badge=$("#notifBadge");if(!badge)return;
   if(S.unreadCount>0){
