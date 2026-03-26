@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>本音ルーム</title>
 <link rel="icon" type="image/png" href="/assets/icon.png">
 <!-- PWA -->
@@ -503,7 +503,7 @@ const DEFAULT_ICON = "https://app.honneroom.com/data/icon/icon00.png";
 const FREE_DAILY_POST_LIMIT = 3;
 
 /* ★ VAPID公開鍵：Step1で生成したものに置き換えてください */
-const VAPID_PUBLIC_KEY = 'BH3tfdzq6i05jIUlojHfZ3NeMKC1dbxqWXjg0oGMfkCk6plfYH0iSQbQFumq7V2yxENcnPc5gPAETMaf5loZrbg';
+const VAPID_PUBLIC_KEY = 'ここにStep1で生成した公開鍵を貼る';
 
 const sb = window.supabase.createClient(SB_URL, SB_KEY, {
   auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
@@ -679,8 +679,14 @@ async function loadNotifications(){
 }
 function updateNotifBadge(){
   const badge=$("#notifBadge");if(!badge)return;
-  if(S.unreadCount>0){badge.textContent=S.unreadCount>99?"99+":S.unreadCount;badge.classList.remove("hidden");}
-  else badge.classList.add("hidden");
+  if(S.unreadCount>0){
+    badge.textContent=S.unreadCount>99?"99+":S.unreadCount;badge.classList.remove("hidden");
+    // PWAアイコンバッジ（対応ブラウザのみ）
+    if('setAppBadge' in navigator){navigator.setAppBadge(S.unreadCount).catch(()=>{});}
+  } else {
+    badge.classList.add("hidden");
+    if('clearAppBadge' in navigator){navigator.clearAppBadge().catch(()=>{});}
+  }
 }
 async function openNotifDrawer(){
   $("#notifOverlay").classList.add("show");$("#notifDrawer").classList.add("show");
@@ -1048,7 +1054,7 @@ async function createNotification(threadId,replyId,threadOwnerId){
   const payloads=[{user_id:ownerId,thread_id:threadId,reply_id:replyId,notif_type:"reply"},{user_id:ownerId,thread_id:threadId,reply_id:replyId},{user_id:ownerId,thread_id:threadId}];
   for(const p of payloads){const{error}=await sb.from("notifications").insert(p);if(!error){
     // ★ プッシュ通知を送信
-    sendPushNotification(ownerId, '💬 新しい返信', '投稿に返信がありました', '/app.html');
+    sendPushNotification(ownerId, '本音ルーム', '投稿に返信がありました。', '/app.html');
     return;
   }console.warn("createNotification failed:",error.code,error.message);}
 }
@@ -1059,7 +1065,7 @@ async function createBestAnswerNotification(threadId,replyId){
   const payloads=[{user_id:r.user_id,thread_id:threadId,reply_id:replyId,notif_type:"best_answer"},{user_id:r.user_id,thread_id:threadId,reply_id:replyId},{user_id:r.user_id,thread_id:threadId}];
   for(const p of payloads){const{error}=await sb.from("notifications").insert(p);if(!error){
     // ★ プッシュ通知を送信
-    sendPushNotification(r.user_id, '🏆 ベストアンサー！', 'あなたの返信がベストアンサーに選ばれました', '/app.html');
+    sendPushNotification(r.user_id, '本音ルーム', 'あなたの返信がベストアンサーに選ばれました！', '/app.html');
     await loadNotifications();return;
   }console.warn("bestAnswer notif failed:",error.code,error.message);}
 }
