@@ -1054,7 +1054,7 @@ async function createNotification(threadId,replyId,threadOwnerId){
   const payloads=[{user_id:ownerId,thread_id:threadId,reply_id:replyId,notif_type:"reply"},{user_id:ownerId,thread_id:threadId,reply_id:replyId},{user_id:ownerId,thread_id:threadId}];
   for(const p of payloads){const{error}=await sb.from("notifications").insert(p);if(!error){
     // ★ プッシュ通知を送信
-    sendPushNotification(ownerId, '本音ルーム', '投稿に返信がありました。', '/app.html');
+    sendPushNotification(ownerId, '新しい返信', '投稿に返信がありました。', '/app.html');
     return;
   }console.warn("createNotification failed:",error.code,error.message);}
 }
@@ -1065,7 +1065,7 @@ async function createBestAnswerNotification(threadId,replyId){
   const payloads=[{user_id:r.user_id,thread_id:threadId,reply_id:replyId,notif_type:"best_answer"},{user_id:r.user_id,thread_id:threadId,reply_id:replyId},{user_id:r.user_id,thread_id:threadId}];
   for(const p of payloads){const{error}=await sb.from("notifications").insert(p);if(!error){
     // ★ プッシュ通知を送信
-    sendPushNotification(r.user_id, '本音ルーム', 'あなたの返信がベストアンサーに選ばれました！', '/app.html');
+    sendPushNotification(r.user_id, 'ベストアンサー', 'あなたの返信がベストアンサーに選ばれました！', '/app.html');
     await loadNotifications();return;
   }console.warn("bestAnswer notif failed:",error.code,error.message);}
 }
