@@ -59,10 +59,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);p
 
 /* TAB NAV */
 .tab-nav{position:fixed;top:var(--hh);left:0;right:0;height:var(--nh);z-index:99;background:white;border-bottom:1px solid rgba(26,23,20,.08);display:flex;align-items:stretch}
-.tab-btn{flex:1;border:none;background:none;font-family:'DM Sans',sans-serif;font-size:13px;letter-spacing:.04em;color:var(--mist);cursor:pointer;position:relative;transition:all .2s;font-weight:400;border-right:1px solid rgba(26,23,20,.06)}
-.tab-btn:last-child{border-right:none}
+.tab-btn{flex:1;border:none;background:none;font-family:'DM Sans',sans-serif;font-size:13px;letter-spacing:.04em;color:var(--mist);cursor:pointer;position:relative;transition:color .2s;font-weight:400}
 .tab-btn::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--primary);transform:scaleX(0);transition:transform .2s}
-.tab-btn.active{color:var(--primary);font-weight:600;background:rgba(196,98,45,.04)}
+.tab-btn.active{color:var(--primary);font-weight:600}
 .tab-btn.active::after{transform:scaleX(1)}
 
 /* PAGE */
@@ -261,11 +260,6 @@ img.av{object-fit:cover;display:block}
 .icon-option img{width:100%;aspect-ratio:1;border-radius:50%;border:3px solid transparent;transition:all .2s;display:block;background:var(--warm)}
 .icon-option input[type=radio]:checked+img{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-pale)}
 .icon-option img:hover{border-color:var(--mist)}
-.icon-option-none{position:relative;cursor:pointer}
-.icon-option-none input[type=radio]{position:absolute;opacity:0;width:0;height:0}
-.icon-none-circle{width:100%;aspect-ratio:1;border-radius:50%;border:3px solid transparent;transition:all .2s;display:flex;align-items:center;justify-content:center;background:var(--warm);color:var(--mist);font-size:10px;font-weight:400;text-align:center;line-height:1.3}
-.icon-option-none input[type=radio]:checked+.icon-none-circle{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-pale)}
-.icon-option-none:hover .icon-none-circle{border-color:var(--mist)}
 .icon-modal-btns{display:flex;gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid rgba(26,23,20,.06)}
 
 /* NOTIFICATION DRAWER */
@@ -495,6 +489,7 @@ const ATTRIBUTES_URL = "https://app.honneroom.com/data/attributes.json";
 const PORTAL  = "https://rhynpigqhnbwjyudvvfw.functions.supabase.co/create-portal-session";
 const APP_URL = "https://app.honneroom.com/app.html";
 const ICONS_URL = "https://app.honneroom.com/data/icons.json";
+const DEFAULT_ICON = "https://app.honneroom.com/data/icon/icon00.png";
 const FREE_DAILY_POST_LIMIT = 3;
 
 const sb = window.supabase.createClient(SB_URL, SB_KEY, {
@@ -1349,11 +1344,11 @@ function openIconPickerModal(currentUrl){
   overlay.id="iconPickerModal";
   overlay.className="icon-modal-overlay show";
 
-  let tempSelected=currentUrl||"";
+  let tempSelected=currentUrl||DEFAULT_ICON;
 
-  // 「画像なし」＋アイコンリスト
-  const noneChecked=!currentUrl?" checked":"";
-  let gridHtml=`<label class="icon-option-none"><input type="radio" name="iconPickModal" value=""${noneChecked}><div class="icon-none-circle">なし</div></label>`;
+  // デフォルトアイコン＋アイコンリスト
+  const defaultChecked=(!currentUrl||currentUrl===DEFAULT_ICON)?" checked":"";
+  let gridHtml=`<label class="icon-option"><input type="radio" name="iconPickModal" value="${DEFAULT_ICON}"${defaultChecked}><img src="${DEFAULT_ICON}" alt="デフォルト" style="opacity:.7"></label>`;
   gridHtml+=S.ICONS.map(url=>{
     const checked=(currentUrl===url)?" checked":"";
     return`<label class="icon-option"><input type="radio" name="iconPickModal" value="${esc(url)}"${checked}><img src="${esc(url)}" alt=""></label>`;
@@ -1379,18 +1374,13 @@ function openIconPickerModal(currentUrl){
 
   // 決定
   overlay.querySelector("#iconModalOk").addEventListener("click",()=>{
+    const iconUrl=tempSelected||DEFAULT_ICON;
     // プレビュー更新
     const prev=$("#avPreview");
-    if(prev){
-      if(tempSelected){
-        prev.innerHTML=`<img src="${esc(tempSelected)}" alt="">`;
-      }else{
-        prev.innerHTML=`<span style="font-size:24px;color:var(--mist)">?</span>`;
-      }
-    }
+    if(prev) prev.innerHTML=`<img src="${esc(iconUrl)}" alt="">`;
     // hidden inputに値を保存
     const h=$("#selectedIconVal");
-    if(h)h.value=tempSelected;
+    if(h)h.value=iconUrl;
     overlay.remove();
   });
 
@@ -1414,13 +1404,13 @@ function renderAccount(){
     <p style="font-size:13px;color:var(--mist);font-weight:300;margin-bottom:18px;line-height:1.7">投稿・返信時に表示される情報です。</p>
     <label class="flbl">アイコン</label>
     <div class="av-upload-wrap">
-      <div class="av-preview-lg" id="avPreview">${pr?.avatar_url?`<img src="${esc(pr.avatar_url)}" alt="">`:`<span style="font-size:24px;color:var(--mist)">?</span>`}</div>
+      <div class="av-preview-lg" id="avPreview"><img src="${esc(pr?.avatar_url||DEFAULT_ICON)}" alt=""></div>
       <div>
         <p style="font-size:12px;color:var(--mist);font-weight:300;line-height:1.7;margin-bottom:6px">好きなアイコンを選んでください。</p>
         <button class="btn-av" id="btnShowIconPicker">アイコンを選ぶ</button>
       </div>
     </div>
-    <input type="hidden" id="selectedIconVal" value="${esc(pr?.avatar_url||"")}">
+    <input type="hidden" id="selectedIconVal" value="${esc(pr?.avatar_url||DEFAULT_ICON)}">
     <p id="avMsg" class="fmsg" style="margin-bottom:16px"></p>
     <div class="fg">
       <label class="flbl">表示名（ニックネーム）<span class="req"> *</span></label>
@@ -1514,9 +1504,8 @@ async function saveProfile(){
   const ageRaw=parseInt($("#pAge").value);
   if($("#pAge").value.trim()!==""&&(isNaN(ageRaw)||ageRaw<18||ageRaw>100)){msg(m,"年齢は18〜100の範囲で入力してください。");return;}
   const age=(!isNaN(ageRaw)&&ageRaw>=18&&ageRaw<=100)?ageRaw:null;
-  const selectedIconVal=$("#selectedIconVal")?.value;
-  const selectedIcon=selectedIconVal===undefined?null:(selectedIconVal===""?null:selectedIconVal);
-  const upd={display_name:displayName,age,work_style:$("#pWork").value||null,marital_status:$("#pMarital").value||null,living_situation:$("#pLiving").value||null,bio:$("#pBio").value.trim()||null,avatar_url:selectedIcon};
+  const selectedIconVal=$("#selectedIconVal")?.value||DEFAULT_ICON;
+  const upd={display_name:displayName,age,work_style:$("#pWork").value||null,marital_status:$("#pMarital").value||null,living_situation:$("#pLiving").value||null,bio:$("#pBio").value.trim()||null,avatar_url:selectedIconVal};
   const btn=$("#btnSaveProf");btn.disabled=true;
   const{error}=await sb.from("profiles").update(upd).eq("id",S.user.id);
   btn.disabled=false;
