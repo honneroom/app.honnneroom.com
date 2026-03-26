@@ -28,7 +28,7 @@
   --ink:#1a1714;--cream:#f5f0e8;--warm:#e8dfd0;
   --primary:#c4622d;--primary-light:#d4845a;--primary-pale:#f0ddd3;
   --mist:#8a7a72;--error:#b3261e;
-  --hh:60px;--nh:48px;
+  --hh:60px;--nh:52px;
 }
 html,body{min-height:100vh}
 body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);padding-top:calc(var(--hh) + var(--nh))}
@@ -59,9 +59,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);p
 
 /* TAB NAV */
 .tab-nav{position:fixed;top:var(--hh);left:0;right:0;height:var(--nh);z-index:99;background:white;border-bottom:1px solid rgba(26,23,20,.08);display:flex;align-items:stretch}
-.tab-btn{flex:1;border:none;background:none;font-family:'DM Sans',sans-serif;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--mist);cursor:pointer;position:relative;transition:color .2s}
-.tab-btn::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--primary);transform:scaleX(0);transition:transform .2s}
-.tab-btn.active{color:var(--primary)}
+.tab-btn{flex:1;border:none;background:none;font-family:'DM Sans',sans-serif;font-size:13px;letter-spacing:.04em;color:var(--mist);cursor:pointer;position:relative;transition:all .2s;font-weight:400;border-right:1px solid rgba(26,23,20,.06)}
+.tab-btn:last-child{border-right:none}
+.tab-btn::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--primary);transform:scaleX(0);transition:transform .2s}
+.tab-btn.active{color:var(--primary);font-weight:600;background:rgba(196,98,45,.04)}
 .tab-btn.active::after{transform:scaleX(1)}
 
 /* PAGE */
@@ -244,13 +245,28 @@ img.av{object-fit:cover;display:block}
 .av-preview-lg img{width:100%;height:100%;object-fit:cover}
 .btn-av{font-size:12px;color:var(--primary);background:none;border:1px solid var(--primary);padding:6px 14px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
 .btn-av:hover{background:var(--primary);color:white}
-.icon-picker-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:14px 0}
+
+/* ICON PICKER MODAL */
+.icon-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;display:none;align-items:center;justify-content:center;padding:20px}
+.icon-modal-overlay.show{display:flex}
+.icon-modal{background:white;width:min(440px,96vw);max-height:80vh;overflow-y:auto;padding:24px;position:relative;border-top:4px solid var(--primary);animation:popIn .2s ease}
+.icon-modal-title{font-family:'Shippori Mincho',serif;font-size:17px;font-weight:600;color:var(--ink);margin-bottom:6px}
+.icon-modal-sub{font-size:12px;color:var(--mist);font-weight:300;margin-bottom:16px}
+.icon-modal-close{position:absolute;top:12px;right:14px;background:none;border:none;font-size:22px;cursor:pointer;color:var(--mist);padding:4px 8px;transition:color .2s;line-height:1}
+.icon-modal-close:hover{color:var(--ink)}
+.icon-picker-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:0}
 @media(max-width:400px){.icon-picker-grid{grid-template-columns:repeat(4,1fr)}}
 .icon-option{position:relative;cursor:pointer}
 .icon-option input[type=radio]{position:absolute;opacity:0;width:0;height:0}
 .icon-option img{width:100%;aspect-ratio:1;border-radius:50%;border:3px solid transparent;transition:all .2s;display:block;background:var(--warm)}
 .icon-option input[type=radio]:checked+img{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-pale)}
 .icon-option img:hover{border-color:var(--mist)}
+.icon-option-none{position:relative;cursor:pointer}
+.icon-option-none input[type=radio]{position:absolute;opacity:0;width:0;height:0}
+.icon-none-circle{width:100%;aspect-ratio:1;border-radius:50%;border:3px solid transparent;transition:all .2s;display:flex;align-items:center;justify-content:center;background:var(--warm);color:var(--mist);font-size:10px;font-weight:400;text-align:center;line-height:1.3}
+.icon-option-none input[type=radio]:checked+.icon-none-circle{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-pale)}
+.icon-option-none:hover .icon-none-circle{border-color:var(--mist)}
+.icon-modal-btns{display:flex;gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid rgba(26,23,20,.06)}
 
 /* NOTIFICATION DRAWER */
 .notif-overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:200;display:none}
@@ -478,6 +494,7 @@ const CATEGORIES_URL = "https://app.honneroom.com/data/categories.json";
 const ATTRIBUTES_URL = "https://app.honneroom.com/data/attributes.json";
 const PORTAL  = "https://rhynpigqhnbwjyudvvfw.functions.supabase.co/create-portal-session";
 const APP_URL = "https://app.honneroom.com/app.html";
+const ICONS_URL = "https://app.honneroom.com/data/icons.json";
 const FREE_DAILY_POST_LIMIT = 3;
 
 const sb = window.supabase.createClient(SB_URL, SB_KEY, {
@@ -491,6 +508,7 @@ const S = {
   search:"", homeType:"", homeCat:"",
   notifications:[], unreadCount:0,
   CATEGORIES:[], ATTRIBUTES:{work_style:[],marital_status:[],living_situation:[]},
+  ICONS:[],
   viewStack:[],
   todayPostCount:0,
 };
@@ -595,6 +613,14 @@ async function loadMasterData(){
       marital_status:["婚活中","交際中","独身","既婚（子あり）","既婚（子なし）","離婚経験あり"],
       living_situation:["一人暮らし","実家暮らし","パートナーと同居","その他"],
     };
+  }
+  // アイコンリスト読み込み
+  try{
+    const icnRes=await fetch(ICONS_URL,{cache:"no-store"});
+    S.ICONS=await icnRes.json();
+  }catch(e){
+    // フォールバック: 従来の15アイコン
+    S.ICONS=Array.from({length:15},(_,i)=>`https://app.honneroom.com/data/icon/icon${String(i+1).padStart(2,"0")}.png`);
   }
 }
 
@@ -1314,6 +1340,67 @@ async function createBestAnswerNotification(threadId,replyId){
   for(const p of payloads){const{error}=await sb.from("notifications").insert(p);if(!error){await loadNotifications();return;}console.warn("bestAnswer notif failed:",error.code,error.message);}
 }
 
+/* ===== アイコンピッカーモーダル ===== */
+function openIconPickerModal(currentUrl){
+  // 既存モーダルがあれば削除
+  const old=document.getElementById("iconPickerModal");if(old)old.remove();
+
+  const overlay=document.createElement("div");
+  overlay.id="iconPickerModal";
+  overlay.className="icon-modal-overlay show";
+
+  let tempSelected=currentUrl||"";
+
+  // 「画像なし」＋アイコンリスト
+  const noneChecked=!currentUrl?" checked":"";
+  let gridHtml=`<label class="icon-option-none"><input type="radio" name="iconPickModal" value=""${noneChecked}><div class="icon-none-circle">なし</div></label>`;
+  gridHtml+=S.ICONS.map(url=>{
+    const checked=(currentUrl===url)?" checked":"";
+    return`<label class="icon-option"><input type="radio" name="iconPickModal" value="${esc(url)}"${checked}><img src="${esc(url)}" alt=""></label>`;
+  }).join("");
+
+  overlay.innerHTML=`<div class="icon-modal">
+    <button class="icon-modal-close" id="iconModalClose">×</button>
+    <div class="icon-modal-title">アイコンを選ぶ</div>
+    <div class="icon-modal-sub">好きなアイコンをタップして選んでください。</div>
+    <div class="icon-picker-grid">${gridHtml}</div>
+    <div class="icon-modal-btns">
+      <button class="btn-p" id="iconModalOk">決定</button>
+      <button class="btn-s" id="iconModalCancel">キャンセル</button>
+    </div>
+  </div>`;
+
+  document.body.appendChild(overlay);
+
+  // ラジオ変更で一時選択を更新
+  overlay.querySelectorAll("input[name=iconPickModal]").forEach(r=>{
+    r.addEventListener("change",()=>{tempSelected=r.value;});
+  });
+
+  // 決定
+  overlay.querySelector("#iconModalOk").addEventListener("click",()=>{
+    // プレビュー更新
+    const prev=$("#avPreview");
+    if(prev){
+      if(tempSelected){
+        prev.innerHTML=`<img src="${esc(tempSelected)}" alt="">`;
+      }else{
+        prev.innerHTML=`<span style="font-size:24px;color:var(--mist)">?</span>`;
+      }
+    }
+    // hidden inputに値を保存
+    const h=$("#selectedIconVal");
+    if(h)h.value=tempSelected;
+    overlay.remove();
+  });
+
+  // キャンセル・×・背景クリック
+  const close=()=>overlay.remove();
+  overlay.querySelector("#iconModalClose").addEventListener("click",close);
+  overlay.querySelector("#iconModalCancel").addEventListener("click",close);
+  overlay.addEventListener("click",e=>{if(e.target===overlay)close();});
+}
+
 function renderAccount(){
   const wrap=$("#accountWrap");const pr=S.profile,planTxt=S.isStd?"Standard":"Free";const attr=S.ATTRIBUTES;
   wrap.innerHTML=`
@@ -1327,17 +1414,13 @@ function renderAccount(){
     <p style="font-size:13px;color:var(--mist);font-weight:300;margin-bottom:18px;line-height:1.7">投稿・返信時に表示される情報です。</p>
     <label class="flbl">アイコン</label>
     <div class="av-upload-wrap">
-      <div class="av-preview-lg" id="avPreview"><img src="${pr?.avatar_url||"https://app.honneroom.com/data/icon/icon01.png"}" alt=""></div>
+      <div class="av-preview-lg" id="avPreview">${pr?.avatar_url?`<img src="${esc(pr.avatar_url)}" alt="">`:`<span style="font-size:24px;color:var(--mist)">?</span>`}</div>
       <div>
         <p style="font-size:12px;color:var(--mist);font-weight:300;line-height:1.7;margin-bottom:6px">好きなアイコンを選んでください。</p>
         <button class="btn-av" id="btnShowIconPicker">アイコンを選ぶ</button>
       </div>
     </div>
-    <div id="iconPickerArea" style="display:none">
-      <div class="icon-picker-grid">
-        ${Array.from({length:15},(_,i)=>{const n=String(i+1).padStart(2,"0");const url=`https://app.honneroom.com/data/icon/icon${n}.png`;return`<label class="icon-option"><input type="radio" name="iconPick" value="${url}"${pr?.avatar_url===url?" checked":""}><img src="${url}" alt="icon${n}"></label>`;}).join("")}
-      </div>
-    </div>
+    <input type="hidden" id="selectedIconVal" value="${esc(pr?.avatar_url||"")}">
     <p id="avMsg" class="fmsg" style="margin-bottom:16px"></p>
     <div class="fg">
       <label class="flbl">表示名（ニックネーム）<span class="req"> *</span></label>
@@ -1384,8 +1467,11 @@ function renderAccount(){
 
   $("#pDisplayName").addEventListener("input",e=>$("#dnCount").textContent=e.target.value.length);
   $("#pBio").addEventListener("input",e=>$("#bioCount").textContent=e.target.value.length);
-  $("#btnShowIconPicker").addEventListener("click",()=>{const area=$("#iconPickerArea");area.style.display=area.style.display==="none"?"block":"none";});
-  document.querySelectorAll("input[name=iconPick]").forEach(r=>{r.addEventListener("change",()=>{const prev=$("#avPreview");if(prev)prev.innerHTML=`<img src="${esc(r.value)}" alt="">`;});});
+
+  // アイコンピッカーモーダル
+  $("#btnShowIconPicker").addEventListener("click",()=>{
+    openIconPickerModal(pr?.avatar_url||"");
+  });
 
   const pa=$("#planActions");
   if(S.isStd){
@@ -1428,8 +1514,9 @@ async function saveProfile(){
   const ageRaw=parseInt($("#pAge").value);
   if($("#pAge").value.trim()!==""&&(isNaN(ageRaw)||ageRaw<18||ageRaw>100)){msg(m,"年齢は18〜100の範囲で入力してください。");return;}
   const age=(!isNaN(ageRaw)&&ageRaw>=18&&ageRaw<=100)?ageRaw:null;
-  const selectedIcon=document.querySelector("input[name=iconPick]:checked")?.value||null;
-  const upd={display_name:displayName,age,work_style:$("#pWork").value||null,marital_status:$("#pMarital").value||null,living_situation:$("#pLiving").value||null,bio:$("#pBio").value.trim()||null,...(selectedIcon?{avatar_url:selectedIcon}:{})};
+  const selectedIconVal=$("#selectedIconVal")?.value;
+  const selectedIcon=selectedIconVal===undefined?null:(selectedIconVal===""?null:selectedIconVal);
+  const upd={display_name:displayName,age,work_style:$("#pWork").value||null,marital_status:$("#pMarital").value||null,living_situation:$("#pLiving").value||null,bio:$("#pBio").value.trim()||null,avatar_url:selectedIcon};
   const btn=$("#btnSaveProf");btn.disabled=true;
   const{error}=await sb.from("profiles").update(upd).eq("id",S.user.id);
   btn.disabled=false;
