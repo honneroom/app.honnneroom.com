@@ -1402,6 +1402,19 @@ async function openPortal(){
   try{const r=await fetch(PORTAL,{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({user_id:S.user.id,return_url:APP_URL})});if(!r.ok){alert("サブスクリプション管理ページを開けませんでした。時間をおいて再度お試しください。");return;}const d=await r.json();if(!d?.url){alert("サブスクリプション管理ページを開けませんでした。");return;}location.href=d.url;}catch(e){alert("エラーが発生しました。");}
 }
 
+/* ===== 通報メール通知 ===== */
+async function notifyReport(reportId){
+  try{
+    const{data:sess}=await sb.auth.getSession();const token=sess?.session?.access_token;
+    if(!token)return;
+    await fetch('https://rhynpigqhnbwjyudvvfw.functions.supabase.co/notify-report',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body:JSON.stringify({report_id:reportId})
+    });
+  }catch(e){console.warn('notifyReport error:',e);}
+}
+
 /* ★変更4: bindReport - プラン制限を撤廃 + モーダルリセット追加 */
 function bindReport(btn){
   btn.addEventListener("click",e=>{
@@ -1426,10 +1439,12 @@ $("#btnReport").addEventListener("click",async()=>{
   if(!S.reportTarget||!S.user)return;
   const btn=$("#btnReport");btn.disabled=true;
   const detail=$("#reportDetail")?.value?.trim()||null;
-  const{error}=await sb.from("reports").insert({reporter_id:S.user.id,target_type:S.reportTarget.type,target_id:S.reportTarget.id,reason,detail,content_snapshot:S.reportTarget.snapshot||null});
+  const{data:reportData,error}=await sb.from("reports").insert({reporter_id:S.user.id,target_type:S.reportTarget.type,target_id:S.reportTarget.id,reason,detail,content_snapshot:S.reportTarget.snapshot||null}).select("id").single();
   btn.disabled=false;
   if(error){msg(m,"通報に失敗しました。");return;}
   msg(m,"通報しました。ご協力ありがとうございます。","ok");
+  // 管理者にメール通知（バックグラウンド）
+  if(reportData?.id){notifyReport(reportData.id);}
   setTimeout(()=>{$("#reportModal").classList.remove("show");S.reportTarget=null;},1500);
 });
 
