@@ -1,4 +1,4 @@
-// 本音ルーム Service Worker（プッシュ通知対応版）
+// 本音ルーム Service Worker
 const CACHE_NAME = 'honneroom-v3';
 const STATIC_ASSETS = [
   '/manifest.json',
