@@ -74,6 +74,26 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(fetch(request));
 });
 
+// ===== バッジカウンター（SW内で管理） =====
+let badgeCount = 0;
+
+// アプリ側からのメッセージ受信
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'RESET_BADGE') {
+    badgeCount = 0;
+    if ('clearAppBadge' in navigator) {
+      navigator.clearAppBadge().catch(() => {});
+    }
+  } else if (event.data && event.data.type === 'SET_BADGE') {
+    badgeCount = event.data.count || 0;
+    if (badgeCount > 0 && 'setAppBadge' in navigator) {
+      navigator.setAppBadge(badgeCount).catch(() => {});
+    } else if ('clearAppBadge' in navigator) {
+      navigator.clearAppBadge().catch(() => {});
+    }
+  }
+});
+
 // ===== プッシュ通知受信 =====
 self.addEventListener('push', (event) => {
   let data = {};
@@ -95,8 +115,15 @@ self.addEventListener('push', (event) => {
     }
   };
 
+  // バッジカウントを+1
+  badgeCount++;
+
   event.waitUntil(
     self.registration.showNotification(title, options).then(() => {
+      // アイコンバッジを更新
+      if ('setAppBadge' in navigator) {
+        navigator.setAppBadge(badgeCount).catch(() => {});
+      }
       // アプリが開いていればDBから未読数を再取得させる
       return clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
         for (const client of clientList) {
@@ -120,6 +147,8 @@ self.addEventListener('notificationclick', (event) => {
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
         if (client.url.includes('app.honneroom.com') && 'focus' in client) {
+          // アプリにバッジリセットを依頼
+          client.postMessage({ type: 'PUSH_CLICKED' });
           return client.focus();
         }
       }
