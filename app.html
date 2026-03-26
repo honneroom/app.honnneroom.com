@@ -1406,6 +1406,13 @@ main();
         .then(reg => console.log('SW registered:', reg.scope))
         .catch(err => console.warn('SW registration failed:', err));
     });
+
+    // SWからプッシュ受信の通知を受け取り、DBから未読数を再取得してバッジ更新
+    navigator.serviceWorker.addEventListener('message', async (event) => {
+      if (event.data && event.data.type === 'PUSH_RECEIVED') {
+        await loadNotifications();
+      }
+    });
   }
 
   let deferredPrompt = null;
