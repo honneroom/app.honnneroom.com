@@ -502,7 +502,8 @@ const ICONS_URL = "https://app.honneroom.com/data/icons.json";
 const DEFAULT_ICON = "https://app.honneroom.com/data/icon/icon00.png";
 const FREE_DAILY_POST_LIMIT = 3;
 
-const VAPID_PUBLIC_KEY = 'BH3tfdzq6i05jIUlojHfZ3NeMKC1dbxqWXjg0oGMfkCk6plfYH0iSQbQFumq7V2yxENcnPc5gPAETMaf5loZrbg';
+/* ★ VAPID公開鍵：Step1で生成したものに置き換えてください */
+const VAPID_PUBLIC_KEY = 'ここにStep1で生成した公開鍵を貼る';
 
 const sb = window.supabase.createClient(SB_URL, SB_KEY, {
   auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
@@ -890,8 +891,14 @@ async function openDetail(threadId,type){
     <div class="dfooter"><span>${rtime(t.created_at)}</span>${t.best_reply_id?`<span class="solved">✓ ベストアンサーあり</span>`:""}</div>
     ${buildReactFull(t.id)}
   </div>`;
+  // 返信フォーム（返信一覧の上に配置）
+  if(!S.user){html+=`<div class="reply-form-box"><div class="upgrade-box">返信するには<a href="/">ログイン</a>が必要です。</div></div>`;}
+  else{
+    html+=`<div class="reply-form-box"><div class="reply-form-lbl">返信する</div><textarea id="rBody" class="fta" placeholder="返信を入力してください…" maxlength="1000" style="min-height:100px"></textarea><div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px"><button id="btnReply" class="btn-p">返信する</button><span class="ccount"><span id="rCount">0</span>/1000</span></div><p id="rMsg" class="fmsg"></p></div>`;
+  }
   const{data:replies}=await sb.from("replies").select(`*,profiles!user_id(display_name,age,work_style,marital_status,living_situation,avatar_url)`).eq("thread_id",threadId).order("created_at",{ascending:true});
   const rids=(replies||[]).map(r=>r.id);await loadReactions(rids);
+  html+=`<div class="sec-divider">返信 (${(replies||[]).length})</div>`;
   html+=`<div class="replies-wrap">`;
   if(!replies?.length){html+=`<div style="padding:20px 0;font-size:13px;color:var(--mist);text-align:center">まだ返信がありません。</div>`;}
   else{
@@ -920,10 +927,6 @@ async function openDetail(threadId,type){
     }).join("");
   }
   html+=`</div>`;
-  if(!S.user){html+=`<div class="reply-form-box"><div class="upgrade-box">返信するには<a href="/">ログイン</a>が必要です。</div></div>`;}
-  else{
-    html+=`<div class="reply-form-box"><div class="reply-form-lbl">返信する</div><textarea id="rBody" class="fta" placeholder="返信を入力してください…" maxlength="1000" style="min-height:100px"></textarea><div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px"><button id="btnReply" class="btn-p">返信する</button><span class="ccount"><span id="rCount">0</span>/1000</span></div><p id="rMsg" class="fmsg"></p></div>`;
-  }
   dv.innerHTML=html;
   dv.querySelector("#backBtn2")?.addEventListener("click",showHomeList);
   dv.querySelectorAll(".report-btn").forEach(b=>bindReport(b));
@@ -1008,17 +1011,45 @@ async function openUserProfile(userId){
 async function renderMypage(){
   await loadTodayPostCount();renderPostFormInHome();
   const wrap=$("#mypageWrap");wrap.innerHTML=`<div class="loading">読み込み中…</div>`;
-  const{data:threads}=await sb.from("threads").select(`id,type,category,title,body,created_at,best_reply_id,user_id,profiles!user_id(display_name,age,work_style,marital_status,living_situation,avatar_url),replies!replies_thread_id_fkey(count)`).eq("user_id",S.user.id).order("created_at",{ascending:false}).limit(100);
-  const ts=threads||[];const posts=ts.filter(t=>t.type==="post");const questions=ts.filter(t=>t.type==="question");
+  const[threadsRes, repliesRes]=await Promise.all([
+    sb.from("threads").select(`id,type,category,title,body,created_at,best_reply_id,user_id,profiles!user_id(display_name,age,work_style,marital_status,living_situation,avatar_url),replies!replies_thread_id_fkey(count)`).eq("user_id",S.user.id).order("created_at",{ascending:false}).limit(100),
+    sb.from("replies").select(`id,body,created_at,thread_id,user_id,threads!thread_id(id,type,title,body)`).eq("user_id",S.user.id).order("created_at",{ascending:false}).limit(100)
+  ]);
+  const ts=threadsRes.data||[];const posts=ts.filter(t=>t.type==="post");const questions=ts.filter(t=>t.type==="question");
+  const myReplies=repliesRes.data||[];
+
+  // 自分の返信カードHTML
+  const repliesHtml=myReplies.length
+    ?`<div class="card-list">`+myReplies.map(r=>{
+      const th=r.threads||{};
+      const thTitle=th.title||(th.body?.slice(0,30)+"…")||"投稿";
+      const isPost=th.type==="post";
+      return`<div class="my-reply-card post-card${isPost?" is-post":" is-question"}" data-tid="${th.id}" data-type="${th.type||'question'}" style="cursor:pointer">
+        <div style="font-size:11px;color:var(--mist);margin-bottom:6px;display:flex;align-items:center;gap:6px">
+          <span class="${isPost?"type-badge-post":"type-badge-q"}" style="font-size:9px;padding:1px 6px">${isPost?"つぶやき":"相談"}</span>
+          <span>「${esc(thTitle)}」への返信</span>
+        </div>
+        <div class="card-preview" style="-webkit-line-clamp:2;color:#4a4440">${esc(r.body)}</div>
+        <div class="card-footer"><span>${rtime(r.created_at)}</span></div>
+      </div>`;
+    }).join("")+`</div>`
+    :`<div class="empty"><div class="empty-h">まだ返信がありません</div><p>他のユーザーの投稿に返信してみましょう。</p></div>`;
+
   wrap.innerHTML=`
-    <div class="mp-tabs"><button class="mp-tab active" data-pane="mpPanePost">つぶやき (${posts.length})</button><button class="mp-tab" data-pane="mpPaneQuestion">相談 (${questions.length})</button></div>
+    <div class="mp-tabs">
+      <button class="mp-tab active" data-pane="mpPanePost">つぶやき (${posts.length})</button>
+      <button class="mp-tab" data-pane="mpPaneQuestion">相談 (${questions.length})</button>
+      <button class="mp-tab" data-pane="mpPaneReply">返信 (${myReplies.length})</button>
+    </div>
     <div id="mpPanePost" class="mp-pane active">${posts.length?`<div class="card-list">`+posts.map(t=>cardHtml(t,false)).join("")+`</div>`:`<div class="empty"><div class="empty-h">まだつぶやきがありません</div><p>上のフォームからつぶやいてみましょう。</p></div>`}</div>
-    <div id="mpPaneQuestion" class="mp-pane">${questions.length?`<div class="card-list">`+questions.map(t=>cardHtml(t,false)).join("")+`</div>`:`<div class="empty"><div class="empty-h">まだ相談がありません</div><p>上のフォームから相談してみましょう。</p></div>`}</div>`;
+    <div id="mpPaneQuestion" class="mp-pane">${questions.length?`<div class="card-list">`+questions.map(t=>cardHtml(t,false)).join("")+`</div>`:`<div class="empty"><div class="empty-h">まだ相談がありません</div><p>上のフォームから相談してみましょう。</p></div>`}</div>
+    <div id="mpPaneReply" class="mp-pane">${repliesHtml}</div>`;
   wrap.querySelectorAll(".mp-tab").forEach(btn=>{btn.addEventListener("click",()=>{wrap.querySelectorAll(".mp-tab").forEach(b=>b.classList.remove("active"));wrap.querySelectorAll(".mp-pane").forEach(p=>p.classList.remove("active"));btn.classList.add("active");document.getElementById(btn.dataset.pane)?.classList.add("active");});});
-  wrap.querySelectorAll(".post-card").forEach(c=>{c.addEventListener("click",e=>{if(e.target.closest(".del-btn")||e.target.closest(".rbtn-sm"))return;switchTab("home");setTimeout(()=>openDetail(c.dataset.id,c.dataset.type),80);});});
+  wrap.querySelectorAll(".post-card:not(.my-reply-card)").forEach(c=>{c.addEventListener("click",e=>{if(e.target.closest(".del-btn")||e.target.closest(".rbtn-sm"))return;switchTab("home");setTimeout(()=>openDetail(c.dataset.id,c.dataset.type),80);});});
+  wrap.querySelectorAll(".my-reply-card").forEach(c=>{c.addEventListener("click",()=>{switchTab("home");setTimeout(()=>openDetail(c.dataset.tid,c.dataset.type),80);});});
   wrap.querySelectorAll(".del-btn").forEach(b=>{b.addEventListener("click",async e=>{e.stopPropagation();await deleteThread(b.dataset.id,()=>renderMypage());});});
   const pids=posts.map(t=>t.id);
-  if(pids.length){await loadReactions(pids);wrap.querySelectorAll(".post-card.is-post").forEach(c=>{const tid=c.dataset.id;const row=c.querySelector(".react-row-sm");if(row){const d=document.createElement("div");d.innerHTML=buildReactSm(tid);row.replaceWith(d.firstChild);}});bindReactsSm(wrap);}
+  if(pids.length){await loadReactions(pids);wrap.querySelectorAll(".post-card.is-post:not(.my-reply-card)").forEach(c=>{const tid=c.dataset.id;const row=c.querySelector(".react-row-sm");if(row){const d=document.createElement("div");d.innerHTML=buildReactSm(tid);row.replaceWith(d.firstChild);}});bindReactsSm(wrap);}
 }
 
 async function deleteThread(threadId,onSuccess){
