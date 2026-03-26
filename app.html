@@ -1109,12 +1109,16 @@ async function subscribePush() {
 }
 
 async function unsubscribePush() {
+  // ブラウザのpush購読は解除しない（iOS で denied になる問題を回避）
+  // DBから購読レコードを削除するだけで、Edge Functionが送信先を見つけられなくなる = 通知が届かなくなる
   const reg = await navigator.serviceWorker.ready;
   const sub = await reg.pushManager.getSubscription();
   if (sub) {
     const endpoint = sub.endpoint;
-    await sub.unsubscribe();
     await sb.from('push_subscriptions').delete().eq('user_id', S.user.id).eq('endpoint', endpoint);
+  } else {
+    // 購読がない場合でもDBに残っているレコードを全削除
+    await sb.from('push_subscriptions').delete().eq('user_id', S.user.id);
   }
 }
 
@@ -1145,23 +1149,16 @@ async function initPushUI() {
     return;
   }
 
-  const sub = await getPushSubscription();
-  const permissionStatus = ('Notification' in window) ? Notification.permission : 'default';
-
-  // 権限がgrantedで購読もある → ON
-  // それ以外 → OFF
-  const isOn = !!sub && permissionStatus === 'granted';
+  // DBに購読レコードがあるかでON/OFFを判定（ブラウザの権限状態には依存しない）
+  const { data: dbSubs } = await sb.from('push_subscriptions').select('id').eq('user_id', S.user.id).limit(1);
+  const isOn = !!(dbSubs && dbSubs.length > 0);
 
   if (toggle) toggle.checked = isOn;
   if (statusEl) {
     statusEl.textContent = isOn ? '通知はONです' : '通知はOFFです';
     statusEl.style.color = isOn ? 'var(--primary)' : 'var(--mist)';
   }
-  // エラーメッセージをクリア（iPhone設定でONに戻した場合に古いメッセージを消す）
   if (msgEl) msgEl.textContent = '';
-
-  // 権限がgrantedなのに購読がない場合（iPhone設定でONに戻した後など）
-  // → トグルはOFF表示のまま、ユーザーがONにすれば再購読される
 
   if (toggle) {
     toggle.disabled = false;
@@ -1172,16 +1169,7 @@ async function initPushUI() {
           const ok = await subscribePush();
           if (!ok) {
             toggle.checked = false;
-            const currentPerm = ('Notification' in window) ? Notification.permission : 'default';
-            if (currentPerm === 'denied') {
-              const isIOS3 = /iphone|ipad|ipod/i.test(navigator.userAgent);
-              const guide = isIOS3
-                ? 'iPhoneの「設定」→「本音ルーム」→「通知」→「通知を許可」をONにしてから、再度お試しください。'
-                : 'ブラウザのアドレスバー左の鍵アイコン → 「サイトの設定」→「通知」を「許可」に変更してから、再度お試しください。';
-              if (msgEl) msg(msgEl, guide);
-            } else {
-              if (msgEl) msg(msgEl, '通知の許可が必要です。ブラウザの設定を確認してください。');
-            }
+            if (msgEl) msg(msgEl, '通知の許可が必要です。通知の許可ダイアログが表示されない場合は、一度アプリを閉じて開き直してからお試しください。');
           } else {
             if (msgEl) msg(msgEl, '通知をONにしました！', 'ok');
           }
@@ -1195,9 +1183,9 @@ async function initPushUI() {
         toggle.checked = !toggle.checked;
       }
       toggle.disabled = false;
-      const sub2 = await getPushSubscription();
-      const perm2 = ('Notification' in window) ? Notification.permission : 'default';
-      const isOn2 = !!sub2 && perm2 === 'granted';
+      // DBから再取得して状態更新
+      const { data: dbSubs2 } = await sb.from('push_subscriptions').select('id').eq('user_id', S.user.id).limit(1);
+      const isOn2 = !!(dbSubs2 && dbSubs2.length > 0);
       if (statusEl) { statusEl.textContent = isOn2 ? '通知はONです' : '通知はOFFです'; statusEl.style.color = isOn2 ? 'var(--primary)' : 'var(--mist)'; }
     };
   }
