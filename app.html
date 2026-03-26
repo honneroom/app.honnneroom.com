@@ -1087,34 +1087,45 @@ async function getPushSubscription() {
 }
 
 async function subscribePush() {
-  if (!('PushManager' in window)) return false;
+  if (!('PushManager' in window)) { alert('DEBUG: PushManager非対応'); return false; }
   const reg = await navigator.serviceWorker.ready;
 
-  // 既にブラウザに購読が残っていればそのまま再利用（permissionチェック不要）
   let sub = await reg.pushManager.getSubscription();
+  alert('DEBUG 1: 既存の購読=' + (sub ? 'あり' : 'なし'));
 
   if (!sub) {
-    // 新規購読 → permissionが必要
     const permission = await Notification.requestPermission();
+    alert('DEBUG 2: permission=' + permission);
     if (permission !== 'granted') return false;
     try {
       sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
       });
+      alert('DEBUG 3: subscribe成功');
     } catch(e) {
-      console.error('pushManager.subscribe failed:', e);
+      alert('DEBUG 3: subscribe失敗: ' + e.message);
       return false;
     }
   }
 
   const subJson = sub.toJSON();
-  await sb.from('push_subscriptions').upsert({
-    user_id: S.user.id,
-    endpoint: subJson.endpoint,
-    p256dh: subJson.keys.p256dh,
-    auth: subJson.keys.auth
-  }, { onConflict: 'user_id,endpoint' });
+  try {
+    const { error } = await sb.from('push_subscriptions').upsert({
+      user_id: S.user.id,
+      endpoint: subJson.endpoint,
+      p256dh: subJson.keys.p256dh,
+      auth: subJson.keys.auth
+    }, { onConflict: 'user_id,endpoint' });
+    if (error) {
+      alert('DEBUG 4: DB保存失敗: ' + error.message);
+      return false;
+    }
+    alert('DEBUG 5: DB保存成功！');
+  } catch(e) {
+    alert('DEBUG 4: DB例外: ' + e.message);
+    return false;
+  }
   return true;
 }
 
