@@ -1146,11 +1146,25 @@ async function initPushUI() {
   }
 
   const sub = await getPushSubscription();
-  if (toggle) toggle.checked = !!sub;
-  if (statusEl) statusEl.textContent = sub ? '通知はONです' : '通知はOFFです';
-  if (statusEl) statusEl.style.color = sub ? 'var(--primary)' : 'var(--mist)';
+  const permissionStatus = ('Notification' in window) ? Notification.permission : 'default';
+
+  // 権限がgrantedで購読もある → ON
+  // それ以外 → OFF
+  const isOn = !!sub && permissionStatus === 'granted';
+
+  if (toggle) toggle.checked = isOn;
+  if (statusEl) {
+    statusEl.textContent = isOn ? '通知はONです' : '通知はOFFです';
+    statusEl.style.color = isOn ? 'var(--primary)' : 'var(--mist)';
+  }
+  // エラーメッセージをクリア（iPhone設定でONに戻した場合に古いメッセージを消す）
+  if (msgEl) msgEl.textContent = '';
+
+  // 権限がgrantedなのに購読がない場合（iPhone設定でONに戻した後など）
+  // → トグルはOFF表示のまま、ユーザーがONにすれば再購読される
 
   if (toggle) {
+    toggle.disabled = false;
     toggle.onchange = async () => {
       toggle.disabled = true;
       try {
@@ -1158,7 +1172,16 @@ async function initPushUI() {
           const ok = await subscribePush();
           if (!ok) {
             toggle.checked = false;
-            if (msgEl) msg(msgEl, '通知の許可が必要です。ブラウザの設定を確認してください。');
+            const currentPerm = ('Notification' in window) ? Notification.permission : 'default';
+            if (currentPerm === 'denied') {
+              const isIOS3 = /iphone|ipad|ipod/i.test(navigator.userAgent);
+              const guide = isIOS3
+                ? 'iPhoneの「設定」→「本音ルーム」→「通知」→「通知を許可」をONにしてから、再度お試しください。'
+                : 'ブラウザのアドレスバー左の鍵アイコン → 「サイトの設定」→「通知」を「許可」に変更してから、再度お試しください。';
+              if (msgEl) msg(msgEl, guide);
+            } else {
+              if (msgEl) msg(msgEl, '通知の許可が必要です。ブラウザの設定を確認してください。');
+            }
           } else {
             if (msgEl) msg(msgEl, '通知をONにしました！', 'ok');
           }
@@ -1173,7 +1196,9 @@ async function initPushUI() {
       }
       toggle.disabled = false;
       const sub2 = await getPushSubscription();
-      if (statusEl) { statusEl.textContent = sub2 ? '通知はONです' : '通知はOFFです'; statusEl.style.color = sub2 ? 'var(--primary)' : 'var(--mist)'; }
+      const perm2 = ('Notification' in window) ? Notification.permission : 'default';
+      const isOn2 = !!sub2 && perm2 === 'granted';
+      if (statusEl) { statusEl.textContent = isOn2 ? '通知はONです' : '通知はOFFです'; statusEl.style.color = isOn2 ? 'var(--primary)' : 'var(--mist)'; }
     };
   }
 }
