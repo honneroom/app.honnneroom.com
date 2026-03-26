@@ -508,7 +508,7 @@ const DEFAULT_ICON = "https://app.honneroom.com/data/icon/icon00.png";
 const FREE_DAILY_POST_LIMIT = 3;
 
 /* ★ VAPID公開鍵：Step1で生成したものに置き換えてください */
-const VAPID_PUBLIC_KEY = 'BH3tfdzq6i05jIUlojHfZ3NeMKC1dbxqWXjg0oGMfkCk6plfYH0iSQbQFumq7V2yxENcnPc5gPAETMaf5loZrbg';
+const VAPID_PUBLIC_KEY = 'ここにStep1で生成した公開鍵を貼る';
 
 const sb = window.supabase.createClient(SB_URL, SB_KEY, {
   auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
@@ -1403,14 +1403,14 @@ async function openPortal(){
 }
 
 /* ===== 通報メール通知 ===== */
-async function notifyReport(reportId){
+async function notifyReportDirect(reportPayload){
   try{
     const{data:sess}=await sb.auth.getSession();const token=sess?.session?.access_token;
     if(!token)return;
     await fetch('https://rhynpigqhnbwjyudvvfw.functions.supabase.co/notify-report',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-      body:JSON.stringify({report_id:reportId})
+      body:JSON.stringify(reportPayload)
     });
   }catch(e){console.warn('notifyReport error:',e);}
 }
@@ -1439,12 +1439,13 @@ $("#btnReport").addEventListener("click",async()=>{
   if(!S.reportTarget||!S.user)return;
   const btn=$("#btnReport");btn.disabled=true;
   const detail=$("#reportDetail")?.value?.trim()||null;
-  const{data:reportData,error}=await sb.from("reports").insert({reporter_id:S.user.id,target_type:S.reportTarget.type,target_id:S.reportTarget.id,reason,detail,content_snapshot:S.reportTarget.snapshot||null}).select("id").single();
+  const reportPayload={reporter_id:S.user.id,target_type:S.reportTarget.type,target_id:S.reportTarget.id,reason,detail,content_snapshot:S.reportTarget.snapshot||null};
+  const{error}=await sb.from("reports").insert(reportPayload);
   btn.disabled=false;
   if(error){msg(m,"通報に失敗しました。");return;}
   msg(m,"通報しました。ご協力ありがとうございます。","ok");
-  // 管理者にメール通知（バックグラウンド）
-  if(reportData?.id){notifyReport(reportData.id);}
+  // 管理者にメール通知（バックグラウンド）- INSERT済みデータをそのまま渡す
+  notifyReportDirect(reportPayload);
   setTimeout(()=>{$("#reportModal").classList.remove("show");S.reportTarget=null;},1500);
 });
 
