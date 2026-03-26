@@ -79,6 +79,37 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+// プッシュ通知受信
+self.addEventListener('push', (event) => {
+  const data = event.data ? event.data.json() : {};
+  const title = data.title || '本音ルーム';
+  const options = {
+    body: data.body || '新しい通知があります',
+    icon: '/assets/icon.png',
+    badge: '/assets/icon.png',
+    tag: data.tag || 'honneroom-notif',
+    data: { url: data.url || '/app.html' }
+  };
+  event.waitUntil(
+    self.registration.showNotification(title, options)
+  );
+});
+
+// 通知クリック時
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url || '/app.html';
+  event.waitUntil(
+    clients.matchAll({ type: 'window' }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url.includes('app.honneroom.com') && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      return clients.openWindow(url);
+    })
+  );
+});
   // ❗それ以外はネットワーク優先（キャッシュしない）
   event.respondWith(fetch(request));
 });
