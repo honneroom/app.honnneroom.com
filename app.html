@@ -1482,6 +1482,9 @@ async function main(){
   await Promise.all([loadBilling(),loadMasterData()]);
   const user=await getUser();
   if(!user){location.replace("/");return;}
+
+  await controlAuthUI();
+  
   S.user=user;
   $("#userEmail").textContent=user.email||"";
   const prof=await loadProfile(user.id);
@@ -1524,7 +1527,6 @@ function showBannedScreen(prof){
 async function controlAuthUI() {
   const { data: { user } } = await sb.auth.getUser();
   if (!user) return;
-  controlAuthUI();
   const provider = user.app_metadata?.provider;
 
   if (provider === "google") {
