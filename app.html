@@ -1533,9 +1533,8 @@ async function hideEmailOnlyUI() {
   }
 }
 
-window.addEventListener("load", hideEmailOnlyUI);
-
-main();
+await main();
+await hideEmailOnlyUI();
 </script>
 
 <!-- Service Worker 登録 + PWAバナー -->
