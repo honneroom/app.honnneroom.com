@@ -1521,19 +1521,18 @@ function showBannedScreen(prof){
     </div>`;
   document.body.style.paddingTop="0";
 }
-async function hideEmailOnlyUI() {
+async function controlAuthUI() {
   const { data: { user } } = await sb.auth.getUser();
-
   if (!user) return;
+  const provider = user.app_metadata?.provider;
 
-  if (user.app_metadata?.provider === "google") {
-    document.querySelectorAll(".email-only").forEach(el => {
-      el.style.display = "none";
-    });
+  if (provider === "google") {
+    // Googleログイン → 非表示
+    document.getElementById("email-settings")?.style.setProperty("display", "none");
+    document.getElementById("password-settings")?.style.setProperty("display", "none");
+    document.getElementById("password-notice")?.style.setProperty("display", "none");
   }
 }
-
-window.addEventListener("load", hideEmailOnlyUI);
 
 main();
 </script>
