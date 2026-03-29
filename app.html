@@ -1524,6 +1524,7 @@ function showBannedScreen(prof){
 async function controlAuthUI() {
   const { data: { user } } = await sb.auth.getUser();
   if (!user) return;
+  controlAuthUI();
   const provider = user.app_metadata?.provider;
 
   if (provider === "google") {
