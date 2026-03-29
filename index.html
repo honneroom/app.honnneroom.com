@@ -316,6 +316,30 @@
         .catch(err => console.warn('SW registration failed:', err));
     });
   }
+  
+  const googleBtn = document.getElementById("btn-google");
+  const googleMsg = document.getElementById("google-message");
+  
+  if (googleBtn) {
+    googleBtn.addEventListener("click", async () => {
+      try {
+        const { error } = await sb.auth.signInWithOAuth({
+          provider: "google",
+          options: {
+            redirectTo: "https://app.honneroom.com/app.html"
+          }
+        });
+  
+        if (error) {
+          googleMsg.textContent = "ログインに失敗しました";
+          googleMsg.classList.add("error");
+        }
+      } catch (e) {
+        googleMsg.textContent = "エラーが発生しました";
+        googleMsg.classList.add("error");
+      }
+    });
+  }
 
   let deferredPrompt = null;
   const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
