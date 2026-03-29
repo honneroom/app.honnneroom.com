@@ -1328,7 +1328,7 @@ function renderAccount(){
     </div>
     <p id="pushMsg" class="fmsg"></p>
   </div>
-  <div class="asec">
+  <div class="asec email-only">
     <div class="asec-h">メールアドレスの変更</div>
     <p style="font-size:13px;color:var(--mist);font-weight:300;margin-bottom:14px">現在：<strong style="color:var(--ink)">${esc(S.user?.email??"")}</strong></p>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -1337,7 +1337,7 @@ function renderAccount(){
     </div>
     <p id="emailMsg" class="fmsg"></p>
   </div>
-  <div class="asec">
+  <div class="asec email-only">
     <div class="asec-h" id="pwSecH">パスワードの設定</div>
     <p style="font-size:13px;color:var(--mist);font-weight:300;margin-bottom:12px" id="pwSecD">パスワードを設定すると、次回からメール＋パスワードでログインできます。</p>
     <div class="pwf">
@@ -1521,6 +1521,19 @@ function showBannedScreen(prof){
     </div>`;
   document.body.style.paddingTop="0";
 }
+async function hideEmailOnlyUI() {
+  const { data: { user } } = await sb.auth.getUser();
+
+  if (!user) return;
+
+  if (user.app_metadata?.provider === "google") {
+    document.querySelectorAll(".email-only").forEach(el => {
+      el.style.display = "none";
+    });
+  }
+}
+
+window.addEventListener("load", hideEmailOnlyUI);
 
 main();
 </script>
