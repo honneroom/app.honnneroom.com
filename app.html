@@ -515,7 +515,7 @@ const sb = window.supabase.createClient(SB_URL, SB_KEY, {
 });
 
 const S = {
-  user:null, profile:null, isStd:false,
+  user:null, profile:null, isStd:false, isGoogleUser:false,
   threads:[], billingCfg:null, reportTarget:null,
   reactions:{}, myReactions:{},
   search:"", homeType:"", homeCat:"",
@@ -808,7 +808,7 @@ function renderHomeTab(){
   const banner=$("#pwNoticeBanner");
   if(banner){
     const dismissed=sessionStorage.getItem("pwNoticeDismissed");
-    if(!S.profile?.has_password&&!dismissed){
+    if(!S.isGoogleUser&&!S.profile?.has_password&&!dismissed){
       banner.innerHTML=`<div class="pw-notice"><div class="pw-notice-icon">🔑</div><div class="pw-notice-body"><div class="pw-notice-title">パスワードを設定しましょう</div><div class="pw-notice-text">パスワードを設定すると、次回からメール＋パスワードでログインできます。</div></div><button class="pw-notice-btn" id="pwNoticeGoBtn">設定する</button><button class="pw-notice-close" id="pwNoticeDismiss">×</button></div>`;
       $("#pwNoticeGoBtn").addEventListener("click",()=>{switchTab("account");setTimeout(()=>document.querySelector("#pwSecH")?.scrollIntoView({behavior:"smooth",block:"center"}),200);});
       $("#pwNoticeDismiss").addEventListener("click",()=>{sessionStorage.setItem("pwNoticeDismissed","1");banner.innerHTML="";});
@@ -1376,6 +1376,10 @@ function renderAccount(){
   $("#pwShow").addEventListener("change",e=>{const t=e.target.checked?"text":"password";$("#pwN").type=t;$("#pwN2").type=t;});
   $("#btnPw").addEventListener("click",savePassword);
   initPushUI();
+  // ★ Googleユーザーはメール・PW変更セクションを非表示
+  if (S.isGoogleUser) {
+    wrap.querySelectorAll(".email-only").forEach(el => el.style.display = "none");
+  }
 }
 
 async function saveProfile(){
@@ -1482,10 +1486,10 @@ async function main(){
   await Promise.all([loadBilling(),loadMasterData()]);
   const user=await getUser();
   if(!user){location.replace("/");return;}
-
-  await controlAuthUI();
   
   S.user=user;
+  // ★ Googleログインユーザー判定
+  S.isGoogleUser = (user.identities || []).some(id => id.provider === "google");
   $("#userEmail").textContent=user.email||"";
   const prof=await loadProfile(user.id);
   S.profile=prof;
@@ -1523,18 +1527,6 @@ function showBannedScreen(prof){
       </div>
     </div>`;
   document.body.style.paddingTop="0";
-}
-async function controlAuthUI() {
-  const { data: { user } } = await sb.auth.getUser();
-  if (!user) return;
-  const provider = user.app_metadata?.provider;
-
-  if (provider === "google") {
-    // Googleログイン → 非表示
-    document.getElementById("email-settings")?.style.setProperty("display", "none");
-    document.getElementById("password-settings")?.style.setProperty("display", "none");
-    document.getElementById("password-notice")?.style.setProperty("display", "none");
-  }
 }
 
 main();
