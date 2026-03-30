@@ -372,6 +372,8 @@ img.av{object-fit:cover;display:block}
 .pwa-step-text strong{font-weight:500;color:var(--primary)}
 .pwa-modal-close{width:100%;padding:12px;background:var(--warm);border:none;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--mist);cursor:pointer;transition:background .2s}
 .pwa-modal-close:hover{background:var(--ink);color:white}
+/* BANNED BADGE */
+.banned-prof-banner{background:#fff0ee;border:1px solid rgba(179,38,30,.2);border-left:4px solid var(--error);padding:14px 16px;margin-bottom:2px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--error);font-weight:400;line-height:1.6}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
@@ -1023,6 +1025,7 @@ async function openUserProfile(userId){
       <div><div class="user-prof-name">${esc(label)}</div><div class="attr-tags" style="margin-top:4px;flex-wrap:wrap">${attrHtml(p)}</div></div>
       ${isMe?`<span style="font-size:11px;padding:3px 10px;background:var(--primary-pale);color:var(--primary);margin-left:auto">自分</span>`:""}
     </div>${p.bio?`<div class="user-prof-bio">${esc(p.bio)}</div>`:""}</div>`;
+  if(p.is_banned){html+=`<div class="banned-prof-banner">🚫 このアカウントは利用規約違反により停止されています</div>`;}
   const ts=threads||[];
   if(!ts.length){html+=`<div class="empty"><div class="empty-h">まだ投稿がありません</div></div>`;}
   else{
