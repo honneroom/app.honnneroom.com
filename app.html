@@ -530,6 +530,7 @@ const S = {
 
 const $ = s=>document.querySelector(s);
 const esc = s=>String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const nl2br = s => esc(s).replace(/\n/g, "<br>");
 const AVC=["#c4622d","#b8975a","#7a5c4a","#d4845a","#8a6a5a"];
 const avc=s=>AVC[Math.abs([...String(s)].reduce((a,c)=>a+c.charCodeAt(0),0))%AVC.length];
 function rtime(ts){
@@ -794,7 +795,7 @@ function cardHtml(t,showBadge){
     </div>
     ${t.category?`<div class="card-sub"><span class="cat-tag">${esc(t.category)}</span></div>`:""}
     ${!isPost&&t.title?`<div class="card-title">${esc(t.title)}</div>`:""}
-    <div class="card-preview">${esc(t.body)}</div>
+    <div class="card-preview">${nl2br(t.body)}</div>
     <div class="card-footer"><span>💬 ${rc}件の返信</span>${t.best_reply_id?`<span class="solved">✓ 解決済み</span>`:""}<span>${rtime(t.created_at)}</span></div>
     ${buildReactSm(t.id)}
   </div>`;
@@ -925,7 +926,7 @@ async function openDetail(threadId,type){
       </div>
     </div>
     ${!isPost?`<div class="dtitle">${esc(t.title)}</div>`:""}
-    <div class="dbody">${esc(t.body)}</div>
+    <div class="dbody">${nl2br(t.body)}</div>
     <div class="dfooter"><span>${rtime(t.created_at)}</span>${t.best_reply_id?`<span class="solved">✓ ベストアンサーあり</span>`:""}</div>
     ${buildReactFull(t.id)}
   </div>`;
@@ -959,7 +960,7 @@ async function openDetail(threadId,type){
             ${isReplyOwner?`<button class="del-btn" data-id="${r.id}" data-type="reply">🗑</button>`:""}
           </div>
         </div>
-        <div class="rbody">${esc(r.body)}</div>
+        <div class="rbody">${nl2br(r.body)}</div>
         ${buildReactFull(r.id)}
       </div>`;
     }).join("");
@@ -1067,7 +1068,7 @@ async function renderMypage(){
           <span class="${isPost?"type-badge-post":"type-badge-q"}" style="font-size:9px;padding:1px 6px">${isPost?"つぶやき":"相談"}</span>
           <span>「${esc(thTitle)}」への返信</span>
         </div>
-        <div class="card-preview" style="-webkit-line-clamp:2;color:#4a4440">${esc(r.body)}</div>
+        <div class="card-preview" style="-webkit-line-clamp:2;color:#4a4440">${nl2br(r.body)}</div>
         <div class="card-footer"><span>${rtime(r.created_at)}</span></div>
       </div>`;
     }).join("")+`</div>`
