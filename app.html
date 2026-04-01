@@ -1362,7 +1362,7 @@ function renderAccount(){
     $("#btnCancel").addEventListener("click",openPortal);
   }else{
     const hasStripeCustomer=!!(S.profile?.stripe_customer_id);
-    const btnSubLabel=hasStripeCustomer?"Standardプランに登録する（¥390/月）":"14日間無料で試す";
+    const btnSubLabel=hasStripeCustomer?"Standardプランに登録する（¥390/月）":"7日間無料で試す";
     pa.innerHTML=`<p style="font-size:13px;color:var(--mist);font-weight:300;margin-bottom:12px;line-height:1.7">Standardプランで新規投稿・返信が無制限に使えます。</p><button id="btnSub" class="btn-p">${btnSubLabel}</button>`;
     $("#btnSub").addEventListener("click",createCheckout);
     const deleteArea=document.createElement("div");
