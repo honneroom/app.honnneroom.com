@@ -3,7 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>本音ルーム プレビュー</title>
+<title>本音ルーム | 女性限定の匿名コミュニティ・恋愛/結婚/仕事/お金の悩みを相談</title>
+<meta name="description" content="本音ルームは、女性限定で恋愛・結婚・ライフプラン・仕事・お金・日常の悩みを匿名でつぶやき、相談できるコミュニティです。無料登録で投稿・返信・リアクションが使えます。">
+<meta name="keywords" content="本音ルーム,女性限定,匿名コミュニティ,恋愛相談,結婚相談,仕事の悩み,お金の悩み,ライフプラン,つぶやき,相談">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="https://app.honneroom.com/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="本音ルーム">
+<meta property="og:title" content="本音ルーム | 女性限定の匿名コミュニティ・恋愛/結婚/仕事/お金の悩みを相談">
+<meta property="og:description" content="恋愛・結婚・仕事・お金・日常の悩みを匿名でつぶやき、相談できる女性限定コミュニティ。無料登録で投稿・返信が使えます。">
+<meta property="og:url" content="https://app.honneroom.com/">
+<meta property="og:image" content="https://app.honneroom.com/assets/ogp.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="本音ルーム | 女性限定の匿名コミュニティ">
+<meta name="twitter:description" content="恋愛・結婚・仕事・お金・日常の悩みを匿名でつぶやき、相談できる女性限定コミュニティ。">
+<meta name="twitter:image" content="https://app.honneroom.com/assets/ogp.png">
 <link rel="icon" type="image/png" href="/assets/icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;700&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-N8N26KRS9P"></script>
@@ -12,6 +26,15 @@ window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
 gtag('config', 'G-N8N26KRS9P', { linker: { domains: ['honneroom.com','app.honneroom.com'] } });
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "本音ルーム",
+  "url": "https://app.honneroom.com/",
+  "description": "女性限定で恋愛・結婚・ライフプラン・仕事・お金・日常の悩みを匿名でつぶやき、相談できるコミュニティ"
+}
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
@@ -36,6 +59,11 @@ body{
   padding-top:calc(var(--hh) + var(--nh));
 }
 button,input,textarea{font:inherit}
+a{text-decoration:none}
+.sr-only{
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
+}
 
 /* HEADER */
 .site-header{
@@ -53,7 +81,7 @@ button,input,textarea{font:inherit}
   font-size:15px;font-weight:600;color:var(--ink);
 }
 .header-actions{display:flex;align-items:center;gap:8px}
-.btn-primary,.btn-secondary{
+.btn-primary,.btn-secondary,.btn-ghost{
   border:none;cursor:pointer;transition:all .2s;
 }
 .btn-primary{
@@ -67,6 +95,12 @@ button,input,textarea{font:inherit}
   padding:9px 14px;font-size:13px;
 }
 .btn-secondary:hover{background:var(--primary-pale)}
+.btn-ghost{
+  background:transparent;color:var(--mist);
+  border:1px solid rgba(26,23,20,.12);
+  padding:9px 14px;font-size:13px;
+}
+.btn-ghost:hover{background:#fff}
 
 /* TAB NAV */
 .tab-nav{
@@ -89,11 +123,27 @@ button,input,textarea{font:inherit}
 .page{max-width:720px;margin:0 auto;padding:20px 10px 110px}
 .tab-pane{display:none}
 .tab-pane.active{display:block}
+.page-lead{margin-bottom:14px}
+.page-lead-title{
+  font-family:'Shippori Mincho',serif;
+  font-size:18px;font-weight:700;line-height:1.5;color:var(--ink);margin-bottom:6px;
+}
+.page-lead-text{font-size:13px;line-height:1.8;color:#5d544e}
+.action-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.action-btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  min-height:66px;padding:16px 18px;background:#efe1d8;color:var(--primary);
+  border:1px solid rgba(196,98,45,.16);font-size:14px;font-weight:600;
+}
+.action-btn.secondary{
+  background:#ece6de;color:#7f746c;border-color:rgba(26,23,20,.10);
+}
+.action-btn:hover{opacity:.92}
 
 /* SEARCH & FILTER */
 .search-bar{display:flex;gap:8px;margin-bottom:14px}
 .s-input{
-  flex:1;padding:9px 14px;font-size:13px;font-weight:300;color:var(--ink);
+  flex:1;padding:14px 18px;font-size:13px;font-weight:300;color:var(--ink);
   background:#fff;border:1px solid rgba(26,23,20,.12);outline:none;
 }
 .s-clear{
@@ -104,13 +154,13 @@ button,input,textarea{font:inherit}
   display:flex;border:1px solid rgba(26,23,20,.10);background:#fff;margin-bottom:14px;
 }
 .type-chip{
-  flex:1;padding:9px;font-size:12px;letter-spacing:.06em;text-align:center;
+  flex:1;padding:14px 9px;font-size:12px;letter-spacing:.06em;text-align:center;
   background:none;border:none;color:var(--mist);cursor:pointer;
 }
 .type-chip.active{background:#7a5c4a;color:#fff}
-.cat-filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.cat-filter{display:flex;gap:10px 8px;flex-wrap:wrap;margin-bottom:14px}
 .cat-chip{
-  font-size:11px;padding:5px 12px;border:1px solid rgba(26,23,20,.12);
+  font-size:11px;padding:10px 14px;border:1px solid rgba(26,23,20,.12);
   background:#fff;color:var(--mist);cursor:pointer;
 }
 .cat-chip.active{background:var(--primary);color:#fff;border-color:var(--primary)}
@@ -135,9 +185,10 @@ button,input,textarea{font:inherit}
 }
 .card-head-right{flex-shrink:0}
 .av{
-  width:28px;height:28px;border-radius:50%;
+  width:32px;height:32px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
   color:#fff;font-size:11px;font-weight:600;flex-shrink:0;overflow:hidden;
+  background:#e9e0d7;border:1px solid rgba(26,23,20,.06);
 }
 .av img{width:100%;height:100%;object-fit:cover;display:block}
 .user-meta{min-width:0}
@@ -145,10 +196,12 @@ button,input,textarea{font:inherit}
   font-size:12px;color:var(--primary);text-decoration:underline;
   cursor:pointer;line-height:1.2;
 }
-.type-badge-post{
+.type-badge-post,.type-badge-consult{
   font-size:10px;font-weight:600;padding:2px 8px;
-  background:var(--primary);color:#fff;white-space:nowrap;
+  color:#fff;white-space:nowrap;
 }
+.type-badge-post{background:var(--primary)}
+.type-badge-consult{background:#8b6b57}
 .attr-tags{display:flex;gap:4px;flex-wrap:wrap;margin:6px 0 0}
 .attr-tag{
   font-size:10px;padding:2px 8px;background:var(--warm);
@@ -200,7 +253,7 @@ button,input,textarea{font:inherit}
 .reply-form-lbl,.sec-divider{font-size:12px;color:var(--mist);margin-bottom:12px}
 .sec-divider{padding:12px 2px 8px}
 .reply-box{
-  width:100%;min-height:100px;padding:12px 14px;background:#ece8e1;
+  width:100%;min-height:100px;padding:12px 14px;background:#fff;
   border:1px solid rgba(26,23,20,.1);outline:none;resize:vertical;
 }
 .reply-actions{
@@ -213,6 +266,7 @@ button,input,textarea{font:inherit}
   gap:10px;margin-bottom:10px;
 }
 .reply-time{font-size:11px;color:var(--mist)}
+.reply-hint{font-size:11px;color:var(--mist);margin-top:8px;line-height:1.7}
 
 /* USER POPOVER */
 .user-popover{
@@ -246,35 +300,20 @@ button,input,textarea{font:inherit}
   display:flex;justify-content:center;gap:10px;
 }
 
-/* MODAL */
-.modal-backdrop{
-  position:fixed;inset:0;background:rgba(0,0,0,.45);
-  display:none;align-items:center;justify-content:center;padding:20px;z-index:200;
-}
-.modal-backdrop.show{display:flex}
-.modal{
-  background:#fff;width:min(440px,96vw);padding:28px;border-top:4px solid var(--primary);
-}
-.modal-title{
-  font-family:'Shippori Mincho',serif;font-size:18px;font-weight:600;margin-bottom:10px;
-}
-.modal-text{
-  font-size:13px;line-height:1.8;color:#4a4440;font-weight:300;margin-bottom:18px;
-}
-.modal-actions{display:flex;gap:8px;flex-wrap:wrap}
-
 @media(max-width:560px){
   .header-actions .btn-secondary{display:none}
   .page{padding:14px 8px 110px}
   .sticky-cta{flex-direction:column}
   .sticky-cta .btn-primary,.sticky-cta .btn-secondary{width:100%}
   .dcard,.reply-form-box,.rcard,.post-card{padding:16px 14px}
+  .action-row{grid-template-columns:1fr 1fr;gap:10px}
+  .action-btn{min-height:58px;padding:14px 10px}
 }
 </style>
 </head>
 <body>
 <header class="site-header">
-  <a href="/" class="hlogo">
+  <a href="/" class="hlogo" aria-label="本音ルーム トップ">
     <img src="https://app.honneroom.com/assets/icon.png" alt="本音ルーム">
     <span class="hlogo-name">本音ルーム</span>
   </a>
@@ -284,17 +323,29 @@ button,input,textarea{font:inherit}
   </div>
 </header>
 
-<nav class="tab-nav">
+<nav class="tab-nav" aria-label="グローバルナビゲーション">
   <button class="tab-btn active" data-tab="home">HOME</button>
   <button class="tab-btn" data-tab="mypage">マイページ</button>
   <button class="tab-btn" data-tab="account">設定</button>
 </nav>
 
-<div class="page">
+<main class="page">
+  <h1 class="sr-only">本音ルーム | 女性限定の匿名コミュニティで恋愛・結婚・仕事・お金の悩みを相談</h1>
+
   <section id="tab-home" class="tab-pane active">
     <div id="homeListView">
+      <div class="page-lead">
+        <div class="page-lead-title">女性限定・匿名で本音を話せる場所</div>
+        <div class="page-lead-text">恋愛、結婚・ライフプラン、仕事、お金、日常のことまで。気軽なつぶやきも、しっかりした相談も、無料登録ですぐ始められます。</div>
+      </div>
+
+      <div class="action-row">
+        <button class="action-btn" id="openPostBtn">✏️ つぶやく</button>
+        <button class="action-btn secondary" id="openConsultBtn">💬 相談する</button>
+      </div>
+
       <div class="search-bar">
-        <input id="homeSearch" class="s-input" type="text" placeholder="キーワードで検索..." autocomplete="off">
+        <input id="homeSearch" class="s-input" type="text" placeholder="キーワードで検索..." autocomplete="off" aria-label="キーワードで検索">
         <button class="s-clear" id="clearSearchBtn">クリア</button>
       </div>
       <div class="type-filter" id="typeFilter"></div>
@@ -306,22 +357,11 @@ button,input,textarea{font:inherit}
 
   <section id="tab-mypage" class="tab-pane"></section>
   <section id="tab-account" class="tab-pane"></section>
-</div>
+</main>
 
 <div class="sticky-cta">
   <button class="btn-secondary" id="bottomColumnBtn">コラムを見る</button>
   <button class="btn-primary" id="bottomStartBtn">無料で始める</button>
-</div>
-
-<div id="loginModal" class="modal-backdrop">
-  <div class="modal">
-    <div class="modal-title">続きは無料登録後に見られます</div>
-    <div class="modal-text">本音ルームは女性限定・匿名コミュニティです。投稿の続き、返信の送信、リアクション、投稿作成は無料登録後に使えます。</div>
-    <div class="modal-actions">
-      <button class="btn-primary" id="modalStartBtn">無料で始める</button>
-      <button class="btn-secondary" id="modalCloseBtn">閉じる</button>
-    </div>
-  </div>
 </div>
 
 <script>
@@ -330,6 +370,7 @@ const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 const APP_URL = '/app.html';
 const LOGIN_URL = 'https://app.honneroom.com/';
 const COLUMN_URL = 'https://honneroom.com/column/';
+const REPLY_MAX = 1000;
 
 const sb = window.supabase.createClient(SB_URL, SB_KEY, {
   auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
@@ -341,15 +382,28 @@ const state = {
   search:''
 };
 
+const avatarMap = {
+  'hana':'https://app.honneroom.com/data/icon/icon00.png',
+  'ゆうう':'https://app.honneroom.com/data/icon/icon01.png',
+  'miii':'https://app.honneroom.com/data/icon/icon02.png',
+  'りんりん':'https://app.honneroom.com/data/icon/icon05.png'
+};
+
 const typeDefs = [
   { value:'', label:'すべて' },
-  { value:'post', label:'つぶやき' }
+  { value:'post', label:'つぶやき' },
+  { value:'consult', label:'相談', loginOnly:true }
 ];
 
 const catDefs = [
   { value:'', label:'すべて' },
+  { value:'キャリア', label:'キャリア' },
+  { value:'結婚・ライフプラン', label:'結婚・ライフプラン' },
+  { value:'お金・将来', label:'お金・将来' },
   { value:'恋愛', label:'恋愛' },
-  { value:'日常・雑談', label:'日常・雑談' }
+  { value:'仕事の悩み', label:'仕事の悩み' },
+  { value:'日常・雑談', label:'日常・雑談' },
+  { value:'その他', label:'その他' }
 ];
 
 const posts = [
@@ -357,7 +411,7 @@ const posts = [
     id:'miii-1',
     type:'post',
     category:'恋愛',
-    user:{name:'miii',avatar:'sunset',attrs:['26歳','交際中','一人暮らし']},
+    user:{name:'miii',attrs:['26歳','交際中','一人暮らし']},
     body:`彼氏と付き合って2年、同棲の話が出てるんだけど正直まだ踏み切れない。。
 仕事も転職活動中で、今環境変えすぎるの怖くて。
 同じくらいの年齢で同棲始めた人いたら、決め手が何だったか聞きたいです🥺`,
@@ -368,8 +422,8 @@ const posts = [
   {
     id:'yuu-1',
     type:'post',
-    category:'',
-    user:{name:'ゆうう',avatar:'camel',attrs:['25歳','会社員','独身','一人暮らし']},
+    category:'結婚・ライフプラン',
+    user:{name:'ゆうう',attrs:['25歳','会社員','独身','一人暮らし']},
     body:`もう彼氏いない歴2年になっちまう…
 田舎出身だから地元の子が続々と結婚し始めて焦る😭
 マチアプは1ヶ月で疲れてやめた。`,
@@ -381,7 +435,7 @@ const posts = [
     id:'yuu-2',
     type:'post',
     category:'日常・雑談',
-    user:{name:'ゆうう',avatar:'camel',attrs:['25歳','会社員','独身','一人暮らし']},
+    user:{name:'ゆうう',attrs:['25歳','会社員','独身','一人暮らし']},
     body:`今日も仕事頑張った！残業おつかれ自分！`,
     replies:0,
     time:'16時間前',
@@ -391,7 +445,7 @@ const posts = [
     id:'hana-1',
     type:'post',
     category:'恋愛',
-    user:{name:'hana',avatar:'person',attrs:['29歳','会社員','婚活中','実家暮らし']},
+    user:{name:'hana',attrs:['29歳','会社員','婚活中','実家暮らし']},
     body:`マチアプ初めて1年、結局一人も付き合えてない。。みたいな人間なのでマチアプ経験談とかアドバイスを求む😓`,
     replies:0,
     time:'17時間前',
@@ -400,8 +454,8 @@ const posts = [
   {
     id:'hana-2',
     type:'post',
-    category:'',
-    user:{name:'hana',avatar:'person',attrs:['29歳','会社員','婚活中','実家暮らし']},
+    category:'その他',
+    user:{name:'hana',attrs:['29歳','会社員','婚活中','実家暮らし']},
     body:`友人の勧めで始めてみた！
 まだ誰もいないかなあ。誰か来い！！`,
     replies:0,
@@ -414,7 +468,7 @@ const detailReplies = {
   'miii-1': [
     {
       id:'rinrin-1',
-      user:{name:'りんりん',avatar:'camel'},
+      user:{name:'りんりん'},
       body:`私は29の時に同棲→30で結婚しましたが、同棲して良かったと思っています。
 一緒に住んでみて仕事含めた生活サイクルとかを早めに確認できて、それまであまり意識していなかったかもだけど、一歩結婚に近づいた感じがしました。
 転職と同時は確かに大変だけど、逆に言えば同棲してみた新しい生活の中で、転職の軸とか選択肢が変わったりするかもとは思います。（良くも悪くもですが…）
@@ -442,17 +496,18 @@ function nl2br(s){
 
 function goLogin(){ location.href = LOGIN_URL; }
 function goColumn(){ location.href = COLUMN_URL; }
-function showModal(){ $('#loginModal').classList.add('show'); }
-function hideModal(){ $('#loginModal').classList.remove('show'); }
 
 function avatarHtml(user){
-  if(user.avatar === 'camel'){
-    return '<div class="av" style="background:#f1b95c">🐪</div>';
+  const url = avatarMap[user.name];
+  if(url){
+    return '<div class="av"><img src="' + esc(url) + '" alt="' + esc(user.name) + '"></div>';
   }
-  if(user.avatar === 'person'){
-    return '<div class="av" style="background:#fff;color:#000;border:1px solid rgba(0,0,0,.08)">👤</div>';
-  }
-  return '<div class="av" style="background:linear-gradient(135deg,#f6bf75,#d96b2b)">🌇</div>';
+  return '<div class="av"></div>';
+}
+
+function typeBadgeHtml(type){
+  if(type === 'consult') return '<span class="type-badge-consult">相談</span>';
+  return '<span class="type-badge-post">つぶやき</span>';
 }
 
 function buildReactionRow(reactions, compact){
@@ -489,7 +544,7 @@ function filteredPosts(){
 
 function renderFilters(){
   $('#typeFilter').innerHTML = typeDefs.map(function(t){
-    return '<button class="type-chip' + (state.type === t.value ? ' active' : '') + '" data-type="' + esc(t.value) + '">' + esc(t.label) + '</button>';
+    return '<button class="type-chip' + (state.type === t.value ? ' active' : '') + '" data-type="' + esc(t.value) + '" data-login-only="' + (t.loginOnly ? '1' : '0') + '">' + esc(t.label) + '</button>';
   }).join('');
 
   $('#catFilter').innerHTML = catDefs.map(function(c){
@@ -498,6 +553,10 @@ function renderFilters(){
 
   $$('#typeFilter [data-type]').forEach(function(btn){
     btn.addEventListener('click', function(){
+      if(btn.dataset.loginOnly === '1'){
+        goLogin();
+        return;
+      }
       state.type = btn.dataset.type;
       renderFilters();
       renderHomeList();
@@ -523,7 +582,7 @@ function cardHtml(p){
           (p.category ? ('<div class="attr-tags"><span class="attr-tag">' + esc(p.category) + '</span></div>') : '') +
         '</div>' +
       '</div>' +
-      '<div class="card-head-right"><span class="type-badge-post">つぶやき</span></div>' +
+      '<div class="card-head-right">' + typeBadgeHtml(p.type) + '</div>' +
     '</div>' +
     '<div class="card-body">' + nl2br(p.body) + '</div>' +
     '<div class="card-footer"><span>💬 ' + p.replies + '件の返信</span><span>' + esc(p.time) + '</span></div>' +
@@ -552,7 +611,7 @@ function renderHomeList(){
   $$('[data-login]').forEach(function(el){
     el.addEventListener('click', function(e){
       e.stopPropagation();
-      showModal();
+      goLogin();
     });
   });
 }
@@ -624,7 +683,7 @@ function openDetail(id){
         '</div>' +
         '<div class="card-head-right">' +
           (p.category ? ('<span class="attr-tag">' + esc(p.category) + '</span> ') : '') +
-          '<span class="attr-tag">通報</span>' +
+          typeBadgeHtml(p.type) +
         '</div>' +
       '</div>' +
       '<div class="dbody">' + nl2br(p.body) + '</div>' +
@@ -633,8 +692,9 @@ function openDetail(id){
     '</div>' +
     '<div class="reply-form-box">' +
       '<div class="reply-form-lbl">返信する</div>' +
-      '<textarea class="reply-box" placeholder="返信を入力してください..." readonly></textarea>' +
-      '<div class="reply-actions"><button class="btn-primary" data-login>返信する</button><span class="reply-count">0/1000</span></div>' +
+      '<textarea class="reply-box" id="replyBox" placeholder="返信を入力してください..."></textarea>' +
+      '<div class="reply-hint">テキスト入力はできますが、送信には無料登録が必要です。</div>' +
+      '<div class="reply-actions"><button class="btn-primary" data-login>返信する</button><span class="reply-count"><span id="replyCount">0</span>/' + REPLY_MAX + '</span></div>' +
     '</div>' +
     '<div class="sec-divider">返信 (' + replies.length + ')</div>';
 
@@ -657,6 +717,17 @@ function openDetail(id){
 
   $('#backBtn').addEventListener('click', showHomeList);
 
+  const replyBox = $('#replyBox');
+  const replyCount = $('#replyCount');
+  if(replyBox && replyCount){
+    replyBox.addEventListener('input', function(){
+      if(replyBox.value.length > REPLY_MAX){
+        replyBox.value = replyBox.value.slice(0, REPLY_MAX);
+      }
+      replyCount.textContent = replyBox.value.length;
+    });
+  }
+
   $$('.pop-link').forEach(function(el){
     el.addEventListener('click', function(e){
       e.stopPropagation();
@@ -665,7 +736,7 @@ function openDetail(id){
   });
 
   $$('[data-login]').forEach(function(el){
-    el.addEventListener('click', showModal);
+    el.addEventListener('click', goLogin);
   });
 }
 
@@ -722,15 +793,11 @@ function bindGlobal(){
 
   $('#headerStartBtn').addEventListener('click', goLogin);
   $('#bottomStartBtn').addEventListener('click', goLogin);
-  $('#modalStartBtn').addEventListener('click', goLogin);
+  $('#openPostBtn').addEventListener('click', goLogin);
+  $('#openConsultBtn').addEventListener('click', goLogin);
 
   $('#headerColumnBtn').addEventListener('click', goColumn);
   $('#bottomColumnBtn').addEventListener('click', goColumn);
-
-  $('#modalCloseBtn').addEventListener('click', hideModal);
-  $('#loginModal').addEventListener('click', function(e){
-    if(e.target.id === 'loginModal') hideModal();
-  });
 }
 
 (async function init(){
