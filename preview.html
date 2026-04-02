@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>本音ルーム プレビュー</title>
+<link rel="icon" type="image/png" href="/assets/icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;700&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-N8N26KRS9P"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-N8N26KRS9P', { linker: { domains: ['honneroom.com','app.honneroom.com'] } });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#1a1714;--cream:#f5f0e8;--warm:#e8dfd0;--panel:#f7f6f3;
+  --primary:#c4622d;--primary-pale:#f0ddd3;--mist:#8a7a72;--line:rgba(26,23,20,.08);
+  --hh:60px;--nh:52px;
+}
+html,body{min-height:100vh}
+body{font-family:'DM Sans',sans-serif;background:#e7e1d8;color:var(--ink);padding-top:calc(var(--hh) + var(--nh))}
+button,input,textarea{font:inherit}
+.site-header{position:fixed;top:0;left:0;right:0;height:var(--hh);z-index:100;background:rgba(245,240,232,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 20px}
+.hlogo{display:flex;align-items:center;gap:9px;text-decoration:none}.hlogo img{width:28px;height:28px;object-fit:contain}.hlogo-name{font-family:'Shippori Mincho',serif;font-size:15px;font-weight:600;color:var(--ink)}
+.header-actions{display:flex;align-items:center;gap:8px}
+.btn-primary,.btn-secondary{border:none;cursor:pointer;transition:all .2s}.btn-primary{background:var(--primary);color:#fff;padding:9px 14px;font-size:13px}.btn-primary:hover{background:var(--ink)}.btn-secondary{background:#fff;color:var(--primary);border:1px solid rgba(196,98,45,.24);padding:9px 14px;font-size:13px}.btn-secondary:hover{background:var(--primary-pale)}
+.tab-nav{position:fixed;top:var(--hh);left:0;right:0;height:var(--nh);z-index:99;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:stretch}
+.tab-btn{flex:1;border:none;background:none;font-size:13px;letter-spacing:.04em;color:var(--mist);cursor:pointer;position:relative;transition:color .2s;font-weight:400}.tab-btn::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--primary);transform:scaleX(0);transition:transform .2s}.tab-btn.active{color:var(--primary);font-weight:600}.tab-btn.active::after{transform:scaleX(1)}
+.page{max-width:720px;margin:0 auto;padding:20px 10px 110px}.tab-pane{display:none}.tab-pane.active{display:block}
+.search-bar{display:flex;gap:8px;margin-bottom:14px}.s-input{flex:1;padding:9px 14px;font-size:13px;font-weight:300;color:var(--ink);background:#fff;border:1px solid rgba(26,23,20,.12);outline:none}.s-clear{font-size:12px;color:var(--mist);background:none;border:none;padding:8px 10px;cursor:pointer}
+.type-filter{display:flex;border:1px solid rgba(26,23,20,.10);background:#fff;margin-bottom:14px}.type-chip{flex:1;padding:9px;font-size:12px;letter-spacing:.06em;text-align:center;background:none;border:none;color:var(--mist);cursor:pointer}.type-chip.active{background:#7a5c4a;color:#fff}
+.cat-filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}.cat-chip{font-size:11px;padding:5px 12px;border:1px solid rgba(26,23,20,.12);background:#fff;color:var(--mist);cursor:pointer}.cat-chip.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.card-list{display:flex;flex-direction:column;gap:2px}.post-card{background:var(--panel);padding:14px 16px;border:1px solid rgba(26,23,20,.06);border-left:4px solid var(--primary);cursor:pointer;transition:all .2s}.post-card:hover{background:#fbfaf8}
+.card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}.card-head-left{display:flex;align-items:flex-start;gap:8px;min-width:0;flex:1}.card-head-right{flex-shrink:0}
+.av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:600;flex-shrink:0;overflow:hidden}.av img{width:100%;height:100%;object-fit:cover;display:block}
+.user-meta{min-width:0}.uname-link{font-size:12px;color:var(--primary);text-decoration:underline;cursor:pointer;line-height:1.2}.type-badge-post{font-size:10px;font-weight:600;padding:2px 8px;background:var(--primary);color:#fff;white-space:nowrap}
+.attr-tags{display:flex;gap:4px;flex-wrap:wrap;margin:6px 0 0}.attr-tag{font-size:10px;padding:2px 8px;background:var(--warm);color:var(--mist);white-space:nowrap}
+.card-body{font-size:14px;line-height:1.95;color:#4a4440;font-weight:300;white-space:pre-wrap}.card-footer{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;font-size:11px;color:var(--mist)}
+.react-row-sm,.react-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid rgba(26,23,20,.06)}.rbtn-sm,.rbtn{display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:5px 10px;background:#f1eee8;border:1px solid rgba(26,23,20,.08);color:#6d6258;border-radius:16px;cursor:pointer;transition:all .15s}.rbtn-sm:hover,.rbtn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-pale)}.rbtn-sm.on,.rbtn.on{background:#fff4ed;border-color:var(--primary);color:var(--primary)}
+.detail-view{display:none}.detail-view.show{display:block}.back-btn{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mist);background:none;border:none;cursor:pointer;padding:0;margin-bottom:12px}.back-btn:hover{color:var(--primary)}
+.dcard,.reply-form-box,.rcard{background:var(--panel);border:1px solid rgba(26,23,20,.06);padding:20px;margin-bottom:2px}.dbody,.rbody{font-size:14px;line-height:1.95;color:#4a4440;font-weight:300;white-space:pre-wrap}.dfooter{display:flex;align-items:center;gap:14px;margin-top:14px;flex-wrap:wrap;font-size:11px;color:var(--mist)}
+.reply-form-lbl,.sec-divider{font-size:12px;color:var(--mist);margin-bottom:12px}.sec-divider{padding:12px 2px 8px}.reply-box{width:100%;min-height:100px;padding:12px 14px;background:#ece8e1;border:1px solid rgba(26,23,20,.1);outline:none;resize:vertical}.reply-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px}.reply-count{font-size:11px;color:var(--mist)}.reply-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}.reply-time{font-size:11px;color:var(--mist)}
+.user-popover{position:fixed;z-index:180;background:#fff;border:1px solid rgba(26,23,20,.10);box-shadow:0 4px 20px rgba(26,23,20,.12);padding:14px 16px;min-width:220px;max-width:290px}.popover-close{position:absolute;top:6px;right:8px;background:none;border:none;font-size:18px;cursor:pointer;color:var(--mist);padding:2px 6px;line-height:1}.popover-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;padding-right:20px}.popover-name{font-family:'Shippori Mincho',serif;font-size:14px;font-weight:600;color:var(--ink)}.popover-attrs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px}.popover-attr{font-size:10px;padding:2px 7px;background:var(--warm);color:var(--mist)}.popover-link{display:block;font-size:12px;color:var(--primary);cursor:pointer;text-decoration:none;padding-top:8px;border-top:1px solid rgba(26,23,20,.06)}
+.sticky-cta{position:fixed;left:0;right:0;bottom:0;z-index:120;background:rgba(255,255,255,.96);backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:10px 14px;display:flex;justify-content:center;gap:10px}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:200}.modal-backdrop.show{display:flex}.modal{background:#fff;width:min(440px,96vw);padding:28px;border-top:4px solid var(--primary)}.modal-title{font-family:'Shippori Mincho',serif;font-size:18px;font-weight:600;margin-bottom:10px}.modal-text{font-size:13px;line-height:1.8;color:#4a4440;font-weight:300;margin-bottom:18px}.modal-actions{display:flex;gap:8px;flex-wrap:wrap}
+@media(max-width:560px){.header-actions .btn-secondary{display:none}.page{padding:14px 8px 110px}.sticky-cta{flex-direction:column}.sticky-cta .btn-primary,.sticky-cta .btn-secondary{width:100%}.dcard,.reply-form-box,.rcard,.post-card{padding:16px 14px}}
+</style>
+</head>
+<body>
+<header class="site-header">
+  <a href="/" class="hlogo">
+    <img src="https://app.honneroom.com/assets/icon.png" alt="本音ルーム">
+    <span class="hlogo-name">本音ルーム</span>
+  </a>
+  <div class="header-actions">
+    <button class="btn-secondary" id="headerColumnBtn">コラム</button>
+    <button class="btn-primary" id="headerStartBtn">無料で始める</button>
+  </div>
+</header>
+<nav class="tab-nav">
+  <button class="tab-btn active" data-tab="home">HOME</button>
+  <button class="tab-btn" data-tab="mypage">マイページ</button>
+  <button class="tab-btn" data-tab="account">設定</button>
+</nav>
+<div class="page">
+  <section id="tab-home" class="tab-pane active">
+    <div id="homeListView">
+      <div class="search-bar">
+        <input id="homeSearch" class="s-input" type="text" placeholder="キーワードで検索..." autocomplete="off">
+        <button class="s-clear" id="clearSearchBtn">クリア</button>
+      </div>
+      <div class="type-filter" id="typeFilter"></div>
+      <div class="cat-filter" id="catFilter"></div>
+      <div id="homeList" class="card-list"></div>
+    </div>
+    <div id="homeDetail" class="detail-view"></div>
+  </section>
+  <section id="tab-mypage" class="tab-pane"></section>
+  <section id="tab-account" class="tab-pane"></section>
+</div>
+<div class="sticky-cta">
+  <button class="btn-secondary" id="bottomColumnBtn">コラムを見る</button>
+  <button class="btn-primary" id="bottomStartBtn">無料で始める</button>
+</div>
+<div id="loginModal" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-title">続きは無料登録後に見られます</div>
+    <div class="modal-text">本音ルームは女性限定・匿名コミュニティです。投稿の続き、返信の送信、リアクション、投稿作成は無料登録後に使えます。</div>
+    <div class="modal-actions">
+      <button class="btn-primary" id="modalStartBtn">無料で始める</button>
+      <button class="btn-secondary" id="modalCloseBtn">閉じる</button>
+    </div>
+  </div>
+</div>
+<script>
+const SB_URL = 'https://rhynpigqhnbwjyudvvfw.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoeW5waWdxaG5id2p5dWR2dmZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3ODcyNTMsImV4cCI6MjA4MzM2MzI1M30.S9h-SH0JB0cEhMukUUaOuYEetx2I8qecZapIeCpk57M';
+const APP_URL = '/app.html';
+const LOGIN_URL = 'https://app.honneroom.com/';
+const COLUMN_URL = 'https://honneroom.com/column/';
+const sb = window.supabase.createClient(SB_URL, SB_KEY, { auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true} });
+const state = { type:'', category:'', search:'' };
+const typeDefs = [{value:'',label:'すべて'},{value:'post',label:'つぶやき'}];
+const catDefs = [{value:'',label:'すべて'},{value:'恋愛',label:'恋愛'},{value:'日常・雑談',label:'日常・雑談'}];
+const posts = [
+  {id:'miii-1',type:'post',category:'恋愛',user:{name:'miii',avatar:'sunset',attrs:['26歳','交際中','一人暮らし']},body:'彼氏と付き合って2年、同棲の話が出てるんだけど正直まだ踏み切れない。。
+仕事も転職活動中で、今環境変えすぎるの怖くて。
+同じくらいの年齢で同棲始めた人いたら、決め手が何だったか聞きたいです🥺',replies:1,time:'1時間前',reactions:{'🤝':0,'💡':0,'📣':0,'🤍':0}},
+  {id:'yuu-1',type:'post',category:'',user:{name:'ゆうう',avatar:'camel',attrs:['25歳','会社員','独身','一人暮らし']},body:'もう彼氏いない歴2年になっちまう…
+田舎出身だから地元の子が続々と結婚し始めて焦る😭
+マチアプは1ヶ月で疲れてやめた。',replies:0,time:'16時間前',reactions:{'🤝':0,'💡':0,'📣':1,'🤍':0}},
+  {id:'yuu-2',type:'post',category:'日常・雑談',user:{name:'ゆうう',avatar:'camel',attrs:['25歳','会社員','独身','一人暮らし']},body:'今日も仕事頑張った！残業おつかれ自分！',replies:0,time:'16時間前',reactions:{'🤝':1,'💡':0,'📣':0,'🤍':0}},
+  {id:'hana-1',type:'post',category:'恋愛',user:{name:'hana',avatar:'person',attrs:['29歳','会社員','婚活中','実家暮らし']},body:'マチアプ初めて1年、結局一人も付き合えてない。。みたいな人間なのでマチアプ経験談とかアドバイスを求む😓',replies:0,time:'17時間前',reactions:{'🤝':1,'💡':0,'📣':1,'🤍':0}},
+  {id:'hana-2',type:'post',category:'',user:{name:'hana',avatar:'person',attrs:['29歳','会社員','婚活中','実家暮らし']},body:'友人の勧めで始めてみた！
+まだ誰もいないかなあ。誰か来い！！',replies:0,time:'17時間前',reactions:{'🤝':1,'💡':0,'📣':0,'🤍':0}}
+];
+const detailReplies = { 'miii-1': [ {id:'rinrin-1',user:{name:'りんりん',avatar:'camel'},body:'私は29の時に同棲→30で結婚しましたが、同棲して良かったと思っています。
+一緒に住んでみて仕事含めた生活サイクルとかを早めに確認できて、それまであまり意識していなかったかもだけど、一歩結婚に近づいた感じがしました。
+転職と同時は確かに大変だけど、逆に言えば同棲してみた新しい生活の中で、転職の軸とか選択肢が変わったりするかもとは思います。（良くも悪くもですが…）
+応援してます！',time:'2分前',reactions:{'🤝':0,'💡':0,'📣':0,'🤍':0}} ] };
+function $(s){return document.querySelector(s)}
+function $$(s){return Array.from(document.querySelectorAll(s))}
+function esc(s){return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function nl2br(s){return esc(s).replace(/
+/g,'<br>')}
+function goLogin(){ location.href = LOGIN_URL }
+function goColumn(){ location.href = COLUMN_URL }
+function showModal(){ $('#loginModal').classList.add('show') }
+function hideModal(){ $('#loginModal').classList.remove('show') }
+function avatarHtml(user){ if(user.avatar==='camel') return '<div class="av" style="background:#f1b95c">🐪</div>'; if(user.avatar==='person') return '<div class="av" style="background:#fff;color:#000;border:1px solid rgba(0,0,0,.08)">👤</div>'; return '<div class="av" style="background:linear-gradient(135deg,#f6bf75,#d96b2b)">🌇</div>'; }
+function buildReactionRow(reactions, compact){ const map=[{icon:'🤝',label:'わかる'},{icon:'💡',label:'参考になった'},{icon:'📣',label:'応援してる'},{icon:'🤍',label:'つらいね'}]; const cls=compact?'rbtn-sm':'rbtn'; const wrap=compact?'react-row-sm':'react-row'; return '<div class="'+wrap+'">'+map.map(function(item){ const count=reactions[item.icon]||0; const on=count>0?' on':''; return '<button class="'+cls+on+'" data-login>'+item.icon+' '+item.label+(count?(' <span>'+count+'</span>'):'')+'</button>'; }).join('')+'</div>'; }
+function filteredPosts(){ return posts.filter(function(p){ if(state.type && p.type!==state.type) return false; if(state.category && p.category!==state.category) return false; if(state.search){ var q=state.search.toLowerCase(); return (p.body+' '+(p.category||'')+' '+p.user.name).toLowerCase().includes(q); } return true; }); }
+function renderFilters(){ $('#typeFilter').innerHTML = typeDefs.map(function(t){ return '<button class="type-chip'+(state.type===t.value?' active':'')+'" data-type="'+esc(t.value)+'">'+esc(t.label)+'</button>'; }).join(''); $('#catFilter').innerHTML = catDefs.map(function(c){ return '<button class="cat-chip'+(state.category===c.value?' active':'')+'" data-cat="'+esc(c.value)+'">'+esc(c.label)+'</button>'; }).join(''); $$('#typeFilter [data-type]').forEach(function(btn){ btn.addEventListener('click', function(){ state.type=btn.dataset.type; renderFilters(); renderHomeList(); }); }); $$('#catFilter [data-cat]').forEach(function(btn){ btn.addEventListener('click', function(){ state.category=btn.dataset.cat; renderFilters(); renderHomeList(); }); }); }
+function cardHtml(p){ return '<article class="post-card" data-open="'+esc(p.id)+'"><div class="card-head"><div class="card-head-left">'+avatarHtml(p.user)+'<div class="user-meta"><div class="uname-link pop-link" data-user="'+esc(p.id)+'">'+esc(p.user.name)+'</div>'+(p.category?('<div class="attr-tags"><span class="attr-tag">'+esc(p.category)+'</span></div>'):'')+'</div></div><div class="card-head-right"><span class="type-badge-post">つぶやき</span></div></div><div class="card-body">'+nl2br(p.body)+'</div><div class="card-footer"><span>💬 '+p.replies+'件の返信</span><span>'+esc(p.time)+'</span></div>'+buildReactionRow(p.reactions,true)+'</article>'; }
+function renderHomeList(){ var list=filteredPosts(); $('#homeList').innerHTML = list.map(cardHtml).join(''); $$('[data-open]').forEach(function(card){ card.addEventListener('click', function(e){ if(e.target.closest('.pop-link') || e.target.closest('[data-login]')) return; openDetail(card.dataset.open); }); }); $$('.pop-link').forEach(function(el){ el.addEventListener('click', function(e){ e.stopPropagation(); openPopover(el); }); }); $$('[data-login]').forEach(function(el){ el.addEventListener('click', function(e){ e.stopPropagation(); showModal(); }); }); }
+function openPopover(el){ closePopover(); var post = posts.find(function(p){ return p.id===el.dataset.user; }); if(!post) return; var pop = document.createElement('div'); pop.className='user-popover'; pop.innerHTML = '<button class="popover-close">×</button><div class="popover-header">'+avatarHtml(post.user)+'<span class="popover-name">'+esc(post.user.name)+'</span></div><div class="popover-attrs">'+post.user.attrs.map(function(a){ return '<span class="popover-attr">'+esc(a)+'</span>'; }).join('')+'</div><a class="popover-link" href="'+LOGIN_URL+'">プロフィールを見る →</a>'; document.body.appendChild(pop); var rect = el.getBoundingClientRect(); pop.style.top = (rect.bottom + 6) + 'px'; pop.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 300)) + 'px'; pop.querySelector('.popover-close').addEventListener('click', function(){ closePopover(); }); window._popover = pop; }
+function closePopover(){ if(window._popover){ window._popover.remove(); window._popover=null; } }
+document.addEventListener('click', function(e){ if(window._popover && !window._popover.contains(e.target) && !e.target.closest('.pop-link')) closePopover(); });
+function openDetail(id){ var p = posts.find(function(x){ return x.id===id; }); if(!p) return; $('#homeListView').style.display='none'; $('#homeDetail').classList.add('show'); var replies = detailReplies[id] || []; var reply = replies[0]; var html = '<button class="back-btn" id="backBtn">← 一覧に戻る</button><div class="dcard"><div class="card-head"><div class="card-head-left">'+avatarHtml(p.user)+'<div class="user-meta"><div class="uname-link pop-link" data-user="'+esc(p.id)+'">'+esc(p.user.name)+'</div></div></div><div class="card-head-right">'+(p.category?('<span class="attr-tag">'+esc(p.category)+'</span> '):'')+'<span class="attr-tag">通報</span></div></div><div class="dbody">'+nl2br(p.body)+'</div><div class="dfooter"><span>'+esc(p.time)+'</span></div>'+buildReactionRow(p.reactions,false)+'</div><div class="reply-form-box"><div class="reply-form-lbl">返信する</div><textarea class="reply-box" placeholder="返信を入力してください..." readonly></textarea><div class="reply-actions"><button class="btn-primary" data-login>返信する</button><span class="reply-count">0/1000</span></div></div><div class="sec-divider">返信 ('+replies.length+')</div>';
+ if(reply){ html += '<div class="rcard"><div class="reply-head"><div class="card-head-left">'+avatarHtml(reply.user)+'<div class="user-meta"><div class="uname-link">'+esc(reply.user.name)+'</div></div></div><div class="reply-time">'+esc(reply.time)+'</div></div><div class="rbody">'+nl2br(reply.body)+'</div>'+buildReactionRow(reply.reactions,false)+'</div>'; }
+ $('#homeDetail').innerHTML = html; $('#backBtn').addEventListener('click', showHomeList); $$('[data-login]').forEach(function(el){ el.addEventListener('click', showModal); }); }
+function showHomeList(){ $('#homeDetail').classList.remove('show'); $('#homeDetail').innerHTML=''; $('#homeListView').style.display=''; }
+function switchTab(tab){ if(tab==='mypage' || tab==='account'){ goLogin(); return; } $$('.tab-btn').forEach(function(btn){ btn.classList.toggle('active', btn.dataset.tab===tab); }); $$('.tab-pane').forEach(function(pane){ pane.classList.toggle('active', pane.id==='tab-'+tab); }); showHomeList(); }
+async function guardLoggedIn(){ try{ const res = await sb.auth.getSession(); const session = res && res.data && res.data.session; if(session && session.user) location.replace(APP_URL); }catch(e){} }
+function bindGlobal(){ $$('.tab-btn').forEach(function(btn){ btn.addEventListener('click', function(){ switchTab(btn.dataset.tab); }); }); $('#homeSearch').addEventListener('input', function(e){ state.search=e.target.value.trim(); renderHomeList(); }); $('#clearSearchBtn').addEventListener('click', function(){ state.search=''; $('#homeSearch').value=''; renderHomeList(); }); $('#headerStartBtn').addEventListener('click', goLogin); $('#bottomStartBtn').addEventListener('click', goLogin); $('#modalStartBtn').addEventListener('click', goLogin); $('#headerColumnBtn').addEventListener('click', goColumn); $('#bottomColumnBtn').addEventListener('click', goColumn); $('#modalCloseBtn').addEventListener('click', hideModal); $('#loginModal').addEventListener('click', function(e){ if(e.target.id==='loginModal') hideModal(); }); }
+(async function init(){ await guardLoggedIn(); renderFilters(); renderHomeList(); bindGlobal(); })();
+</script>
+</body>
+</html>
