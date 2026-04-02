@@ -78,7 +78,14 @@ a{text-decoration:none}
 .cat-filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
 .cat-chip{font-size:11px;padding:5px 12px;border:1px solid rgba(26,23,20,.12);background:#fff;color:var(--mist);cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;letter-spacing:.04em}
 .cat-chip.active{background:var(--primary);color:#fff;border-color:var(--primary)}.cat-chip:hover:not(.active){border-color:var(--primary);color:var(--primary)}
-.card-list{display:flex;flex-direction:column;gap:2px}
+.card-list{display:flex;flex-direction:column;gap:2px;position:relative}
+.card-list-fade{position:relative}
+.card-list-fade::after{content:'';position:absolute;bottom:0;left:0;right:0;height:320px;background:linear-gradient(to bottom,rgba(245,240,232,0) 0%,rgba(245,240,232,.7) 30%,rgba(245,240,232,.95) 55%,rgba(245,240,232,1) 75%);pointer-events:none;z-index:2}
+.preview-cta{position:relative;z-index:3;text-align:center;padding:8px 16px 32px;background:var(--cream)}
+.preview-cta-text{font-family:'Shippori Mincho',serif;font-size:16px;color:var(--ink);margin-bottom:12px;font-weight:600;line-height:1.7}
+.preview-cta-sub{font-size:13px;color:var(--mist);font-weight:300;margin-bottom:18px;line-height:1.7}
+.preview-cta-btn{display:inline-block;background:var(--primary);color:#fff;padding:14px 36px;font-family:'DM Sans',sans-serif;font-size:14px;border:none;cursor:pointer;transition:all .2s;text-decoration:none;letter-spacing:.02em}
+.preview-cta-btn:hover{background:var(--ink)}
 .post-card{background:#fff;padding:14px 16px;border:1px solid rgba(26,23,20,.06);border-left:4px solid transparent;cursor:pointer;transition:all .2s}
 .post-card:hover{border-color:rgba(26,23,20,.14);transform:translateX(2px)}
 .post-card.is-post{border-left-color:var(--primary)}.post-card.is-question{border-left-color:#7a5c4a}
@@ -149,7 +156,14 @@ a{text-decoration:none}
       </div>
       <div class="type-filter" id="typeFilter"></div>
       <div class="cat-filter" id="catFilter"></div>
-      <div id="homeList" class="card-list"></div>
+      <div class="card-list-fade">
+        <div id="homeList" class="card-list"></div>
+      </div>
+      <div class="preview-cta">
+        <div class="preview-cta-text">もっと見るには無料登録</div>
+        <div class="preview-cta-sub">登録は1分。匿名OK、女性限定の安心な場所です。</div>
+        <a href="https://app.honneroom.com/" class="preview-cta-btn">無料で始める →</a>
+      </div>
     </div>
     <div id="homeDetail" class="detail-view"></div>
   </section>
