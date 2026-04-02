@@ -39,9 +39,9 @@ gtag('config', 'G-N8N26KRS9P', { linker: { domains: ['honneroom.com','app.honner
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--ink:#1a1714;--cream:#f5f0e8;--warm:#e8dfd0;--primary:#c4622d;--primary-pale:#f0ddd3;--mist:#8a7a72;--line:rgba(26,23,20,.08);--hh:60px;--nh:52px}
+:root{--ink:#1a1714;--cream:#f5f0e8;--warm:#e8dfd0;--primary:#c4622d;--primary-pale:#f0ddd3;--mist:#8a7a72;--line:rgba(26,23,20,.08);--hh:60px;--nh:52px;--pb:56px}
 html,body{min-height:100vh}
-body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);padding-top:calc(var(--hh) + var(--nh))}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);padding-top:calc(var(--hh) + var(--nh) + var(--pb))}
 button,input,textarea{font:inherit}
 a{text-decoration:none}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
@@ -60,7 +60,7 @@ a{text-decoration:none}
 .tab-btn::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--primary);transform:scaleX(0);transition:transform .2s}
 .tab-btn.active{color:var(--primary);font-weight:600}.tab-btn.active::after{transform:scaleX(1)}
 .page{max-width:680px;margin:0 auto;padding:24px 16px 96px}.tab-pane{display:none}.tab-pane.active{display:block}
-.home-post-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.home-post-btns{position:fixed;top:calc(var(--hh) + var(--nh));left:0;right:0;z-index:98;display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:680px;margin:0 auto;padding:10px 16px;background:var(--cream)}
 .home-post-btn-post,.home-post-btn-q{border:none;padding:12px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:400;cursor:pointer;transition:all .2s;letter-spacing:.02em;border-radius:2px}
 .home-post-btn-post{background:var(--primary-pale);color:var(--primary);border:1px solid rgba(196,98,45,.2)}
 .home-post-btn-post:hover{background:var(--primary);color:#fff}
