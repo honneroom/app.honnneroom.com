@@ -28,10 +28,10 @@
   --ink:#1a1714;--cream:#f5f0e8;--warm:#e8dfd0;
   --primary:#c4622d;--primary-light:#d4845a;--primary-pale:#f0ddd3;
   --mist:#8a7a72;--error:#b3261e;
-  --hh:60px;--nh:52px;
+  --hh:60px;--nh:52px;--pb:56px;
 }
 html,body{min-height:100vh}
-body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);padding-top:calc(var(--hh) + var(--nh))}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);padding-top:calc(var(--hh) + var(--nh) + var(--pb))}
 
 /* HEADER */
 .site-header{position:fixed;top:0;left:0;right:0;height:var(--hh);z-index:100;background:rgba(245,240,232,.96);backdrop-filter:blur(12px);border-bottom:1px solid rgba(26,23,20,.08);display:flex;align-items:center;padding:0 20px;justify-content:space-between}
@@ -311,7 +311,7 @@ img.av{object-fit:cover;display:block}
 .pw-notice-close:hover{color:var(--ink)}
 
 /* HOME 投稿誘導ボタン */
-.home-post-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.home-post-btns{position:fixed;top:calc(var(--hh) + var(--nh));left:0;right:0;z-index:98;display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:680px;margin:0 auto;padding:10px 16px;background:var(--cream)}
 .home-post-btn-post,.home-post-btn-q{border:none;padding:12px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:400;cursor:pointer;transition:all .2s;letter-spacing:.02em;border-radius:2px}
 .home-post-btn-post{background:var(--primary-pale);color:var(--primary);border:1px solid rgba(196,98,45,.2)}
 .home-post-btn-post:hover{background:var(--primary);color:white}
