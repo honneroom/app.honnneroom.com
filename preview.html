@@ -40,274 +40,115 @@ gtag('config', 'G-N8N26KRS9P', { linker: { domains: ['honneroom.com','app.honner
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --ink:#1a1714;
-  --cream:#f5f0e8;
-  --warm:#e8dfd0;
-  --panel:#f7f6f3;
-  --primary:#c4622d;
-  --primary-pale:#f0ddd3;
-  --mist:#8a7a72;
-  --line:rgba(26,23,20,.08);
-  --hh:60px;
-  --nh:52px;
+  --ink:#1a1714;--cream:#f5f0e8;--warm:#e8dfd0;
+  --primary:#c4622d;--primary-light:#d4845a;--primary-pale:#f0ddd3;
+  --mist:#8a7a72;--line:rgba(26,23,20,.08);
+  --hh:60px;--nh:52px;
 }
 html,body{min-height:100vh}
-body{
-  font-family:'DM Sans',sans-serif;
-  background:#e7e1d8;
-  color:var(--ink);
-  padding-top:calc(var(--hh) + var(--nh));
-}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);padding-top:calc(var(--hh) + var(--nh))}
 button,input,textarea{font:inherit}
 a{text-decoration:none}
-.sr-only{
-  position:absolute;width:1px;height:1px;padding:0;margin:-1px;
-  overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
-}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
-/* HEADER */
-.site-header{
-  position:fixed;top:0;left:0;right:0;height:var(--hh);z-index:100;
-  background:rgba(245,240,232,.96);
-  backdrop-filter:blur(12px);
-  border-bottom:1px solid var(--line);
-  display:flex;align-items:center;justify-content:space-between;
-  padding:0 20px;
-}
+.site-header{position:fixed;top:0;left:0;right:0;height:var(--hh);z-index:100;background:rgba(245,240,232,.96);backdrop-filter:blur(12px);border-bottom:1px solid rgba(26,23,20,.08);display:flex;align-items:center;justify-content:space-between;padding:0 20px}
 .hlogo{display:flex;align-items:center;gap:9px;text-decoration:none}
 .hlogo img{width:28px;height:28px;object-fit:contain}
-.hlogo-name{
-  font-family:'Shippori Mincho',serif;
-  font-size:15px;font-weight:600;color:var(--ink);
-}
+.hlogo-name{font-family:'Shippori Mincho',serif;font-size:15px;font-weight:600;color:var(--ink)}
 .header-actions{display:flex;align-items:center;gap:8px}
-.btn-primary,.btn-secondary,.btn-ghost{
-  border:none;cursor:pointer;transition:all .2s;
-}
-.btn-primary{
-  background:var(--primary);color:#fff;
-  padding:9px 14px;font-size:13px;
-}
+.btn-primary,.btn-secondary{border:none;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif}
+.btn-primary{background:var(--primary);color:#fff;padding:9px 14px;font-size:13px}
 .btn-primary:hover{background:var(--ink)}
-.btn-secondary{
-  background:#fff;color:var(--primary);
-  border:1px solid rgba(196,98,45,.24);
-  padding:9px 14px;font-size:13px;
-}
+.btn-secondary{background:#fff;color:var(--primary);border:1px solid rgba(196,98,45,.24);padding:9px 14px;font-size:13px}
 .btn-secondary:hover{background:var(--primary-pale)}
-.btn-ghost{
-  background:transparent;color:var(--mist);
-  border:1px solid rgba(26,23,20,.12);
-  padding:9px 14px;font-size:13px;
-}
-.btn-ghost:hover{background:#fff}
 
-/* TAB NAV */
-.tab-nav{
-  position:fixed;top:var(--hh);left:0;right:0;height:var(--nh);z-index:99;
-  background:#fff;border-bottom:1px solid var(--line);
-  display:flex;align-items:stretch;
-}
-.tab-btn{
-  flex:1;border:none;background:none;font-size:13px;letter-spacing:.04em;
-  color:var(--mist);cursor:pointer;position:relative;transition:color .2s;font-weight:400;
-}
-.tab-btn::after{
-  content:'';position:absolute;bottom:0;left:0;right:0;height:3px;
-  background:var(--primary);transform:scaleX(0);transition:transform .2s;
-}
+.tab-nav{position:fixed;top:var(--hh);left:0;right:0;height:var(--nh);z-index:99;background:#fff;border-bottom:1px solid rgba(26,23,20,.08);display:flex;align-items:stretch}
+.tab-btn{flex:1;border:none;background:none;font-size:13px;letter-spacing:.04em;color:var(--mist);cursor:pointer;position:relative;transition:color .2s;font-weight:400}
+.tab-btn::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--primary);transform:scaleX(0);transition:transform .2s}
 .tab-btn.active{color:var(--primary);font-weight:600}
 .tab-btn.active::after{transform:scaleX(1)}
 
-/* PAGE */
-.page{max-width:720px;margin:0 auto;padding:20px 10px 110px}
+.page{max-width:680px;margin:0 auto;padding:24px 16px 96px}
 .tab-pane{display:none}
 .tab-pane.active{display:block}
-.page-lead{margin-bottom:14px}
-.page-lead-title{
-  font-family:'Shippori Mincho',serif;
-  font-size:18px;font-weight:700;line-height:1.5;color:var(--ink);margin-bottom:6px;
-}
-.page-lead-text{font-size:13px;line-height:1.8;color:#5d544e}
-.action-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
-.action-btn{
-  display:flex;align-items:center;justify-content:center;gap:8px;
-  min-height:66px;padding:16px 18px;background:#efe1d8;color:var(--primary);
-  border:1px solid rgba(196,98,45,.16);font-size:14px;font-weight:600;
-}
-.action-btn.secondary{
-  background:#ece6de;color:#7f746c;border-color:rgba(26,23,20,.10);
-}
-.action-btn:hover{opacity:.92}
+.hero-copy{display:none}
+.home-post-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.home-post-btn-post,.home-post-btn-q{border:none;padding:12px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:400;cursor:pointer;transition:all .2s;letter-spacing:.02em;border-radius:2px}
+.home-post-btn-post{background:var(--primary-pale);color:var(--primary);border:1px solid rgba(196,98,45,.2)}
+.home-post-btn-post:hover{background:var(--primary);color:white}
+.home-post-btn-q{background:#ede6df;color:#7a5c4a;border:1px solid rgba(122,92,74,.2)}
+.home-post-btn-q:hover{background:#7a5c4a;color:white}
 
-/* SEARCH & FILTER */
 .search-bar{display:flex;gap:8px;margin-bottom:14px}
-.s-input{
-  flex:1;padding:14px 18px;font-size:13px;font-weight:300;color:var(--ink);
-  background:#fff;border:1px solid rgba(26,23,20,.12);outline:none;
-}
-.s-clear{
-  font-size:12px;color:var(--mist);background:none;border:none;
-  padding:8px 10px;cursor:pointer;
-}
-.type-filter{
-  display:flex;border:1px solid rgba(26,23,20,.10);background:#fff;margin-bottom:14px;
-}
-.type-chip{
-  flex:1;padding:14px 9px;font-size:12px;letter-spacing:.06em;text-align:center;
-  background:none;border:none;color:var(--mist);cursor:pointer;
-}
-.type-chip.active{background:#7a5c4a;color:#fff}
-.cat-filter{display:flex;gap:10px 8px;flex-wrap:wrap;margin-bottom:14px}
-.cat-chip{
-  font-size:11px;padding:10px 14px;border:1px solid rgba(26,23,20,.12);
-  background:#fff;color:var(--mist);cursor:pointer;
-}
-.cat-chip.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.s-input{flex:1;padding:9px 14px;font-size:13px;font-weight:300;color:var(--ink);background:white;border:1px solid rgba(26,23,20,.12);outline:none;transition:border-color .2s,box-shadow .2s}
+.s-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(196,98,45,.1)}
+.s-input::placeholder{color:#b0a898}
+.s-clear{font-size:12px;color:var(--mist);background:none;border:none;cursor:pointer;padding:8px 10px;white-space:nowrap}
+.s-clear:hover{color:var(--primary)}
+.type-filter{display:flex;border:1px solid rgba(26,23,20,.10);background:white;margin-bottom:14px}
+.type-chip{flex:1;padding:9px;font-size:12px;letter-spacing:.06em;text-align:center;cursor:pointer;border:none;background:none;color:var(--mist);font-family:'DM Sans',sans-serif;transition:all .2s;border-right:1px solid rgba(26,23,20,.08)}
+.type-chip:last-child{border-right:none}
+.type-chip.active{background:#7a5c4a;color:white}
+.cat-filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.cat-chip{font-size:11px;padding:5px 12px;border:1px solid rgba(26,23,20,.12);background:white;color:var(--mist);cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;letter-spacing:.04em}
+.cat-chip.active{background:var(--primary);color:white;border-color:var(--primary)}
+.cat-chip:hover:not(.active){border-color:var(--primary);color:var(--primary)}
 
-/* POST LIST */
 .card-list{display:flex;flex-direction:column;gap:2px}
-.post-card{
-  background:var(--panel);
-  padding:14px 16px;
-  border:1px solid rgba(26,23,20,.06);
-  border-left:4px solid var(--primary);
-  cursor:pointer;
-  transition:all .2s;
-}
-.post-card:hover{background:#fbfaf8}
-.card-head{
-  display:flex;align-items:flex-start;justify-content:space-between;
-  gap:10px;margin-bottom:10px;
-}
-.card-head-left{
-  display:flex;align-items:flex-start;gap:8px;min-width:0;flex:1;
-}
+.post-card{background:white;padding:14px 16px;border:1px solid rgba(26,23,20,.06);border-left:4px solid transparent;cursor:pointer;transition:all .2s}
+.post-card:hover{border-color:rgba(26,23,20,.14);transform:translateX(2px)}
+.post-card.is-post{border-left-color:var(--primary)}
+.post-card.is-question{border-left-color:#7a5c4a}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.card-head-left{display:flex;align-items:center;gap:7px;min-width:0;flex:1}
 .card-head-right{flex-shrink:0}
-.av{
-  width:32px;height:32px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  color:#fff;font-size:11px;font-weight:600;flex-shrink:0;overflow:hidden;
-  background:#e9e0d7;border:1px solid rgba(26,23,20,.06);
-}
+.av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:white;flex-shrink:0;overflow:hidden;background:var(--warm)}
 .av img{width:100%;height:100%;object-fit:cover;display:block}
 .user-meta{min-width:0}
-.uname-link{
-  font-size:12px;color:var(--primary);text-decoration:underline;
-  cursor:pointer;line-height:1.2;
-}
-.type-badge-post,.type-badge-consult{
-  font-size:10px;font-weight:600;padding:2px 8px;
-  color:#fff;white-space:nowrap;
-}
-.type-badge-post{background:var(--primary)}
-.type-badge-consult{background:#8b6b57}
+.uname-link{font-size:12px;color:var(--primary);text-decoration:none;cursor:pointer;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.uname-link:hover{text-decoration:underline}
+.type-badge-post{font-size:10px;font-weight:600;padding:2px 8px;letter-spacing:.04em;background:var(--primary);color:white;white-space:nowrap}
+.type-badge-consult{font-size:10px;font-weight:600;padding:2px 8px;letter-spacing:.04em;border:1px solid #7a5c4a;color:#7a5c4a;background:white;white-space:nowrap}
 .attr-tags{display:flex;gap:4px;flex-wrap:wrap;margin:6px 0 0}
-.attr-tag{
-  font-size:10px;padding:2px 8px;background:var(--warm);
-  color:var(--mist);white-space:nowrap;
-}
-.card-body{
-  font-size:14px;line-height:1.95;color:#4a4440;font-weight:300;white-space:pre-wrap;
-}
-.card-footer{
-  display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;font-size:11px;color:var(--mist);
-}
+.attr-tag{font-size:10px;padding:2px 8px;background:var(--warm);color:var(--mist);white-space:nowrap}
+.card-body{font-size:14px;line-height:1.95;color:#4a4440;font-weight:300;white-space:pre-wrap}
+.card-footer{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;font-size:11px;color:var(--mist)}
 
-/* REACTIONS */
-.react-row-sm,.react-row{
-  display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;
-  padding-top:12px;border-top:1px solid rgba(26,23,20,.06);
-}
-.rbtn-sm,.rbtn{
-  display:inline-flex;align-items:center;gap:4px;font-size:12px;
-  padding:5px 10px;background:#f1eee8;border:1px solid rgba(26,23,20,.08);
-  color:#6d6258;border-radius:16px;cursor:pointer;transition:all .15s;
-}
-.rbtn-sm:hover,.rbtn:hover{
-  border-color:var(--primary);color:var(--primary);background:var(--primary-pale);
-}
-.rbtn-sm.on,.rbtn.on{
-  background:#fff4ed;border-color:var(--primary);color:var(--primary);
-}
+.react-row-sm,.react-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid rgba(26,23,20,.06)}
+.rbtn-sm,.rbtn{display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:5px 10px;background:var(--cream);border:1px solid rgba(26,23,20,.08);color:#6d6258;border-radius:16px;cursor:pointer;transition:all .15s}
+.rbtn-sm:hover,.rbtn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-pale)}
+.rbtn-sm.on,.rbtn.on{background:#fff4ed;border-color:var(--primary);color:var(--primary)}
 
-/* DETAIL */
 .detail-view{display:none}
 .detail-view.show{display:block}
-.back-btn{
-  display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mist);
-  background:none;border:none;cursor:pointer;padding:0;margin-bottom:12px;
-}
+.back-btn{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mist);background:none;border:none;cursor:pointer;padding:0;margin-bottom:20px}
 .back-btn:hover{color:var(--primary)}
-.dcard,.reply-form-box,.rcard{
-  background:var(--panel);border:1px solid rgba(26,23,20,.06);
-  padding:20px;margin-bottom:2px;
-}
-.dbody,.rbody{
-  font-size:14px;line-height:1.95;color:#4a4440;font-weight:300;white-space:pre-wrap;
-}
-.dfooter{
-  display:flex;align-items:center;gap:14px;margin-top:14px;
-  flex-wrap:wrap;font-size:11px;color:var(--mist);
-}
+.dcard,.reply-form-box,.rcard{background:white;border:1px solid rgba(26,23,20,.06);padding:20px;margin-bottom:2px}
+.dbody,.rbody{font-size:14px;line-height:1.95;color:#4a4440;font-weight:300;white-space:pre-wrap}
+.dfooter{display:flex;align-items:center;gap:14px;margin-top:14px;flex-wrap:wrap;font-size:11px;color:var(--mist)}
 .reply-form-lbl,.sec-divider{font-size:12px;color:var(--mist);margin-bottom:12px}
 .sec-divider{padding:12px 2px 8px}
-.reply-box{
-  width:100%;min-height:100px;padding:12px 14px;background:#fff;
-  border:1px solid rgba(26,23,20,.1);outline:none;resize:vertical;
-}
-.reply-actions{
-  display:flex;align-items:center;justify-content:space-between;
-  gap:12px;margin-top:12px;
-}
+.reply-box{width:100%;min-height:100px;padding:12px 14px;background:var(--cream);border:1px solid rgba(26,23,20,.12);outline:none;resize:vertical;line-height:1.7}
+.reply-box:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(196,98,45,.1);background:white}
+.reply-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px}
 .reply-count{font-size:11px;color:var(--mist)}
-.reply-head{
-  display:flex;align-items:flex-start;justify-content:space-between;
-  gap:10px;margin-bottom:10px;
-}
+.reply-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
 .reply-time{font-size:11px;color:var(--mist)}
 .reply-hint{font-size:11px;color:var(--mist);margin-top:8px;line-height:1.7}
 
-/* USER POPOVER */
-.user-popover{
-  position:fixed;z-index:180;background:#fff;border:1px solid rgba(26,23,20,.10);
-  box-shadow:0 4px 20px rgba(26,23,20,.12);padding:14px 16px;min-width:220px;max-width:290px;
-}
-.popover-close{
-  position:absolute;top:6px;right:8px;background:none;border:none;
-  font-size:18px;cursor:pointer;color:var(--mist);padding:2px 6px;line-height:1;
-}
-.popover-header{
-  display:flex;align-items:center;gap:10px;margin-bottom:10px;padding-right:20px;
-}
-.popover-name{
-  font-family:'Shippori Mincho',serif;font-size:14px;font-weight:600;color:var(--ink);
-}
+.user-popover{position:fixed;z-index:180;background:white;border:1px solid rgba(26,23,20,.10);box-shadow:0 4px 20px rgba(26,23,20,.12);padding:14px 16px;min-width:220px;max-width:290px}
+.popover-close{position:absolute;top:6px;right:8px;background:none;border:none;font-size:18px;cursor:pointer;color:var(--mist);padding:2px 6px;line-height:1}
+.popover-close:hover{color:var(--ink)}
+.popover-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;padding-right:20px}
+.popover-name{font-family:'Shippori Mincho',serif;font-size:14px;font-weight:600;color:var(--ink)}
 .popover-attrs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px}
-.popover-attr{
-  font-size:10px;padding:2px 7px;background:var(--warm);color:var(--mist);
-}
-.popover-link{
-  display:block;font-size:12px;color:var(--primary);cursor:pointer;
-  text-decoration:none;padding-top:8px;border-top:1px solid rgba(26,23,20,.06);
-}
-
-/* FOOT CTA */
-.sticky-cta{
-  position:fixed;left:0;right:0;bottom:0;z-index:120;
-  background:rgba(255,255,255,.96);backdrop-filter:blur(12px);
-  border-top:1px solid var(--line);padding:10px 14px;
-  display:flex;justify-content:center;gap:10px;
-}
+.popover-attr{font-size:10px;padding:2px 7px;background:var(--warm);color:var(--mist)}
+.popover-link{display:block;font-size:12px;color:var(--primary);cursor:pointer;text-decoration:none;padding-top:8px;border-top:1px solid rgba(26,23,20,.06)}
+.popover-link:hover{text-decoration:underline}
 
 @media(max-width:560px){
-  .header-actions .btn-secondary{display:none}
-  .page{padding:14px 8px 110px}
-  .sticky-cta{flex-direction:column}
-  .sticky-cta .btn-primary,.sticky-cta .btn-secondary{width:100%}
+  .page{padding:16px 12px 96px}
   .dcard,.reply-form-box,.rcard,.post-card{padding:16px 14px}
-  .action-row{grid-template-columns:1fr 1fr;gap:10px}
-  .action-btn{min-height:58px;padding:14px 10px}
 }
 </style>
 </head>
@@ -318,7 +159,6 @@ a{text-decoration:none}
     <span class="hlogo-name">本音ルーム</span>
   </a>
   <div class="header-actions">
-    <button class="btn-secondary" id="headerColumnBtn">コラム</button>
     <button class="btn-primary" id="headerStartBtn">無料で始める</button>
   </div>
 </header>
@@ -334,14 +174,11 @@ a{text-decoration:none}
 
   <section id="tab-home" class="tab-pane active">
     <div id="homeListView">
-      <div class="page-lead">
-        <div class="page-lead-title">女性限定・匿名で本音を話せる場所</div>
-        <div class="page-lead-text">恋愛、結婚・ライフプラン、仕事、お金、日常のことまで。気軽なつぶやきも、しっかりした相談も、無料登録ですぐ始められます。</div>
-      </div>
+      <div class="hero-copy" aria-hidden="true"></div>
 
-      <div class="action-row">
-        <button class="action-btn" id="openPostBtn">✏️ つぶやく</button>
-        <button class="action-btn secondary" id="openConsultBtn">💬 相談する</button>
+      <div class="home-post-btns">
+        <button class="home-post-btn-post" id="openPostBtn">✏️ つぶやく</button>
+        <button class="home-post-btn-q" id="openConsultBtn">💬 相談する</button>
       </div>
 
       <div class="search-bar">
@@ -359,28 +196,18 @@ a{text-decoration:none}
   <section id="tab-account" class="tab-pane"></section>
 </main>
 
-<div class="sticky-cta">
-  <button class="btn-secondary" id="bottomColumnBtn">コラムを見る</button>
-  <button class="btn-primary" id="bottomStartBtn">無料で始める</button>
-</div>
-
 <script>
 const SB_URL = 'https://rhynpigqhnbwjyudvvfw.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoeW5waWdxaG5id2p5dWR2dmZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3ODcyNTMsImV4cCI6MjA4MzM2MzI1M30.S9h-SH0JB0cEhMukUUaOuYEetx2I8qecZapIeCpk57M';
 const APP_URL = '/app.html';
 const LOGIN_URL = 'https://app.honneroom.com/';
-const COLUMN_URL = 'https://honneroom.com/column/';
 const REPLY_MAX = 1000;
 
 const sb = window.supabase.createClient(SB_URL, SB_KEY, {
   auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
 });
 
-const state = {
-  type:'',
-  category:'',
-  search:''
-};
+const state = { type:'', category:'', search:'' };
 
 const avatarMap = {
   'hana':'https://app.honneroom.com/data/icon/icon00.png',
@@ -408,128 +235,82 @@ const catDefs = [
 
 const posts = [
   {
-    id:'miii-1',
-    type:'post',
-    category:'恋愛',
+    id:'miii-1', type:'post', category:'恋愛',
     user:{name:'miii',attrs:['26歳','交際中','一人暮らし']},
     body:`彼氏と付き合って2年、同棲の話が出てるんだけど正直まだ踏み切れない。。
 仕事も転職活動中で、今環境変えすぎるの怖くて。
 同じくらいの年齢で同棲始めた人いたら、決め手が何だったか聞きたいです🥺`,
-    replies:1,
-    time:'1時間前',
-    reactions:{'🤝':0,'💡':0,'📣':0,'🤍':0}
+    replies:1,time:'1時間前',reactions:{'🤝':0,'💡':0,'📣':0,'🤍':0}
   },
   {
-    id:'yuu-1',
-    type:'post',
-    category:'結婚・ライフプラン',
+    id:'yuu-1', type:'post', category:'結婚・ライフプラン',
     user:{name:'ゆうう',attrs:['25歳','会社員','独身','一人暮らし']},
     body:`もう彼氏いない歴2年になっちまう…
 田舎出身だから地元の子が続々と結婚し始めて焦る😭
 マチアプは1ヶ月で疲れてやめた。`,
-    replies:0,
-    time:'16時間前',
-    reactions:{'🤝':0,'💡':0,'📣':1,'🤍':0}
+    replies:0,time:'16時間前',reactions:{'🤝':0,'💡':0,'📣':1,'🤍':0}
   },
   {
-    id:'yuu-2',
-    type:'post',
-    category:'日常・雑談',
+    id:'yuu-2', type:'post', category:'日常・雑談',
     user:{name:'ゆうう',attrs:['25歳','会社員','独身','一人暮らし']},
     body:`今日も仕事頑張った！残業おつかれ自分！`,
-    replies:0,
-    time:'16時間前',
-    reactions:{'🤝':1,'💡':0,'📣':0,'🤍':0}
+    replies:0,time:'16時間前',reactions:{'🤝':1,'💡':0,'📣':0,'🤍':0}
   },
   {
-    id:'hana-1',
-    type:'post',
-    category:'恋愛',
+    id:'hana-1', type:'post', category:'恋愛',
     user:{name:'hana',attrs:['29歳','会社員','婚活中','実家暮らし']},
     body:`マチアプ初めて1年、結局一人も付き合えてない。。みたいな人間なのでマチアプ経験談とかアドバイスを求む😓`,
-    replies:0,
-    time:'17時間前',
-    reactions:{'🤝':1,'💡':0,'📣':1,'🤍':0}
+    replies:0,time:'17時間前',reactions:{'🤝':1,'💡':0,'📣':1,'🤍':0}
   },
   {
-    id:'hana-2',
-    type:'post',
-    category:'その他',
+    id:'hana-2', type:'post', category:'その他',
     user:{name:'hana',attrs:['29歳','会社員','婚活中','実家暮らし']},
     body:`友人の勧めで始めてみた！
 まだ誰もいないかなあ。誰か来い！！`,
-    replies:0,
-    time:'17時間前',
-    reactions:{'🤝':1,'💡':0,'📣':0,'🤍':0}
+    replies:0,time:'17時間前',reactions:{'🤝':1,'💡':0,'📣':0,'🤍':0}
   }
 ];
 
 const detailReplies = {
-  'miii-1': [
-    {
-      id:'rinrin-1',
-      user:{name:'りんりん'},
-      body:`私は29の時に同棲→30で結婚しましたが、同棲して良かったと思っています。
+  'miii-1': [{
+    id:'rinrin-1', user:{name:'りんりん'},
+    body:`私は29の時に同棲→30で結婚しましたが、同棲して良かったと思っています。
 一緒に住んでみて仕事含めた生活サイクルとかを早めに確認できて、それまであまり意識していなかったかもだけど、一歩結婚に近づいた感じがしました。
 転職と同時は確かに大変だけど、逆に言えば同棲してみた新しい生活の中で、転職の軸とか選択肢が変わったりするかもとは思います。（良くも悪くもですが…）
 応援してます！`,
-      time:'2分前',
-      reactions:{'🤝':0,'💡':0,'📣':0,'🤍':0}
-    }
-  ]
+    time:'2分前', reactions:{'🤝':0,'💡':0,'📣':0,'🤍':0}
+  }]
 };
 
 function $(s){ return document.querySelector(s); }
 function $$(s){ return Array.from(document.querySelectorAll(s)); }
-
-function esc(s){
-  return String(s ?? '')
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;');
-}
-
-function nl2br(s){
-  return esc(s).replace(/\n/g,'<br>');
-}
-
+function esc(s){ return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function nl2br(s){ return esc(s).replace(/
+/g,'<br>'); }
 function goLogin(){ location.href = LOGIN_URL; }
-function goColumn(){ location.href = COLUMN_URL; }
 
 function avatarHtml(user){
   const url = avatarMap[user.name];
-  if(url){
-    return '<div class="av"><img src="' + esc(url) + '" alt="' + esc(user.name) + '"></div>';
-  }
+  if(url){ return '<div class="av"><img src="' + esc(url) + '" alt="' + esc(user.name) + '"></div>'; }
   return '<div class="av"></div>';
 }
-
 function typeBadgeHtml(type){
   if(type === 'consult') return '<span class="type-badge-consult">相談</span>';
   return '<span class="type-badge-post">つぶやき</span>';
 }
-
 function buildReactionRow(reactions, compact){
   const map = [
-    {icon:'🤝',label:'わかる'},
-    {icon:'💡',label:'参考になった'},
-    {icon:'📣',label:'応援してる'},
-    {icon:'🤍',label:'つらいね'}
+    {icon:'🤝',label:'わかる'}, {icon:'💡',label:'参考になった'},
+    {icon:'📣',label:'応援してる'}, {icon:'🤍',label:'つらいね'}
   ];
   const cls = compact ? 'rbtn-sm' : 'rbtn';
   const wrap = compact ? 'react-row-sm' : 'react-row';
-
   return '<div class="' + wrap + '">' + map.map(function(item){
     const count = reactions[item.icon] || 0;
     const on = count > 0 ? ' on' : '';
-    return '<button class="' + cls + on + '" data-login>' +
-      item.icon + ' ' + item.label +
-      (count ? (' <span>' + count + '</span>') : '') +
-      '</button>';
+    return '<button class="' + cls + on + '" data-login>' + item.icon + ' ' + item.label + (count ? (' <span>' + count + '</span>') : '') + '</button>';
   }).join('') + '</div>';
 }
-
 function filteredPosts(){
   return posts.filter(function(p){
     if(state.type && p.type !== state.type) return false;
@@ -541,42 +322,27 @@ function filteredPosts(){
     return true;
   });
 }
-
 function renderFilters(){
   $('#typeFilter').innerHTML = typeDefs.map(function(t){
     return '<button class="type-chip' + (state.type === t.value ? ' active' : '') + '" data-type="' + esc(t.value) + '" data-login-only="' + (t.loginOnly ? '1' : '0') + '">' + esc(t.label) + '</button>';
   }).join('');
-
   $('#catFilter').innerHTML = catDefs.map(function(c){
     return '<button class="cat-chip' + (state.category === c.value ? ' active' : '') + '" data-cat="' + esc(c.value) + '">' + esc(c.label) + '</button>';
   }).join('');
-
   $$('#typeFilter [data-type]').forEach(function(btn){
     btn.addEventListener('click', function(){
-      if(btn.dataset.loginOnly === '1'){
-        goLogin();
-        return;
-      }
-      state.type = btn.dataset.type;
-      renderFilters();
-      renderHomeList();
+      if(btn.dataset.loginOnly === '1'){ goLogin(); return; }
+      state.type = btn.dataset.type; renderFilters(); renderHomeList();
     });
   });
-
   $$('#catFilter [data-cat]').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      state.category = btn.dataset.cat;
-      renderFilters();
-      renderHomeList();
-    });
+    btn.addEventListener('click', function(){ state.category = btn.dataset.cat; renderFilters(); renderHomeList(); });
   });
 }
-
 function cardHtml(p){
-  return '<article class="post-card" data-open="' + esc(p.id) + '">' +
+  return '<article class="post-card ' + (p.type === 'consult' ? 'is-question' : 'is-post') + '" data-open="' + esc(p.id) + '">' +
     '<div class="card-head">' +
-      '<div class="card-head-left">' +
-        avatarHtml(p.user) +
+      '<div class="card-head-left">' + avatarHtml(p.user) +
         '<div class="user-meta">' +
           '<div class="uname-link pop-link" data-user="' + esc(p.id) + '">' + esc(p.user.name) + '</div>' +
           (p.category ? ('<div class="attr-tags"><span class="attr-tag">' + esc(p.category) + '</span></div>') : '') +
@@ -589,223 +355,63 @@ function cardHtml(p){
     buildReactionRow(p.reactions, true) +
   '</article>';
 }
-
 function renderHomeList(){
   const list = filteredPosts();
   $('#homeList').innerHTML = list.map(cardHtml).join('');
-
   $$('[data-open]').forEach(function(card){
-    card.addEventListener('click', function(e){
-      if(e.target.closest('.pop-link') || e.target.closest('[data-login]')) return;
-      openDetail(card.dataset.open);
-    });
+    card.addEventListener('click', function(e){ if(e.target.closest('.pop-link') || e.target.closest('[data-login]')) return; openDetail(card.dataset.open); });
   });
-
-  $$('.pop-link').forEach(function(el){
-    el.addEventListener('click', function(e){
-      e.stopPropagation();
-      openPopover(el);
-    });
-  });
-
-  $$('[data-login]').forEach(function(el){
-    el.addEventListener('click', function(e){
-      e.stopPropagation();
-      goLogin();
-    });
-  });
+  $$('.pop-link').forEach(function(el){ el.addEventListener('click', function(e){ e.stopPropagation(); openPopover(el); }); });
+  $$('[data-login]').forEach(function(el){ el.addEventListener('click', function(e){ e.stopPropagation(); goLogin(); }); });
 }
-
 function openPopover(el){
   closePopover();
-
   const post = posts.find(function(p){ return p.id === el.dataset.user; });
   if(!post) return;
-
   const pop = document.createElement('div');
   pop.className = 'user-popover';
-  pop.innerHTML =
-    '<button class="popover-close">×</button>' +
-    '<div class="popover-header">' +
-      avatarHtml(post.user) +
-      '<span class="popover-name">' + esc(post.user.name) + '</span>' +
-    '</div>' +
-    '<div class="popover-attrs">' +
-      post.user.attrs.map(function(a){
-        return '<span class="popover-attr">' + esc(a) + '</span>';
-      }).join('') +
-    '</div>' +
-    '<a class="popover-link" href="' + LOGIN_URL + '">プロフィールを見る →</a>';
-
+  pop.innerHTML = '<button class="popover-close">×</button><div class="popover-header">' + avatarHtml(post.user) + '<span class="popover-name">' + esc(post.user.name) + '</span></div><div class="popover-attrs">' + post.user.attrs.map(function(a){ return '<span class="popover-attr">' + esc(a) + '</span>'; }).join('') + '</div><a class="popover-link" href="' + LOGIN_URL + '">プロフィールを見る →</a>';
   document.body.appendChild(pop);
-
   const rect = el.getBoundingClientRect();
   pop.style.top = (rect.bottom + 6) + 'px';
   pop.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 300)) + 'px';
-
-  pop.querySelector('.popover-close').addEventListener('click', function(){
-    closePopover();
-  });
-
+  pop.querySelector('.popover-close').addEventListener('click', function(){ closePopover(); });
   window._popover = pop;
 }
-
-function closePopover(){
-  if(window._popover){
-    window._popover.remove();
-    window._popover = null;
-  }
-}
-
-document.addEventListener('click', function(e){
-  if(window._popover && !window._popover.contains(e.target) && !e.target.closest('.pop-link')){
-    closePopover();
-  }
-});
-
+function closePopover(){ if(window._popover){ window._popover.remove(); window._popover = null; } }
+document.addEventListener('click', function(e){ if(window._popover && !window._popover.contains(e.target) && !e.target.closest('.pop-link')){ closePopover(); } });
 function openDetail(id){
   const p = posts.find(function(x){ return x.id === id; });
   if(!p) return;
-
   $('#homeListView').style.display = 'none';
   $('#homeDetail').classList.add('show');
-
   const replies = detailReplies[id] || [];
   const reply = replies[0];
-
-  let html =
-    '<button class="back-btn" id="backBtn">← 一覧に戻る</button>' +
-    '<div class="dcard">' +
-      '<div class="card-head">' +
-        '<div class="card-head-left">' +
-          avatarHtml(p.user) +
-          '<div class="user-meta"><div class="uname-link pop-link" data-user="' + esc(p.id) + '">' + esc(p.user.name) + '</div></div>' +
-        '</div>' +
-        '<div class="card-head-right">' +
-          (p.category ? ('<span class="attr-tag">' + esc(p.category) + '</span> ') : '') +
-          typeBadgeHtml(p.type) +
-        '</div>' +
-      '</div>' +
-      '<div class="dbody">' + nl2br(p.body) + '</div>' +
-      '<div class="dfooter"><span>' + esc(p.time) + '</span></div>' +
-      buildReactionRow(p.reactions, false) +
-    '</div>' +
-    '<div class="reply-form-box">' +
-      '<div class="reply-form-lbl">返信する</div>' +
-      '<textarea class="reply-box" id="replyBox" placeholder="返信を入力してください..."></textarea>' +
-      '<div class="reply-hint">テキスト入力はできますが、送信には無料登録が必要です。</div>' +
-      '<div class="reply-actions"><button class="btn-primary" data-login>返信する</button><span class="reply-count"><span id="replyCount">0</span>/' + REPLY_MAX + '</span></div>' +
-    '</div>' +
-    '<div class="sec-divider">返信 (' + replies.length + ')</div>';
-
+  let html = '<button class="back-btn" id="backBtn">← 一覧に戻る</button><div class="dcard"><div class="card-head"><div class="card-head-left">' + avatarHtml(p.user) + '<div class="user-meta"><div class="uname-link pop-link" data-user="' + esc(p.id) + '">' + esc(p.user.name) + '</div></div></div><div class="card-head-right">' + (p.category ? ('<span class="attr-tag">' + esc(p.category) + '</span> ') : '') + typeBadgeHtml(p.type) + '</div></div><div class="dbody">' + nl2br(p.body) + '</div><div class="dfooter"><span>' + esc(p.time) + '</span></div>' + buildReactionRow(p.reactions, false) + '</div><div class="reply-form-box"><div class="reply-form-lbl">返信する</div><textarea class="reply-box" id="replyBox" placeholder="返信を入力してください..."></textarea><div class="reply-hint">テキスト入力はできますが、送信には無料登録が必要です。</div><div class="reply-actions"><button class="btn-primary" data-login>返信する</button><span class="reply-count"><span id="replyCount">0</span>/' + REPLY_MAX + '</span></div></div><div class="sec-divider">返信 (' + replies.length + ')</div>';
   if(reply){
-    html +=
-      '<div class="rcard">' +
-        '<div class="reply-head">' +
-          '<div class="card-head-left">' +
-            avatarHtml(reply.user) +
-            '<div class="user-meta"><div class="uname-link">' + esc(reply.user.name) + '</div></div>' +
-          '</div>' +
-          '<div class="reply-time">' + esc(reply.time) + '</div>' +
-        '</div>' +
-        '<div class="rbody">' + nl2br(reply.body) + '</div>' +
-        buildReactionRow(reply.reactions, false) +
-      '</div>';
+    html += '<div class="rcard"><div class="reply-head"><div class="card-head-left">' + avatarHtml(reply.user) + '<div class="user-meta"><div class="uname-link">' + esc(reply.user.name) + '</div></div></div><div class="reply-time">' + esc(reply.time) + '</div></div><div class="rbody">' + nl2br(reply.body) + '</div>' + buildReactionRow(reply.reactions, false) + '</div>';
   }
-
   $('#homeDetail').innerHTML = html;
-
   $('#backBtn').addEventListener('click', showHomeList);
-
-  const replyBox = $('#replyBox');
-  const replyCount = $('#replyCount');
+  const replyBox = $('#replyBox'); const replyCount = $('#replyCount');
   if(replyBox && replyCount){
-    replyBox.addEventListener('input', function(){
-      if(replyBox.value.length > REPLY_MAX){
-        replyBox.value = replyBox.value.slice(0, REPLY_MAX);
-      }
-      replyCount.textContent = replyBox.value.length;
-    });
+    replyBox.addEventListener('input', function(){ if(replyBox.value.length > REPLY_MAX){ replyBox.value = replyBox.value.slice(0, REPLY_MAX); } replyCount.textContent = replyBox.value.length; });
   }
-
-  $$('.pop-link').forEach(function(el){
-    el.addEventListener('click', function(e){
-      e.stopPropagation();
-      openPopover(el);
-    });
-  });
-
-  $$('[data-login]').forEach(function(el){
-    el.addEventListener('click', goLogin);
-  });
+  $$('.pop-link').forEach(function(el){ el.addEventListener('click', function(e){ e.stopPropagation(); openPopover(el); }); });
+  $$('[data-login]').forEach(function(el){ el.addEventListener('click', goLogin); });
 }
-
-function showHomeList(){
-  $('#homeDetail').classList.remove('show');
-  $('#homeDetail').innerHTML = '';
-  $('#homeListView').style.display = '';
-}
-
-function switchTab(tab){
-  if(tab === 'mypage' || tab === 'account'){
-    goLogin();
-    return;
-  }
-
-  $$('.tab-btn').forEach(function(btn){
-    btn.classList.toggle('active', btn.dataset.tab === tab);
-  });
-
-  $$('.tab-pane').forEach(function(pane){
-    pane.classList.toggle('active', pane.id === 'tab-' + tab);
-  });
-
-  showHomeList();
-}
-
-async function guardLoggedIn(){
-  try{
-    const res = await sb.auth.getSession();
-    const session = res && res.data && res.data.session;
-    if(session && session.user){
-      location.replace(APP_URL);
-    }
-  }catch(e){}
-}
-
+function showHomeList(){ $('#homeDetail').classList.remove('show'); $('#homeDetail').innerHTML = ''; $('#homeListView').style.display = ''; }
+function switchTab(tab){ if(tab === 'mypage' || tab === 'account'){ goLogin(); return; } $$('.tab-btn').forEach(function(btn){ btn.classList.toggle('active', btn.dataset.tab === tab); }); $$('.tab-pane').forEach(function(pane){ pane.classList.toggle('active', pane.id === 'tab-' + tab); }); showHomeList(); }
+async function guardLoggedIn(){ try{ const res = await sb.auth.getSession(); const session = res && res.data && res.data.session; if(session && session.user){ location.replace(APP_URL); } }catch(e){} }
 function bindGlobal(){
-  $$('.tab-btn').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      switchTab(btn.dataset.tab);
-    });
-  });
-
-  $('#homeSearch').addEventListener('input', function(e){
-    state.search = e.target.value.trim();
-    renderHomeList();
-  });
-
-  $('#clearSearchBtn').addEventListener('click', function(){
-    state.search = '';
-    $('#homeSearch').value = '';
-    renderHomeList();
-  });
-
+  $$('.tab-btn').forEach(function(btn){ btn.addEventListener('click', function(){ switchTab(btn.dataset.tab); }); });
+  $('#homeSearch').addEventListener('input', function(e){ state.search = e.target.value.trim(); renderHomeList(); });
+  $('#clearSearchBtn').addEventListener('click', function(){ state.search = ''; $('#homeSearch').value = ''; renderHomeList(); });
   $('#headerStartBtn').addEventListener('click', goLogin);
-  $('#bottomStartBtn').addEventListener('click', goLogin);
   $('#openPostBtn').addEventListener('click', goLogin);
   $('#openConsultBtn').addEventListener('click', goLogin);
-
-  $('#headerColumnBtn').addEventListener('click', goColumn);
-  $('#bottomColumnBtn').addEventListener('click', goColumn);
 }
-
-(async function init(){
-  await guardLoggedIn();
-  renderFilters();
-  renderHomeList();
-  bindGlobal();
-})();
+(async function init(){ await guardLoggedIn(); renderFilters(); renderHomeList(); bindGlobal(); })();
 </script>
 </body>
 </html>
