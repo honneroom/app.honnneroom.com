@@ -157,69 +157,60 @@ a{text-decoration:none}
   <section id="tab-account" class="tab-pane"></section>
 </main>
 <script>
-const SB_URL = 'https://rhynpigqhnbwjyudvvfw.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoeW5waWdxaG5id2p5dWR2dmZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3ODcyNTMsImV4cCI6MjA4MzM2MzI1M30.S9h-SH0JB0cEhMukUUaOuYEetx2I8qecZapIeCpk57M';
-const APP_URL = '/app.html';
-const LOGIN_URL = 'https://app.honneroom.com/';
-const REPLY_MAX = 1000;
-const sb = window.supabase.createClient(SB_URL, SB_KEY, { auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true} });
-const state = { type:'', category:'', search:'' };
-const avatarMap = {
+var SB_URL = 'https://rhynpigqhnbwjyudvvfw.supabase.co';
+var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoeW5waWdxaG5id2p5dWR2dmZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3ODcyNTMsImV4cCI6MjA4MzM2MzI1M30.S9h-SH0JB0cEhMukUUaOuYEetx2I8qecZapIeCpk57M';
+var APP_URL = '/app.html';
+var LOGIN_URL = 'https://app.honneroom.com/';
+var REPLY_MAX = 1000;
+var sb = window.supabase.createClient(SB_URL, SB_KEY, { auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true} });
+var state = { type:'', category:'', search:'' };
+var avatarMap = {
   'hana':'https://app.honneroom.com/data/icon/icon00.png',
-  'ゆうう':'https://app.honneroom.com/data/icon/icon01.png',
+  '\u3086\u3046\u3046':'https://app.honneroom.com/data/icon/icon01.png',
   'miii':'https://app.honneroom.com/data/icon/icon02.png',
-  'りんりん':'https://app.honneroom.com/data/icon/icon05.png'
+  '\u308a\u3093\u308a\u3093':'https://app.honneroom.com/data/icon/icon05.png'
 };
-const typeDefs = [
-  { value:'', label:'すべて' },
-  { value:'post', label:'つぶやき' },
-  { value:'consult', label:'相談', loginOnly:true }
+var typeDefs = [
+  { value:'', label:'\u3059\u3079\u3066' },
+  { value:'post', label:'\u3064\u3076\u3084\u304d' },
+  { value:'consult', label:'\u76f8\u8ac7', loginOnly:true }
 ];
-const catDefs = [
-  { value:'', label:'すべて' },
-  { value:'キャリア', label:'キャリア' },
-  { value:'結婚・ライフプラン', label:'結婚・ライフプラン' },
-  { value:'お金・将来', label:'お金・将来' },
-  { value:'恋愛', label:'恋愛' },
-  { value:'仕事の悩み', label:'仕事の悩み' },
-  { value:'日常・雑談', label:'日常・雑談' },
-  { value:'その他', label:'その他' }
+var catDefs = [
+  { value:'', label:'\u3059\u3079\u3066' },
+  { value:'\u30ad\u30e3\u30ea\u30a2', label:'\u30ad\u30e3\u30ea\u30a2' },
+  { value:'\u7d50\u5a5a\u30fb\u30e9\u30a4\u30d5\u30d7\u30e9\u30f3', label:'\u7d50\u5a5a\u30fb\u30e9\u30a4\u30d5\u30d7\u30e9\u30f3' },
+  { value:'\u304a\u91d1\u30fb\u5c06\u6765', label:'\u304a\u91d1\u30fb\u5c06\u6765' },
+  { value:'\u604b\u611b', label:'\u604b\u611b' },
+  { value:'\u4ed5\u4e8b\u306e\u60a9\u307f', label:'\u4ed5\u4e8b\u306e\u60a9\u307f' },
+  { value:'\u65e5\u5e38\u30fb\u96d1\u8ac7', label:'\u65e5\u5e38\u30fb\u96d1\u8ac7' },
+  { value:'\u305d\u306e\u4ed6', label:'\u305d\u306e\u4ed6' }
 ];
-const posts = [
-  { id:'miii-1', type:'post', category:'恋愛', user:{name:'miii',attrs:['26歳','交際中','一人暮らし']}, body:'彼氏と付き合って2年、同棲の話が出てるんだけど正直まだ踏み切れない。。
-仕事も転職活動中で、今環境変えすぎるの怖くて。
-同じくらいの年齢で同棲始めた人いたら、決め手が何だったか聞きたいです🥺', replies:1, time:'1時間前', reactions:{'🤝':0,'💡':0,'📣':0,'🤍':0} },
-  { id:'yuu-1', type:'post', category:'結婚・ライフプラン', user:{name:'ゆうう',attrs:['25歳','会社員','独身','一人暮らし']}, body:'もう彼氏いない歴2年になっちまう…
-田舎出身だから地元の子が続々と結婚し始めて焦る😭
-マチアプは1ヶ月で疲れてやめた。', replies:0, time:'16時間前', reactions:{'🤝':0,'💡':0,'📣':1,'🤍':0} },
-  { id:'yuu-2', type:'post', category:'日常・雑談', user:{name:'ゆうう',attrs:['25歳','会社員','独身','一人暮らし']}, body:'今日も仕事頑張った！残業おつかれ自分！', replies:0, time:'16時間前', reactions:{'🤝':1,'💡':0,'📣':0,'🤍':0} },
-  { id:'hana-1', type:'post', category:'恋愛', user:{name:'hana',attrs:['29歳','会社員','婚活中','実家暮らし']}, body:'マチアプ初めて1年、結局一人も付き合えてない。。みたいな人間なのでマチアプ経験談とかアドバイスを求む😓', replies:0, time:'17時間前', reactions:{'🤝':1,'💡':0,'📣':1,'🤍':0} },
-  { id:'hana-2', type:'post', category:'その他', user:{name:'hana',attrs:['29歳','会社員','婚活中','実家暮らし']}, body:'友人の勧めで始めてみた！
-まだ誰もいないかなあ。誰か来い！！', replies:0, time:'17時間前', reactions:{'🤝':1,'💡':0,'📣':0,'🤍':0} }
+var posts = [
+  { id:'miii-1', type:'post', category:'\u604b\u611b', user:{name:'miii',attrs:['26\u6b73','\u4ea4\u969b\u4e2d','\u4e00\u4eba\u66ae\u3089\u3057']}, body:'\u5f7c\u6c0f\u3068\u4ed8\u304d\u5408\u3063\u30662\u5e74\u3001\u540c\u68f2\u306e\u8a71\u304c\u51fa\u3066\u308b\u3093\u3060\u3051\u3069\u6b63\u76f4\u307e\u3060\u8e0f\u307f\u5207\u308c\u306a\u3044\u3002\u3002\n\u4ed5\u4e8b\u3082\u8ee2\u8077\u6d3b\u52d5\u4e2d\u3067\u3001\u4eca\u74b0\u5883\u5909\u3048\u3059\u304e\u308b\u306e\u6016\u304f\u3066\u3002\n\u540c\u3058\u304f\u3089\u3044\u306e\u5e74\u9f62\u3067\u540c\u68f2\u59cb\u3081\u305f\u4eba\u3044\u305f\u3089\u3001\u6c7a\u3081\u624b\u304c\u4f55\u3060\u3063\u305f\u304b\u805e\u304d\u305f\u3044\u3067\u3059\ud83e\udd7a', replies:1, time:'1\u6642\u9593\u524d', reactions:{'\ud83e\udd1d':0,'\ud83d\udca1':0,'\ud83d\udce3':0,'\ud83e\udd0d':0} },
+  { id:'yuu-1', type:'post', category:'\u7d50\u5a5a\u30fb\u30e9\u30a4\u30d5\u30d7\u30e9\u30f3', user:{name:'\u3086\u3046\u3046',attrs:['25\u6b73','\u4f1a\u793e\u54e1','\u72ec\u8eab','\u4e00\u4eba\u66ae\u3089\u3057']}, body:'\u3082\u3046\u5f7c\u6c0f\u3044\u306a\u3044\u6b742\u5e74\u306b\u306a\u3063\u3061\u307e\u3046\u2026\n\u7530\u820e\u51fa\u8eab\u3060\u304b\u3089\u5730\u5143\u306e\u5b50\u304c\u7d9a\u3005\u3068\u7d50\u5a5a\u3057\u59cb\u3081\u3066\u7126\u308b\ud83d\ude2d\n\u30de\u30c1\u30a2\u30d7\u306f1\u30f6\u6708\u3067\u75b2\u308c\u3066\u3084\u3081\u305f\u3002', replies:0, time:'16\u6642\u9593\u524d', reactions:{'\ud83e\udd1d':0,'\ud83d\udca1':0,'\ud83d\udce3':1,'\ud83e\udd0d':0} },
+  { id:'yuu-2', type:'post', category:'\u65e5\u5e38\u30fb\u96d1\u8ac7', user:{name:'\u3086\u3046\u3046',attrs:['25\u6b73','\u4f1a\u793e\u54e1','\u72ec\u8eab','\u4e00\u4eba\u66ae\u3089\u3057']}, body:'\u4eca\u65e5\u3082\u4ed5\u4e8b\u9811\u5f35\u3063\u305f\uff01\u6b8b\u696d\u304a\u3064\u304b\u308c\u81ea\u5206\uff01', replies:0, time:'16\u6642\u9593\u524d', reactions:{'\ud83e\udd1d':1,'\ud83d\udca1':0,'\ud83d\udce3':0,'\ud83e\udd0d':0} },
+  { id:'hana-1', type:'post', category:'\u604b\u611b', user:{name:'hana',attrs:['29\u6b73','\u4f1a\u793e\u54e1','\u5a5a\u6d3b\u4e2d','\u5b9f\u5bb6\u66ae\u3089\u3057']}, body:'\u30de\u30c1\u30a2\u30d7\u521d\u3081\u30661\u5e74\u3001\u7d50\u5c40\u4e00\u4eba\u3082\u4ed8\u304d\u5408\u3048\u3066\u306a\u3044\u3002\u3002\u307f\u305f\u3044\u306a\u4eba\u9593\u306a\u306e\u3067\u30de\u30c1\u30a2\u30d7\u7d4c\u9a13\u8ac7\u3068\u304b\u30a2\u30c9\u30d0\u30a4\u30b9\u3092\u6c42\u3080\ud83d\ude13', replies:0, time:'17\u6642\u9593\u524d', reactions:{'\ud83e\udd1d':1,'\ud83d\udca1':0,'\ud83d\udce3':1,'\ud83e\udd0d':0} },
+  { id:'hana-2', type:'post', category:'\u305d\u306e\u4ed6', user:{name:'hana',attrs:['29\u6b73','\u4f1a\u793e\u54e1','\u5a5a\u6d3b\u4e2d','\u5b9f\u5bb6\u66ae\u3089\u3057']}, body:'\u53cb\u4eba\u306e\u52e7\u3081\u3067\u59cb\u3081\u3066\u307f\u305f\uff01\n\u307e\u3060\u8ab0\u3082\u3044\u306a\u3044\u304b\u306a\u3042\u3002\u8ab0\u304b\u6765\u3044\uff01\uff01', replies:0, time:'17\u6642\u9593\u524d', reactions:{'\ud83e\udd1d':1,'\ud83d\udca1':0,'\ud83d\udce3':0,'\ud83e\udd0d':0} }
 ];
-const detailReplies = {
+var detailReplies = {
   'miii-1': [
-    { id:'rinrin-1', user:{name:'りんりん'}, body:'私は29の時に同棲→30で結婚しましたが、同棲して良かったと思っています。
-一緒に住んでみて仕事含めた生活サイクルとかを早めに確認できて、それまであまり意識していなかったかもだけど、一歩結婚に近づいた感じがしました。
-転職と同時は確かに大変だけど、逆に言えば同棲してみた新しい生活の中で、転職の軸とか選択肢が変わったりするかもとは思います。（良くも悪くもですが…）
-応援してます！', time:'2分前', reactions:{'🤝':0,'💡':0,'📣':0,'🤍':0} }
+    { id:'rinrin-1', user:{name:'\u308a\u3093\u308a\u3093'}, body:'\u79c1\u306f29\u306e\u6642\u306b\u540c\u68f2\u21920\u3067\u7d50\u5a5a\u3057\u307e\u3057\u305f\u304c\u3001\u540c\u68f2\u3057\u3066\u826f\u304b\u3063\u305f\u3068\u601d\u3063\u3066\u3044\u307e\u3059\u3002\n\u4e00\u7dd2\u306b\u4f4f\u3093\u3067\u307f\u3066\u4ed5\u4e8b\u542b\u3081\u305f\u751f\u6d3b\u30b5\u30a4\u30af\u30eb\u3068\u304b\u3092\u65e9\u3081\u306b\u78ba\u8a8d\u3067\u304d\u3066\u3001\u305d\u308c\u307e\u3067\u3042\u307e\u308a\u610f\u8b58\u3057\u3066\u3044\u306a\u304b\u3063\u305f\u304b\u3082\u3060\u3051\u3069\u3001\u4e00\u6b69\u7d50\u5a5a\u306b\u8fd1\u3065\u3044\u305f\u611f\u3058\u304c\u3057\u307e\u3057\u305f\u3002\n\u8ee2\u8077\u3068\u540c\u6642\u306f\u78ba\u304b\u306b\u5927\u5909\u3060\u3051\u3069\u3001\u9006\u306b\u8a00\u3048\u3070\u540c\u68f2\u3057\u3066\u307f\u305f\u65b0\u3057\u3044\u751f\u6d3b\u306e\u4e2d\u3067\u3001\u8ee2\u8077\u306e\u8ef8\u3068\u304b\u9078\u629e\u80a2\u304c\u5909\u308f\u3063\u305f\u308a\u3059\u308b\u304b\u3082\u3068\u306f\u601d\u3044\u307e\u3059\u3002\uff08\u826f\u304f\u3082\u60aa\u304f\u3082\u3067\u3059\u304c\u2026\uff09\n\u5fdc\u63f4\u3057\u3066\u307e\u3059\uff01', time:'2\u5206\u524d', reactions:{'\ud83e\udd1d':0,'\ud83d\udca1':0,'\ud83d\udce3':0,'\ud83e\udd0d':0} }
   ]
 };
 function $(s){ return document.querySelector(s); }
 function $$(s){ return Array.from(document.querySelectorAll(s)); }
-function esc(s){ return String(s == null ? '' : s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;'); }
-function nl2br(s){ return esc(s).replaceAll('
-','<br>'); }
+function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function nl2br(s){ return esc(s).replace(/\n/g,'<br>'); }
 function goLogin(){ location.href = LOGIN_URL; }
 function avatarHtml(user){ var url = avatarMap[user.name]; return url ? '<div class="av"><img src="' + esc(url) + '" alt="' + esc(user.name) + '"></div>' : '<div class="av"></div>'; }
-function typeBadgeHtml(type){ return type === 'consult' ? '<span class="type-badge-consult">相談</span>' : '<span class="type-badge-post">つぶやき</span>'; }
+function typeBadgeHtml(type){ return type === 'consult' ? '<span class="type-badge-consult">\u76f8\u8ac7</span>' : '<span class="type-badge-post">\u3064\u3076\u3084\u304d</span>'; }
 function buildReactionRow(reactions, compact){
-  var map = [{icon:'🤝',label:'わかる'},{icon:'💡',label:'参考になった'},{icon:'📣',label:'応援してる'},{icon:'🤍',label:'つらいね'}];
+  var map = [{icon:'\ud83e\udd1d',label:'\u308f\u304b\u308b'},{icon:'\ud83d\udca1',label:'\u53c2\u8003\u306b\u306a\u3063\u305f'},{icon:'\ud83d\udce3',label:'\u5fdc\u63f4\u3057\u3066\u308b'},{icon:'\ud83e\udd0d',label:'\u3064\u3089\u3044\u306d'}];
   var cls = compact ? 'rbtn-sm' : 'rbtn';
   var wrap = compact ? 'react-row-sm' : 'react-row';
   return '<div class="' + wrap + '">' + map.map(function(item){ var count = reactions[item.icon] || 0; var on = count > 0 ? ' on' : ''; return '<button class="' + cls + on + '" data-login>' + item.icon + ' ' + item.label + (count ? ' <span>' + count + '</span>' : '') + '</button>'; }).join('') + '</div>';
 }
-function filteredPosts(){ return posts.filter(function(p){ if(state.type && p.type !== state.type) return false; if(state.category && p.category !== state.category) return false; if(state.search){ var q = state.search.toLowerCase(); return (p.body + ' ' + (p.category || '') + ' ' + p.user.name).toLowerCase().includes(q); } return true; }); }
+function filteredPosts(){ return posts.filter(function(p){ if(state.type && p.type !== state.type) return false; if(state.category && p.category !== state.category) return false; if(state.search){ var q = state.search.toLowerCase(); return (p.body + ' ' + (p.category || '') + ' ' + p.user.name).toLowerCase().indexOf(q) >= 0; } return true; }); }
 function renderFilters(){
   $('#typeFilter').innerHTML = typeDefs.map(function(t){ return '<button class="type-chip' + (state.type === t.value ? ' active' : '') + '" data-type="' + esc(t.value) + '" data-login-only="' + (t.loginOnly ? '1' : '0') + '">' + esc(t.label) + '</button>'; }).join('');
   $('#catFilter').innerHTML = catDefs.map(function(c){ return '<button class="cat-chip' + (state.category === c.value ? ' active' : '') + '" data-cat="' + esc(c.value) + '">' + esc(c.label) + '</button>'; }).join('');
@@ -239,7 +230,7 @@ function cardHtml(p){
       '<div class="card-head-right">' + typeBadgeHtml(p.type) + '</div>' +
     '</div>' +
     '<div class="card-body">' + nl2br(p.body) + '</div>' +
-    '<div class="card-footer"><span>💬 ' + p.replies + '件の返信</span><span>' + esc(p.time) + '</span></div>' +
+    '<div class="card-footer"><span>\ud83d\udcac ' + p.replies + '\u4ef6\u306e\u8fd4\u4fe1</span><span>' + esc(p.time) + '</span></div>' +
     buildReactionRow(p.reactions, true) +
   '</article>';
 }
@@ -256,7 +247,7 @@ function openPopover(el){
   if(!post) return;
   var pop = document.createElement('div');
   pop.className = 'user-popover';
-  pop.innerHTML = '<button class="popover-close">×</button>' + '<div class="popover-header">' + avatarHtml(post.user) + '<span class="popover-name">' + esc(post.user.name) + '</span></div>' + '<div class="popover-attrs">' + post.user.attrs.map(function(a){ return '<span class="popover-attr">' + esc(a) + '</span>'; }).join('') + '</div>' + '<a class="popover-link" href="' + LOGIN_URL + '">プロフィールを見る →</a>';
+  pop.innerHTML = '<button class="popover-close">\u00d7</button>' + '<div class="popover-header">' + avatarHtml(post.user) + '<span class="popover-name">' + esc(post.user.name) + '</span></div>' + '<div class="popover-attrs">' + post.user.attrs.map(function(a){ return '<span class="popover-attr">' + esc(a) + '</span>'; }).join('') + '</div>' + '<a class="popover-link" href="' + LOGIN_URL + '">\u30d7\u30ed\u30d5\u30a3\u30fc\u30eb\u3092\u898b\u308b \u2192</a>';
   document.body.appendChild(pop);
   var rect = el.getBoundingClientRect();
   pop.style.top = (rect.bottom + 6) + 'px';
@@ -273,7 +264,7 @@ function openDetail(id){
   $('#homeDetail').classList.add('show');
   var replies = detailReplies[id] || [];
   var reply = replies[0];
-  var html = '<button class="back-btn" id="backBtn">← 一覧に戻る</button>' +
+  var html = '<button class="back-btn" id="backBtn">\u2190 \u4e00\u89a7\u306b\u623b\u308b</button>' +
     '<div class="dcard">' +
       '<div class="card-head">' +
         '<div class="card-head-left">' + avatarHtml(p.user) + '<div class="user-meta"><div class="uname-link pop-link" data-user="' + esc(p.id) + '">' + esc(p.user.name) + '</div></div></div>' +
@@ -284,12 +275,12 @@ function openDetail(id){
       buildReactionRow(p.reactions, false) +
     '</div>' +
     '<div class="reply-form-box">' +
-      '<div class="reply-form-lbl">返信する</div>' +
-      '<textarea class="reply-box" id="replyBox" placeholder="返信を入力してください..."></textarea>' +
-      '<div class="reply-hint">テキスト入力はできますが、送信には無料登録が必要です。</div>' +
-      '<div class="reply-actions"><button class="btn-primary" data-login>返信する</button><span class="reply-count"><span id="replyCount">0</span>/' + REPLY_MAX + '</span></div>' +
+      '<div class="reply-form-lbl">\u8fd4\u4fe1\u3059\u308b</div>' +
+      '<textarea class="reply-box" id="replyBox" placeholder="\u8fd4\u4fe1\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044..."></textarea>' +
+      '<div class="reply-hint">\u30c6\u30ad\u30b9\u30c8\u5165\u529b\u306f\u3067\u304d\u307e\u3059\u304c\u3001\u9001\u4fe1\u306b\u306f\u7121\u6599\u767b\u9332\u304c\u5fc5\u8981\u3067\u3059\u3002</div>' +
+      '<div class="reply-actions"><button class="btn-primary" data-login>\u8fd4\u4fe1\u3059\u308b</button><span class="reply-count"><span id="replyCount">0</span>/' + REPLY_MAX + '</span></div>' +
     '</div>' +
-    '<div class="sec-divider">返信 (' + replies.length + ')</div>';
+    '<div class="sec-divider">\u8fd4\u4fe1 (' + replies.length + ')</div>';
   if(reply){
     html += '<div class="rcard"><div class="reply-head"><div class="card-head-left">' + avatarHtml(reply.user) + '<div class="user-meta"><div class="uname-link">' + esc(reply.user.name) + '</div></div></div><div class="reply-time">' + esc(reply.time) + '</div></div><div class="rbody">' + nl2br(reply.body) + '</div>' + buildReactionRow(reply.reactions, false) + '</div>';
   }
