@@ -213,6 +213,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);p
 .entry-del-btn{position:absolute;top:8px;right:10px;background:none;border:none;color:var(--mist);font-size:14px;cursor:pointer;padding:3px 7px;opacity:0;transition:opacity .2s;line-height:1}
 .entry-card:hover .entry-del-btn,.entry-card:focus-within .entry-del-btn{opacity:.6}
 .entry-del-btn:hover{color:var(--error);opacity:1!important}
+.entry-share-btn{position:absolute;top:8px;right:38px;background:none;border:none;color:var(--mist);font-size:13px;cursor:pointer;padding:3px 6px;opacity:0;transition:opacity .2s;line-height:1}
+.entry-card:hover .entry-share-btn,.entry-card:focus-within .entry-share-btn{opacity:.6}
+.entry-share-btn:hover{color:var(--primary);opacity:1!important}
 
 /* PREMIUM LOCK */
 .premium-lock{background:white;border:1px solid rgba(26,23,20,.06);padding:48px 24px;text-align:center}
@@ -1079,6 +1082,7 @@ function renderRecordList(entries,main){
     const bodyPreview=e.body?.slice(0,80)+(e.body?.length>80?"…":"");
     return`<div class="entry-card" data-id="${esc(e.id)}">
       <button class="entry-del-btn" onclick="deleteEntry('${esc(e.id)}',event)" title="削除">✕</button>
+      ${a?`<button class="entry-share-btn" onclick="shareEntry('${esc(e.id)}',event)" title="シェア">📤</button>`:""}
       <div class="entry-card-date">${rtime(e.created_at)}</div>
       ${a?.core_emotion?`<div class="entry-card-core">「${esc(a.core_emotion.slice(0,50))}」</div>`:""}
       <div class="entry-card-body">${esc(bodyPreview)}</div>
@@ -1088,7 +1092,7 @@ function renderRecordList(entries,main){
   }).join('')+`</div>`;
   main.querySelectorAll(".entry-card").forEach(c=>{
     c.addEventListener("click",e=>{
-      if(e.target.classList.contains('entry-del-btn'))return;
+      if(e.target.classList.contains('entry-del-btn')||e.target.classList.contains('entry-share-btn'))return;
       openEntryDetail(c.dataset.id,entries);
     });
   });
@@ -1101,6 +1105,14 @@ async function deleteEntry(entryId,e){
   if(error){alert('削除に失敗しました。');return;}
   _cachedEntries=null;
   renderRecord();
+}
+
+function shareEntry(entryId,event){
+  event.stopPropagation();
+  const entry=_cachedEntries?.find(x=>x.id===entryId);
+  const a=(entry?.analyses||[])[0]||null;
+  if(!a){showToast('この記録には分析データがありません');return;}
+  showShareModal(a);
 }
 
 /* ===== 感情カレンダー ===== */
@@ -1408,10 +1420,17 @@ function openEntryDetail(entryId,entries){
     html+=`<div class="result-card"><div style="color:var(--mist);font-size:13px;text-align:center;padding:8px">この記録の分析結果はありません。</div></div>`;
   }
 
+  if(a){
+    html+=`<button class="btn-share" id="btnShareDetail">📸 この記録をシェアする（無料）</button>`;
+  }
+
   detail.innerHTML=html;
   detail.querySelector("#detailBackBtn").addEventListener("click",()=>{
     main.style.display="";detail.classList.remove("show");detail.innerHTML="";
   });
+  if(a){
+    detail.querySelector("#btnShareDetail")?.addEventListener("click",()=>showShareModal(a));
+  }
 }
 
 /* ===== 設定 ===== */
