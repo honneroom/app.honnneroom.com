@@ -1,8 +1,14 @@
 {
   "stripe": {
-    "standard": {
-      "payment_link_url": "https://buy.stripe.com/5kQ28k7E9eFC8WG9J29k400",
-      "payment_link_no_trial_url": "https://buy.stripe.com/5kQ3cobUpbtq2yidZi9k401"
-    }
+    "plans": [
+      {
+        "id": "standard",
+        "name": "Standard",
+        "price_id": "price_XXXXXXXXXX",
+        "amount": 390,
+        "currency": "jpy",
+        "interval": "month"
+      }
+    ]
   }
 }

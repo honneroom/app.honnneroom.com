@@ -296,9 +296,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);p
 <script>
 const SB_URL  = "https://rhynpigqhnbwjyudvvfw.supabase.co";
 const SB_KEY  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoeW5waWdxaG5id2p5dWR2dmZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3ODcyNTMsImV4cCI6MjA4MzM2MzI1M30.S9h-SH0JB0cEhMukUUaOuYEetx2I8qecZapIeCpk57M";
-const BILLING     = "https://app.honneroom.com/data/billing.json";
-const PORTAL      = "https://rhynpigqhnbwjyudvvfw.functions.supabase.co/create-portal-session";
-const ANALYZE_URL = "https://rhynpigqhnbwjyudvvfw.functions.supabase.co/analyze-entry";
+const BILLING      = "https://app.honneroom.com/data/billing.json";
+const PORTAL       = "https://rhynpigqhnbwjyudvvfw.functions.supabase.co/create-portal-session";
+const CHECKOUT_URL = "https://rhynpigqhnbwjyudvvfw.functions.supabase.co/create-checkout-session";
+const ANALYZE_URL  = "https://rhynpigqhnbwjyudvvfw.functions.supabase.co/analyze-entry";
 const APP_URL     = "https://app.honneroom.com/app.html";
 const DEFAULT_ICON = "https://app.honneroom.com/data/icon/icon00.png";
 const ICONS_URL   = "https://app.honneroom.com/data/icons.json";
@@ -639,11 +640,10 @@ function renderAccount(){
       </tbody>
     </table>
     <div style="margin-top:14px">
-      <button id="btnSub" class="btn-p">${pr?.stripe_customer_id?"Standardプランに登録する（¥390/月）":"7日間無料で試す"}</button>
+      <button id="btnSub" class="btn-p">Standardプランに登録する（¥390/月）</button>
     </div>
     `:`
     <button id="btnCancel" class="btn-d">サブスクを解約する</button>
-    <p style="font-size:12px;color:var(--mist);font-weight:300;line-height:1.7;margin-top:8px">※無料期間中に解約した場合、再登録時に無料トライアルは適用されません。</p>
     `}
   </div>
 
@@ -793,14 +793,36 @@ async function loadBilling(){
 }
 
 async function createCheckout(){
-  const base=S.profile?.stripe_customer_id
-    ?(S.billingCfg?.stripe?.standard?.payment_link_no_trial_url||S.billingCfg?.stripe?.standard?.payment_link_url)
-    :S.billingCfg?.stripe?.standard?.payment_link_url;
-  if(!base){alert("設定の読み込みに失敗しました。");return;}
-  const p=new URLSearchParams();
-  if(S.user?.email)p.set("prefilled_email",S.user.email);
-  if(S.user?.id)p.set("client_reference_id",S.user.id);
-  location.href=base+(base.includes("?")?"&":"?")+p.toString();
+  const plan=(S.billingCfg?.stripe?.plans||[]).find(p=>p.id==="standard");
+  if(!plan?.price_id){alert("設定の読み込みに失敗しました。");return;}
+
+  const btn=document.getElementById("btnSub");
+  if(btn){btn.disabled=true;btn.textContent="処理中…";}
+
+  try{
+    const{data:sess}=await sb.auth.getSession();
+    const token=sess?.session?.access_token;
+    const res=await fetch(CHECKOUT_URL,{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        ...(token?{Authorization:`Bearer ${token}`}:{}),
+      },
+      body:JSON.stringify({
+        price_id:plan.price_id,
+        user_id:S.user?.id||null,
+        user_email:S.user?.email||null,
+      }),
+    });
+    if(!res.ok)throw new Error(`${res.status}`);
+    const{url}=await res.json();
+    if(!url)throw new Error("no url");
+    location.href=url;
+  }catch(e){
+    console.error("createCheckout error:",e);
+    alert("決済ページを開けませんでした。しばらく経ってから再試行してください。");
+    if(btn){btn.disabled=false;btn.textContent="Standardプランに登録する（¥390/月）";}
+  }
 }
 
 async function openPortal(){
