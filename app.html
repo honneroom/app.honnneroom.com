@@ -289,7 +289,29 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);p
 .report-month-fill{height:100%;background:var(--primary);border-radius:5px;opacity:.55}
 .report-month-count{font-size:11px;color:var(--mist);width:28px;text-align:right;flex-shrink:0}
 
-/* ENTRY CARD TYPE BADGE */
+/* CALENDAR DAY DETAIL PANEL */
+.cal-day.selected{background:rgba(196,98,45,.14);border-radius:4px}
+.cal-day.selected .cal-day-num{color:var(--primary);font-weight:700}
+.cal-multi{font-size:8px;color:rgba(255,255,255,.9);background:var(--primary);border-radius:5px;padding:0 3px;line-height:1.5;text-align:center;min-width:11px;margin-top:1px}
+.cal-day-detail{margin-top:14px;border-top:2px solid rgba(26,23,20,.06);padding-top:14px;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.cal-day-detail-header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px}
+.cal-day-detail-date{font-family:'Shippori Mincho',serif;font-size:15px;font-weight:600;color:var(--ink)}
+.cal-day-detail-count{font-size:11px;color:var(--mist)}
+.cal-day-entry{background:var(--cream);padding:12px 14px;margin-bottom:7px;cursor:pointer;border-left:3px solid rgba(26,23,20,.1);transition:all .15s}
+.cal-day-entry:hover{border-left-color:var(--primary);background:white;transform:translateX(2px)}
+.cal-day-entry:last-child{margin-bottom:0}
+.cal-day-entry-type{font-size:12px;font-weight:600;margin-bottom:4px}
+.cal-day-entry-emotion{font-family:'Shippori Mincho',serif;font-size:13px;font-weight:600;color:var(--ink);margin-bottom:5px;line-height:1.5}
+.cal-day-entry-summary{font-size:11px;color:var(--primary);font-weight:400;background:var(--primary-pale);padding:2px 8px;display:inline-block;margin-bottom:5px}
+.cal-day-entry-body{font-size:12px;color:var(--mist);font-weight:300;line-height:1.6;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.cal-day-entry-link{font-size:11px;color:var(--primary);text-align:right;letter-spacing:.04em}
+
+/* RATE LIMIT NOTICE */
+.limit-notice{background:var(--warm);border-left:4px solid var(--primary);padding:14px 16px;margin-top:12px}
+.limit-notice-title{font-size:14px;font-weight:500;color:var(--ink);margin-bottom:5px}
+.limit-notice-body{font-size:13px;color:var(--mist);font-weight:300;line-height:1.7;margin-bottom:10px}
+
 .entry-card-type{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:white;padding:2px 8px;border-radius:10px;margin-top:6px;font-weight:500}
 
 /* DISTORTION ACCORDION */
@@ -419,6 +441,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);p
           <span id="analyzeBtnText">✦ 分析する</span>
         </button>
         <p id="analyzeMsg" class="fmsg" style="text-align:center;margin-top:8px"></p>
+        <div id="limitReachedNotice" class="limit-notice" style="display:none">
+          <div id="limitNoticeTitle" class="limit-notice-title"></div>
+          <div id="limitNoticeBody" class="limit-notice-body"></div>
+          <div id="limitNoticeCta"></div>
+        </div>
       </div>
     </div>
 
@@ -456,6 +483,8 @@ const PORTAL       = "https://rhynpigqhnbwjyudvvfw.functions.supabase.co/create-
 const CHECKOUT_URL = "https://rhynpigqhnbwjyudvvfw.functions.supabase.co/create-checkout-session";
 const ANALYZE_URL  = "https://rhynpigqhnbwjyudvvfw.functions.supabase.co/analyze-entry";
 const APP_URL     = "https://app.honneroom.com/app.html";
+const GUEST_DAILY_LIMIT  = 3;  // ゲスト: 1日の利用上限
+const FREE_MONTHLY_LIMIT = 20; // 無料: 月間利用上限
 const DEFAULT_ICON = "https://app.honneroom.com/data/icon/icon00.png";
 const ICONS_URL   = "https://app.honneroom.com/data/icons.json";
 
@@ -471,6 +500,43 @@ const S = {
 const $ = s => document.querySelector(s);
 const esc = s => String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 const nl2br = s => esc(s).replace(/\n/g,"<br>");
+
+/* ===== 利用制限ヘルパー ===== */
+function getGuestUsage(){
+  try{
+    const p=JSON.parse(localStorage.getItem('honneroom_gu')||'{}');
+    const today=new Date().toISOString().slice(0,10);
+    return p.date===today?p:{count:0,date:today};
+  }catch{return{count:0,date:''};}
+}
+function incrementGuestUsage(){
+  const today=new Date().toISOString().slice(0,10);
+  const u=getGuestUsage();
+  const nc=u.count+1;
+  localStorage.setItem('honneroom_gu',JSON.stringify({count:nc,date:today}));
+  return nc;
+}
+function showLimitNotice(limitType){
+  const notice=document.getElementById('limitReachedNotice');
+  if(!notice)return;
+  const t=document.getElementById('limitNoticeTitle');
+  const b=document.getElementById('limitNoticeBody');
+  const c=document.getElementById('limitNoticeCta');
+  if(limitType==='daily_guest'||limitType==='guest'){
+    if(t)t.textContent=`本日の利用上限（${GUEST_DAILY_LIMIT}回）に達しました`;
+    if(b)b.textContent='アカウントを作成すると月20回まで無料でご利用いただけます。登録・ログインは無料です。';
+    if(c)c.innerHTML=`<a href="/" class="btn-p" style="display:inline-block;text-decoration:none;font-size:13px;padding:9px 24px">アカウント登録（無料）→</a>`;
+  }else if(limitType==='monthly_free'){
+    if(t)t.textContent=`今月の分析回数（${FREE_MONTHLY_LIMIT}回）の上限に達しました`;
+    if(b)b.textContent='Standardプランにアップグレードすると、毎月無制限でご利用いただけます（¥390/月）。';
+    if(c)c.innerHTML=`<button class="btn-p" style="font-size:13px;padding:9px 24px" onclick="switchTab('account')">Standardプランを見る →</button>`;
+  }else{
+    if(t)t.textContent='利用上限に達しました';
+    if(b)b.textContent='しばらく時間をおいてから再度お試しください。';
+    if(c)c.innerHTML='';
+  }
+  notice.style.display='block';
+}
 
 function msg(el,txt,type="err"){
   if(!el)return;el.textContent=txt;el.className="fmsg"+(type?" "+type:"");
@@ -785,9 +851,20 @@ async function analyzeEntry(){
 
   const btn=$("#btnAnalyze");
   const msgEl=$("#analyzeMsg");
+
+  // ─── ゲスト利用制限チェック（クライアント側） ───
+  if(!S.user){
+    const usage=getGuestUsage();
+    if(usage.count>=GUEST_DAILY_LIMIT){
+      showLimitNotice('guest');
+      return;
+    }
+  }
+
   btn.disabled=true;
   $("#analyzeBtnText").innerHTML=`<span class="spinner">↻</span> 分析中…`;
   msg(msgEl,"");
+  document.getElementById('limitReachedNotice').style.display='none';
 
   let entry_id=null;
 
@@ -818,12 +895,40 @@ async function analyzeEntry(){
     if(S.user?.id) payload.user_id=S.user.id;
 
     const res=await fetch(ANALYZE_URL,{method:"POST",headers,body:JSON.stringify(payload)});
+
+    // ─── レート制限 429 ハンドリング ───
+    if(res.status===429){
+      const errData=await res.json().catch(()=>({}));
+      // 保存済みエントリーを削除（分析なしのゴミレコードを防ぐ）
+      if(entry_id){
+        await sb.from("entries").delete().eq("id",entry_id).eq("user_id",S.user.id);
+        _cachedEntries=null;
+      }
+      btn.disabled=false;
+      $("#analyzeBtnText").textContent="✦ 分析する";
+      showLimitNotice(errData.limit_type||'unknown');
+      return;
+    }
+
     if(!res.ok){
       const errBody=await res.text().catch(()=>"");
       throw new Error(`API ${res.status}: ${errBody}`);
     }
     const data=await res.json();
     analysis=data.analysis;
+
+    // ゲスト利用カウントアップ
+    if(!S.user){
+      const usedCount=incrementGuestUsage();
+      const remaining=Math.max(0,GUEST_DAILY_LIMIT-usedCount);
+      const gn=document.getElementById("guestNotice");
+      if(gn){
+        gn.style.display="";
+        gn.innerHTML=remaining>0
+          ?`本日あと<strong style="color:var(--primary)"> ${remaining} 回</strong>使えます。<a href="/">登録で月20回まで無料 →</a>`
+          :`本日の利用上限に達しました。<a href="/">アカウント登録で続けられます →</a>`;
+      }
+    }
   }catch(e){
     console.error("analyzeEntry error:",e);
     msg(msgEl,"分析に失敗しました。analyze-entryのEdge Functionが正しくデプロイされているか確認してください。");
@@ -849,9 +954,11 @@ async function analyzeEntry(){
   if(S.user){
     saveEl.innerHTML=`<div class="save-saved">✓ この記録は保存されました。「記録」タブから振り返ることができます。</div>`;
   } else {
+    const usage=getGuestUsage();
+    const remaining=Math.max(0,GUEST_DAILY_LIMIT-usage.count);
     saveEl.innerHTML=`<div class="save-notice">
       <div class="save-notice-icon">💡</div>
-      <div>この結果は保存されていません。<a href="/">ログイン・登録すると</a>記録が残り、あとから振り返れます。</div>
+      <div>この結果は保存されていません。<a href="/">ログイン・登録すると</a>記録が残り、あとから振り返れます。${remaining<=0?`<br><strong style="color:var(--primary)">本日の利用上限に達しました。また明日も使えます。</strong>`:''}</div>
     </div>`;
   }
 
@@ -862,6 +969,7 @@ async function analyzeEntry(){
 function showEntryForm(){
   document.getElementById("entryFormSection").style.display="";
   document.getElementById("analysisSection").style.display="none";
+  document.getElementById("limitReachedNotice").style.display="none";
   const ta=$("#entryBody");
   if(ta){ta.value="";ta.focus();}
   $("#entryBodyCount").textContent="0";
@@ -873,6 +981,7 @@ let _recTab='list';
 let _calYear=new Date().getFullYear();
 let _calMonth=new Date().getMonth();
 let _cachedEntries=null;
+let _calDateMap={}; // 感情カレンダー用: "YYYY-M-D" → {color,ptype,entries[]}
 
 function getDominantEmotion(analyses){
   const a=(analyses||[])[0];
@@ -986,25 +1095,28 @@ async function deleteEntry(entryId,e){
 /* ===== 感情カレンダー ===== */
 function renderCalendar(entries,main){
   if(!S.isStd){
-    main.innerHTML=premiumLockHtml('📅','感情カレンダー','1ヶ月の感情の変化をカレンダーで可視化します。\n毎日の記録から、あなたの感情パターンを発見できます。');
+    main.innerHTML=premiumLockHtml('📅','感情カレンダー','1ヶ月の感情の変化をカレンダーで可視化します。\n日付をタップすると、その日の記録と感情を振り返れます。');
     return;
   }
-  // 日付→感情スタイル色マップ
-  const dateMap={};
+  // 日付 → {color, ptype, entries[]} マップ
+  _calDateMap={};
   entries.forEach(e=>{
     const d=new Date(e.created_at);
     const key=`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-    if(!dateMap[key]){
+    if(!_calDateMap[key]){
       const a=(e.analyses||[])[0];
-      const ptype=a?determineType(a):null;
-      dateMap[key]=ptype?ptype.color:'#8a7a72';
+      const pt=a?determineType(a):null;
+      _calDateMap[key]={color:pt?.color||'#8a7a72',ptype:pt,entries:[]};
     }
+    _calDateMap[key].entries.push(e);
   });
+
   const year=_calYear,month=_calMonth;
   const firstDay=new Date(year,month,1);
   const totalDays=new Date(year,month+1,0).getDate();
   const startDow=(firstDay.getDay()+6)%7;
   const today=new Date();
+
   let html=`<div class="result-card">
     <div class="cal-header">
       <div class="cal-title">${year}年${month+1}月</div>
@@ -1013,19 +1125,26 @@ function renderCalendar(entries,main){
         <button class="cal-nav-btn" onclick="_calMonth++;if(_calMonth>11){_calMonth=0;_calYear++;}renderCalendar(_cachedEntries,document.getElementById('recordMain'))">▶</button>
       </div>
     </div>
+    <div style="font-size:11px;color:var(--mist);margin-bottom:10px;text-align:center">日付をタップするとその日の記録を見られます</div>
     <div class="cal-grid">
     ${['月','火','水','木','金','土','日'].map(d=>`<div class="cal-dow">${d}</div>`).join('')}`;
+
   for(let i=0;i<startDow;i++)html+=`<div class="cal-day other-month"></div>`;
   for(let day=1;day<=totalDays;day++){
     const key=`${year}-${month}-${day}`;
-    const color=dateMap[key];
+    const info=_calDateMap[key];
     const isToday=day===today.getDate()&&month===today.getMonth()&&year===today.getFullYear();
-    html+=`<div class="cal-day${color?' has-entry':''}${isToday?' today':''}">
+    const multi=info?.entries?.length>1;
+    html+=`<div class="cal-day${info?' has-entry':''}${isToday?' today':''}"${info?` data-calkey="${key}" onclick="calDayClick('${key}')"`:''}">
       <span class="cal-day-num">${day}</span>
-      ${color?`<div class="cal-dot" style="background:${color}"></div>`:''}
+      ${info?`<div class="cal-dot" style="background:${info.color}"></div>`:''}
+      ${multi?`<div class="cal-multi">${info.entries.length}</div>`:''}
     </div>`;
   }
-  html+=`</div></div>
+
+  html+=`</div>
+    <div id="calDayDetail" class="cal-day-detail" style="display:none"></div>
+  </div>
   <div class="result-card" style="padding:14px 20px">
     <div class="result-label">感情スタイル 色凡例</div>
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">
@@ -1036,6 +1155,55 @@ function renderCalendar(entries,main){
     </div>
   </div>`;
   main.innerHTML=html;
+}
+
+function calDayClick(key){
+  const info=_calDateMap[key];
+  if(!info||!info.entries.length)return;
+
+  const detail=document.getElementById('calDayDetail');
+  if(!detail)return;
+
+  // 同じ日をもう一度クリックで閉じる
+  if(detail.dataset.key===key&&detail.style.display!=='none'){
+    detail.style.display='none';
+    detail.dataset.key='';
+    document.querySelectorAll('.cal-day.selected').forEach(d=>d.classList.remove('selected'));
+    return;
+  }
+
+  // 選択日をハイライト
+  document.querySelectorAll('.cal-day.selected').forEach(d=>d.classList.remove('selected'));
+  document.querySelector(`.cal-day[data-calkey="${key}"]`)?.classList.add('selected');
+  detail.dataset.key=key;
+
+  const fe=info.entries[0];
+  const d=new Date(fe.created_at);
+  const dow=['日','月','火','水','木','金','土'][d.getDay()];
+  const dateStr=`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${dow}）`;
+
+  let html=`<div class="cal-day-detail-header">
+    <div class="cal-day-detail-date">${dateStr}</div>
+    ${info.entries.length>1?`<div class="cal-day-detail-count">${info.entries.length}件の記録</div>`:''}
+  </div>`;
+
+  info.entries.forEach(e=>{
+    const a=(e.analyses||[])[0]||null;
+    const pt=a?determineType(a):null;
+    const bodyPreview=(e.body||'').slice(0,120)+((e.body||'').length>120?'…':'');
+    html+=`<div class="cal-day-entry" onclick="openEntryDetail('${esc(e.id)}',_cachedEntries)">
+      ${pt?`<div class="cal-day-entry-type" style="color:${pt.color}">${pt.symbol} ${esc(pt.name)}</div>`:''}
+      ${a?.core_emotion?`<div class="cal-day-entry-emotion">「${esc(a.core_emotion.slice(0,50))}」</div>`:''}
+      ${a?.summary?`<div class="cal-day-entry-summary">${esc(a.summary)}</div>`:''}
+      <div class="cal-day-entry-body">${esc(bodyPreview)}</div>
+      <div class="cal-day-entry-link">詳細を見る →</div>
+    </div>`;
+  });
+
+  detail.innerHTML=html;
+  detail.style.display='block';
+  // スムーズスクロールで見えるように
+  setTimeout(()=>detail.scrollIntoView({behavior:'smooth',block:'nearest'}),50);
 }
 
 /* ===== 傾向・パターン分析 ===== */
@@ -1763,9 +1931,20 @@ async function main(){
     document.querySelectorAll('.tab-btn[data-tab="record"],.tab-btn[data-tab="account"]')
       .forEach(b=>b.style.display='');
   } else {
-    // ゲストモード: ゲスト通知を表示、タブは吐き出すのみ
+    // ゲストモード: 残り回数表示 + タブは吐き出すのみ
     const gn=document.getElementById("guestNotice");
-    if(gn) gn.style.display="";
+    if(gn){
+      const usage=getGuestUsage();
+      const remaining=Math.max(0,GUEST_DAILY_LIMIT-usage.count);
+      gn.style.display="";
+      if(remaining>0){
+        gn.innerHTML=`本日あと<strong style="color:var(--primary)"> ${remaining} 回</strong>使えます。<a href="/">登録で月20回まで無料 →</a>`;
+      } else {
+        gn.innerHTML=`本日の利用上限に達しました。<a href="/">アカウント登録で続けられます →</a>`;
+        // すでに上限なら即座にnoticeを表示
+        showLimitNotice('guest');
+      }
+    }
     document.querySelectorAll('.tab-btn[data-tab="record"],.tab-btn[data-tab="account"]')
       .forEach(b=>b.style.display='none');
   }

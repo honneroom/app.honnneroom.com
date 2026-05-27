@@ -1,12 +1,18 @@
 // analyze-entry Edge Function
 // Deploy with: supabase functions deploy analyze-entry
-// Set secret: supabase secrets set ANTHROPIC_API_KEY=your_key
+// Required secrets:
+//   ANTHROPIC_API_KEY=sk-ant-...
+//   SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY (自動設定)
+//
+// 利用制限:
+//   ゲスト（未ログイン）: 1日3回（IPアドレスハッシュベース）
+//   無料アカウント:       月間20回（entriesテーブルカウント）
+//   Standardプラン:       無制限
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const FREE_MONTHLY_LIMIT = 20;
+const GUEST_DAILY_LIMIT  = 3;
 
 function getCorsHeaders(req: Request) {
   const origin = req.headers.get("Origin") || "";
@@ -19,10 +25,27 @@ function getCorsHeaders(req: Request) {
   };
 }
 
+/** IPをSHA-256でハッシュ化（プライバシー保護） */
+async function hashIp(ip: string): Promise<string> {
+  const data = new TextEncoder().encode(ip + "_honneroom_rl_2024");
+  const buf  = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(buf))
+    .map(b => b.toString(16).padStart(2, "0"))
+    .join("")
+    .slice(0, 40);
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: getCorsHeaders(req) });
   }
+
+  // シークレットはリクエストごとに読み込む（デプロイ時 undefined 固定を防ぐ）
+  const ANTHROPIC_API_KEY       = Deno.env.get("ANTHROPIC_API_KEY")!;
+  const SUPABASE_URL            = Deno.env.get("SUPABASE_URL")!;
+  const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+  const corsHeaders = getCorsHeaders(req);
 
   try {
     const { body, entry_id, user_id } = await req.json();
@@ -30,9 +53,89 @@ Deno.serve(async (req) => {
     if (!body || body.trim().length === 0) {
       return new Response(JSON.stringify({ error: "本文が空です" }), {
         status: 400,
-        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    // ─── 利用制限チェック ───────────────────────────────────────
+
+    if (user_id) {
+      // ログイン済みユーザー: プランを確認
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("tier, is_active")
+        .eq("id", user_id)
+        .single();
+
+      const isStd = !!profile?.is_active &&
+        String(profile?.tier || "free").toLowerCase() === "standard";
+
+      if (!isStd) {
+        // 無料ユーザー: 今月のエントリー数をチェック
+        const now = new Date();
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+        const { count } = await supabase
+          .from("entries")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user_id)
+          .gte("created_at", monthStart);
+
+        // count には今回挿入済みのエントリーが含まれる（> LIMIT で判定）
+        if ((count ?? 0) > FREE_MONTHLY_LIMIT) {
+          return new Response(
+            JSON.stringify({
+              error: `今月の分析回数（${FREE_MONTHLY_LIMIT}回）の上限に達しました`,
+              limit_type: "monthly_free",
+              limit: FREE_MONTHLY_LIMIT,
+              used: count,
+            }),
+            {
+              status: 429,
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            }
+          );
+        }
+      }
+    } else {
+      // ゲスト: IPアドレスベースのレート制限
+      const ipRaw =
+        req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+        req.headers.get("x-real-ip") ||
+        req.headers.get("cf-connecting-ip") ||
+        "unknown";
+
+      const ipHash = await hashIp(ipRaw);
+      const today  = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
+      // アトミックインクリメント（RPC関数）
+      const { data: newCount, error: rlError } = await supabase.rpc(
+        "guest_rate_limit_increment",
+        { p_ip_hash: ipHash, p_period: today }
+      );
+
+      if (rlError) {
+        // RPC失敗時はフェイルオープン（リクエストを許可してログのみ）
+        console.error("Rate limit RPC error:", rlError);
+      } else if ((newCount ?? 0) > GUEST_DAILY_LIMIT) {
+        return new Response(
+          JSON.stringify({
+            error: `1日の利用回数（${GUEST_DAILY_LIMIT}回）の上限に達しました`,
+            limit_type: "daily_guest",
+            limit: GUEST_DAILY_LIMIT,
+            used: newCount,
+          }),
+          {
+            status: 429,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+    }
+
+    // ─── Anthropic API 呼び出し ────────────────────────────────
 
     const prompt = `
 以下のテキストは、ユーザーが感じているモヤモヤや悩みを吐き出したものです。
@@ -75,7 +178,7 @@ cognitive_distortionsが見当たらない場合は空配列[]にしてくださ
       throw new Error(`Anthropic API error: ${aiRes.status}`);
     }
 
-    const aiData = await aiRes.json();
+    const aiData  = await aiRes.json();
     const rawText = aiData.content[0].text.trim();
 
     const jsonMatch = rawText.match(/\{[\s\S]*\}/);
@@ -84,26 +187,26 @@ cognitive_distortionsが見当たらない場合は空配列[]にしてくださ
 
     // ログイン済みかつ entry_id がある場合のみDBに保存
     if (entry_id && user_id) {
-      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
       const { error } = await supabase.from("analyses").insert({
         entry_id,
-        core_emotion: analysis.core_emotion,
-        emotion_wheel: analysis.emotion_wheel,
+        core_emotion:         analysis.core_emotion,
+        emotion_wheel:        analysis.emotion_wheel,
         cognitive_distortions: analysis.cognitive_distortions,
-        summary: analysis.summary,
-        reframe: analysis.reframe,
+        summary:              analysis.summary,
+        reframe:              analysis.reframe,
       });
       if (error) console.error("analyses insert error:", error);
     }
 
     return new Response(JSON.stringify({ analysis }), {
-      headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
+
   } catch (e) {
     console.error(e);
     return new Response(JSON.stringify({ error: "分析に失敗しました" }), {
       status: 500,
-      headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
