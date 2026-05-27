@@ -1722,10 +1722,16 @@ async function generateShareCard(analysis){
   ctx.fillText('本音ルーム  感情スタイル診断',W/2,56);
 
   // ─── シンボル（白丸の中に）───
-  ctx.fillStyle='rgba(255,255,255,.18)';
-  ctx.beginPath();ctx.arc(W/2,232,118,0,Math.PI*2);ctx.fill();
-  ctx.font=`${Math.round(W*.12)}px serif`;
-  ctx.fillText(type.symbol,W/2,286);
+  // 外側リング（薄め）
+  ctx.fillStyle='rgba(255,255,255,.15)';
+  ctx.beginPath();ctx.arc(W/2,232,126,0,Math.PI*2);ctx.fill();
+  // 内側円（明るめ）
+  ctx.fillStyle='rgba(255,255,255,.32)';
+  ctx.beginPath();ctx.arc(W/2,232,108,0,Math.PI*2);ctx.fill();
+  // 絵文字は fillStyle をリセットしてから描画（tint防止）
+  ctx.fillStyle='white';
+  ctx.font=`${Math.round(W*.115)}px serif`;
+  ctx.fillText(type.symbol,W/2,284);
 
   // ─── "あなたは" ───
   ctx.fillStyle='rgba(255,255,255,.68)';
