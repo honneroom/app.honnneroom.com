@@ -289,6 +289,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);p
 .report-month-fill{height:100%;background:var(--primary);border-radius:5px;opacity:.55}
 .report-month-count{font-size:11px;color:var(--mist);width:28px;text-align:right;flex-shrink:0}
 
+/* PASSWORD SETUP BANNER */
+.pw-setup-banner{display:flex;align-items:flex-start;gap:12px;background:white;border:1px solid rgba(196,98,45,.25);border-left:4px solid var(--primary);padding:14px 16px;margin-bottom:16px;position:relative}
+.pw-setup-banner-icon{font-size:22px;flex-shrink:0;margin-top:1px}
+.pw-setup-banner-body{flex:1;min-width:0}
+.pw-setup-banner-title{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:3px}
+.pw-setup-banner-desc{font-size:12px;color:var(--mist);font-weight:300;line-height:1.6}
+.pw-setup-banner-btn{font-size:12px;color:white;background:var(--primary);border:none;padding:7px 15px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;flex-shrink:0;align-self:center;transition:background .2s;margin-left:4px}
+.pw-setup-banner-btn:hover{background:var(--ink)}
+.pw-setup-banner-close{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--mist);font-size:16px;cursor:pointer;padding:2px 6px;line-height:1}
+
 /* CALENDAR DAY DETAIL PANEL */
 .cal-day.selected{background:rgba(196,98,45,.14);border-radius:4px}
 .cal-day.selected .cal-day-num{color:var(--primary);font-weight:700}
@@ -407,7 +417,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);p
 </header>
 
 <nav class="tab-nav">
-  <button class="tab-btn active" data-tab="home">吐き出す</button>
+  <button class="tab-btn active" data-tab="home">気持ちを書く</button>
   <button class="tab-btn" data-tab="record" style="display:none">記録</button>
   <button class="tab-btn" data-tab="account" style="display:none">設定</button>
 </nav>
@@ -423,8 +433,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);p
     <button class="pwa-banner-close" id="pwaBannerClose">×</button>
   </div>
 
-  <!-- 吐き出す tab -->
+  <!-- 気持ちを書く tab -->
   <section id="tab-home" class="tab-pane active">
+    <div id="pwSetupBanner" style="display:none"></div>
     <!-- Entry form -->
     <div id="entryFormSection">
       <div class="entry-hero">
@@ -1029,7 +1040,7 @@ async function renderRecord(){
       <div class="login-prompt-h">📖 記録を残そう</div>
       <div class="login-prompt-body">ログイン・登録すると、過去の記録をいつでも振り返ることができます。<br>無料で利用できます。</div>
       <a href="/" class="btn-p" style="display:inline-block;text-decoration:none;padding:13px 32px">ログイン / 新規登録 →</a>
-      <div class="login-prompt-hint">登録なしでも「吐き出す」はいつでも使えます。</div>
+      <div class="login-prompt-hint">登録なしでも「気持ちを書く」はいつでも使えます。</div>
     </div>`;
     return;
   }
@@ -1059,7 +1070,7 @@ async function renderRecord(){
 
 function renderRecordList(entries,main){
   if(!entries.length){
-    main.innerHTML=`<div class="empty"><div class="empty-h">まだ記録がありません</div><p>「吐き出す」タブから気持ちを書いてみましょう。</p></div>`;
+    main.innerHTML=`<div class="empty"><div class="empty-h">まだ記録がありません</div><p>「気持ちを書く」タブから、今の感情を書いてみましょう。</p></div>`;
     return;
   }
   main.innerHTML=`<div class="entries-list">`+entries.map(e=>{
@@ -1429,7 +1440,7 @@ function renderAccount(){
     <table class="plan-table">
       <thead><tr><th>機能</th><th style="text-align:center">無料</th><th style="text-align:center">¥390/月</th></tr></thead>
       <tbody>
-        <tr><td>吐き出し・AI分析</td><td class="check">✓ 無制限</td><td class="check">✓ 無制限</td></tr>
+        <tr><td>AI感情分析</td><td class="check" style="font-size:12px">月${FREE_MONTHLY_LIMIT}回</td><td class="check">✓ 無制限</td></tr>
         <tr><td>過去の記録閲覧</td><td class="check">✓</td><td class="check">✓</td></tr>
         <tr><td>感情カレンダー</td><td class="cross">—</td><td class="check">✓</td></tr>
         <tr><td>傾向・パターン分析</td><td class="cross">—</td><td class="check">✓</td></tr>
@@ -1930,8 +1941,26 @@ async function main(){
     // ログイン後：記録・設定タブを表示
     document.querySelectorAll('.tab-btn[data-tab="record"],.tab-btn[data-tab="account"]')
       .forEach(b=>b.style.display='');
+
+    // パスワード未設定バナー（メール登録 & PW未設定のみ）
+    if(!S.isGoogleUser && !S.profile?.has_password){
+      const banner=document.getElementById('pwSetupBanner');
+      if(banner){
+        banner.className='pw-setup-banner';
+        banner.style.display='flex';
+        banner.innerHTML=`
+          <div class="pw-setup-banner-icon">🔑</div>
+          <div class="pw-setup-banner-body">
+            <div class="pw-setup-banner-title">パスワードを設定しておきましょう</div>
+            <div class="pw-setup-banner-desc">パスワード未設定のため、ログイン時に毎回メールリンクが必要です。<br>設定するとメール＋パスワードで簡単にログインできます。</div>
+          </div>
+          <button class="pw-setup-banner-btn" onclick="switchTab('account');setTimeout(()=>document.getElementById('pwSecH')?.scrollIntoView({behavior:'smooth',block:'center'}),300)">設定する →</button>
+          <button class="pw-setup-banner-close" onclick="this.closest('#pwSetupBanner').style.display='none'" title="閉じる">×</button>
+        `;
+      }
+    }
   } else {
-    // ゲストモード: 残り回数表示 + タブは吐き出すのみ
+    // ゲストモード: 残り回数表示 + タブは気持ちを書くのみ
     const gn=document.getElementById("guestNotice");
     if(gn){
       const usage=getGuestUsage();
