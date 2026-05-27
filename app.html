@@ -238,8 +238,28 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);p
 .bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
 .bar-label{font-size:12px;color:var(--ink);min-width:52px;max-width:96px;text-align:right;flex-shrink:0;line-height:1.3}
 .bar-track{flex:1;background:var(--warm);height:16px;border-radius:2px;overflow:hidden}
-.bar-fill{height:100%;border-radius:2px;display:flex;align-items:center;justify-content:flex-end;padding-right:5px;font-size:10px;color:white;font-weight:500;min-width:4px}
+.bar-fill{height:100%;border-radius:2px;display:flex;align-items:center;justify-content:flex-end;padding-right:5px;font-size:10px;color:white;font-weight:500}
 .bar-count{font-size:11px;color:var(--mist);width:22px;text-align:right;flex-shrink:0}
+
+/* SHARE BUTTON */
+.btn-share{width:100%;padding:14px;background:var(--ink);color:white;border:none;font-family:'DM Sans',sans-serif;font-size:14px;letter-spacing:.06em;cursor:pointer;transition:background .2s;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-share:hover{background:#3f51b5}
+
+/* SHARE MODAL */
+.share-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:600;display:none;align-items:flex-end;justify-content:center;padding:0}
+.share-modal-overlay.show{display:flex}
+.share-modal{background:white;width:min(480px,100vw);padding:24px 24px 32px;border-top-left-radius:16px;border-top-right-radius:16px;border-top:4px solid var(--ink)}
+.share-modal-title{font-family:'Shippori Mincho',serif;font-size:17px;font-weight:600;color:var(--ink);margin-bottom:14px}
+.share-preview-img{width:100%;border:1px solid rgba(26,23,20,.08);margin-bottom:14px;display:block}
+.share-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.share-btn{padding:11px 8px;border:none;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;font-weight:500;transition:opacity .2s;display:flex;align-items:center;justify-content:center;gap:6px}
+.share-btn:hover{opacity:.85}
+.share-btn-dl{background:var(--warm);color:var(--ink);grid-column:1/-1}
+.share-btn-x{background:#000;color:white}
+.share-btn-line{background:#06c755;color:white}
+.share-btn-copy{background:var(--primary-pale);color:var(--primary)}
+.share-modal-close{width:100%;padding:12px;background:var(--warm);border:none;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--mist);cursor:pointer;transition:background .2s;margin-top:4px}
+.share-modal-close:hover{background:var(--ink);color:white}
 
 /* MONTHLY REPORT */
 .report-stats{display:flex;gap:6px;flex-wrap:wrap}
@@ -261,6 +281,22 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);p
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
 <body>
+
+<!-- Share Modal -->
+<div id="shareModal" class="share-modal-overlay">
+  <div class="share-modal">
+    <div class="share-modal-title">📸 診断結果をシェア</div>
+    <img id="sharePreviewImg" class="share-preview-img" alt="シェア画像" style="display:none">
+    <div id="shareGenerating" style="text-align:center;padding:24px;color:var(--mist);font-size:13px"><span class="spinner">↻</span> 画像を生成中…</div>
+    <div class="share-btns">
+      <button class="share-btn share-btn-dl" id="shareBtnDl" style="display:none">💾 画像を保存する</button>
+      <button class="share-btn share-btn-x" id="shareBtnX" style="display:none">𝕏 でシェア</button>
+      <button class="share-btn share-btn-line" id="shareBtnLine" style="display:none">💬 LINEでシェア</button>
+      <button class="share-btn share-btn-copy" id="shareBtnCopy" style="display:none">📋 テキストをコピー</button>
+    </div>
+    <button class="share-modal-close" id="shareModalClose">閉じる</button>
+  </div>
+</div>
 
 <!-- PWA Modal -->
 <div id="pwaModal" class="pwa-modal-overlay">
@@ -419,7 +455,10 @@ function renderCogDistortions(distortions){
     </div>`).join('')+`</div>`;
 }
 
+let _lastAnalysis=null;
+
 function renderAnalysisCards(analysis){
+  _lastAnalysis=analysis;
   const container=document.getElementById("analysisCards");
   if(!container)return;
   let html='';
@@ -473,8 +512,12 @@ function renderAnalysisCards(analysis){
     }
   }
 
+  // シェアボタン（全プラン無料）
+  html+=`<button class="btn-share" id="btnShareResult">📸 診断結果をシェアする（無料）</button>`;
+
   container.innerHTML=html;
   document.getElementById("btnUpgradeReframe")?.addEventListener("click",()=>switchTab("account"));
+  document.getElementById("btnShareResult")?.addEventListener("click",()=>showShareModal(_lastAnalysis));
 }
 
 /* ===== 分析実行 ===== */
@@ -766,12 +809,14 @@ function renderTrend(entries,main){
     if(age<7)weekCounts[0]++;else if(age<14)weekCounts[1]++;else if(age<21)weekCounts[2]++;else if(age<28)weekCounts[3]++;
   });
   const maxWk=Math.max(...weekCounts,1);
+  // ゼロの時はwidthもmin-widthも0にする
+  const barPct=(v,max)=>v===0?'width:0;min-width:0':`width:${Math.round((v/max)*100)}%`;
   let html=`<div class="result-card">
     <div class="result-label">記録の頻度（過去4週間）</div>
     ${['今週','先週','2週前','3週前'].map((lbl,i)=>`
       <div class="bar-row">
         <div class="bar-label">${lbl}</div>
-        <div class="bar-track"><div class="bar-fill" style="width:${Math.round((weekCounts[i]/maxWk)*100)}%;background:var(--primary)">${weekCounts[i]||''}</div></div>
+        <div class="bar-track"><div class="bar-fill" style="${barPct(weekCounts[i],maxWk)};background:var(--primary)">${weekCounts[i]>0?weekCounts[i]:''}</div></div>
         <div class="bar-count">${weekCounts[i]}</div>
       </div>`).join('')}
   </div>
@@ -780,18 +825,21 @@ function renderTrend(entries,main){
     ${sortedEmo.slice(0,5).map(([cat,val])=>`
       <div class="bar-row">
         <div class="bar-label">${cat}</div>
-        <div class="bar-track"><div class="bar-fill" style="width:${Math.round((val/maxEmo)*100)}%;background:${EMOTION_COLORS[cat]||'#8a7a72'}"></div></div>
+        <div class="bar-track"><div class="bar-fill" style="${barPct(val,maxEmo)};background:${EMOTION_COLORS[cat]||'#8a7a72'}"></div></div>
         <div class="bar-count">${val}</div>
       </div>`).join('')}
   </div>`;
   if(sortedDis.length){
+    // 思考のクセは長いラベルがあるため縦レイアウト
     html+=`<div class="result-card">
       <div class="result-label">よく見られる思考のクセ</div>
       ${sortedDis.map(([type,count])=>`
-        <div class="bar-row">
-          <div class="bar-label" style="max-width:110px;font-size:11px">${esc(type)}</div>
-          <div class="bar-track"><div class="bar-fill" style="width:${Math.round((count/maxDis)*100)}%;background:var(--primary)"></div></div>
-          <div class="bar-count">${count}</div>
+        <div style="margin-bottom:12px">
+          <div style="font-size:12px;color:var(--ink);margin-bottom:5px;font-weight:400">${esc(type)}</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="bar-track" style="flex:1"><div class="bar-fill" style="${barPct(count,maxDis)};background:var(--primary)"></div></div>
+            <div class="bar-count">${count}回</div>
+          </div>
         </div>`).join('')}
     </div>`;
   }
@@ -980,6 +1028,13 @@ function renderAccount(){
 
   <div class="asec">
     <div class="asec-h">アカウント削除</div>
+    ${S.isStd?`
+    <div style="background:var(--warm);padding:14px 16px;font-size:13px;color:var(--mist);font-weight:300;line-height:1.8">
+      現在Standardプランに契約中のため、アカウントを削除できません。<br>
+      先にサブスクを解約してから削除できます。
+    </div>
+    <button class="btn-d" style="margin-top:10px;font-size:13px" onclick="openPortal()">サブスクを解約する →</button>
+    `:`
     <button id="btnDeleteAccount" class="btn-d" style="font-size:12px;padding:8px 20px">アカウントを削除する</button>
     <div id="deleteConfirmBox" style="display:none;margin-top:12px;background:#ffe7e3;border:1px solid #ffb3a7;padding:16px">
       <p style="font-size:13px;color:#8b1a07;margin-bottom:10px;font-weight:500">本当にアカウントを削除しますか？この操作は取り消せません。</p>
@@ -988,7 +1043,7 @@ function renderAccount(){
         <button id="btnDeleteCancel" class="btn-s">キャンセル</button>
       </div>
       <p id="deleteStatusMsg" style="font-size:12px;margin-top:8px;color:var(--mist)"></p>
-    </div>
+    </div>`}
   </div>`;
 
   if(S.isStd){ $("#btnCancel").addEventListener("click",openPortal); }
@@ -1000,8 +1055,10 @@ function renderAccount(){
   $("#pwShow").addEventListener("change",e=>{const t=e.target.checked?"text":"password";$("#pwN").type=t;$("#pwN2").type=t;});
   $("#btnPw").addEventListener("click",savePassword);
   if(S.isGoogleUser){ wrap.querySelectorAll(".email-only").forEach(el=>el.style.display="none"); }
-  $("#btnDeleteAccount").onclick=()=>{ document.getElementById("deleteConfirmBox").style.display="block"; };
-  $("#btnDeleteCancel").onclick=()=>{ document.getElementById("deleteConfirmBox").style.display="none"; };
+  if(!S.isStd){
+    $("#btnDeleteAccount").onclick=()=>{ document.getElementById("deleteConfirmBox").style.display="block"; };
+    $("#btnDeleteCancel").onclick=()=>{ document.getElementById("deleteConfirmBox").style.display="none"; };
+  }
   $("#btnDeleteConfirm").onclick=()=>{ document.getElementById("btnDeleteConfirm").disabled=true; document.getElementById("btnDeleteCancel").disabled=true; handleDeleteAccount(); };
 }
 
@@ -1107,6 +1164,191 @@ async function createCheckout(){
     if(btn){btn.disabled=false;btn.textContent="Standardプランに登録する（¥390/月）";}
   }
 }
+
+/* ===== SNSシェア ===== */
+function ctxWrapText(ctx,text,x,y,maxW,lineH){
+  const lines=[];let line='';
+  for(const c of[...text]){
+    const t=line+c;
+    if(ctx.measureText(t).width>maxW&&line){lines.push(line);line=c;}
+    else line=t;
+  }
+  if(line)lines.push(line);
+  lines.forEach((l,i)=>ctx.fillText(l,x,y+i*lineH));
+  return lines.length;
+}
+
+function rrFill(ctx,x,y,w,h,r,color){
+  ctx.fillStyle=color;
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arcTo(x+w,y,x+w,y+r,r);
+  ctx.lineTo(x+w,y+h-r);ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+  ctx.lineTo(x+r,y+h);ctx.arcTo(x,y+h,x,y+h-r,r);
+  ctx.lineTo(x,y+r);ctx.arcTo(x,y,x+r,y,r);
+  ctx.closePath();ctx.fill();
+}
+
+async function generateShareCard(analysis){
+  const W=1080,H=1080;
+  const canvas=document.createElement('canvas');
+  canvas.width=W;canvas.height=H;
+  const ctx=canvas.getContext('2d');
+
+  // フォント読み込み待機
+  try{await document.fonts.ready;}catch(e){}
+
+  const CREAM='#f5f0e8',ORA='#c4622d',INK='#1a1714',MIST='#8a7a72',WARM='#e8dfd0';
+  const PAD=72;
+
+  // 背景
+  ctx.fillStyle=CREAM;ctx.fillRect(0,0,W,H);
+
+  // 左アクセントバー
+  ctx.fillStyle=ORA;ctx.fillRect(0,0,18,H);
+
+  // 下部アクセント
+  ctx.fillStyle=ORA;ctx.globalAlpha=.07;ctx.fillRect(0,H-140,W,140);ctx.globalAlpha=1;
+
+  // ─── ヘッダー ───
+  ctx.fillStyle=ORA;
+  ctx.font=`700 38px 'Shippori Mincho', serif`;
+  ctx.fillText('本音ルーム',PAD,84);
+  ctx.fillStyle=MIST;
+  ctx.font=`300 26px 'DM Sans', sans-serif`;
+  ctx.fillText('感情診断レポート',PAD,122);
+
+  // 区切り線
+  ctx.strokeStyle='rgba(196,98,45,.22)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(PAD,144);ctx.lineTo(W-PAD,144);ctx.stroke();
+
+  // ─── 核心感情 ───
+  ctx.fillStyle=ORA;
+  ctx.font=`400 22px 'DM Sans', sans-serif`;
+  ctx.fillText('▪ あなたの核心感情',PAD,192);
+  if(analysis.core_emotion){
+    ctx.fillStyle=INK;
+    ctx.font=`700 54px 'Shippori Mincho', serif`;
+    const lines=ctxWrapText(ctx,analysis.core_emotion,PAD,258,W-PAD*2,72);
+    var coreBottom=258+lines*72;
+  } else {var coreBottom=260;}
+
+  // ─── 感情チップ ───
+  const emo=analysis.emotion_wheel||[];
+  const chipY=Math.max(coreBottom+40,420);
+  if(emo.length){
+    ctx.fillStyle=MIST;
+    ctx.font=`400 22px 'DM Sans', sans-serif`;
+    ctx.fillText('感じていた感情',PAD,chipY-10);
+    const cw=200,ch=76,gap=16;
+    emo.slice(0,4).forEach((e,i)=>{
+      const col=i%3,row=Math.floor(i/3);
+      const cx=PAD+col*(cw+gap),cy=chipY+20+row*(ch+gap);
+      const color=EMOTION_COLORS[e.category]||'#8a7a72';
+      rrFill(ctx,cx,cy,cw,ch,12,color);
+      ctx.fillStyle='white';
+      ctx.font=`600 28px 'Shippori Mincho', serif`;
+      ctx.textAlign='center';
+      ctx.fillText(e.emotion,cx+cw/2,cy+34);
+      ctx.font=`300 20px 'DM Sans', sans-serif`;
+      ctx.fillStyle='rgba(255,255,255,.8)';
+      ctx.fillText(e.category,cx+cw/2,cy+60);
+      ctx.textAlign='left';
+    });
+  }
+
+  // ─── サマリー ───
+  if(analysis.summary){
+    const sqY=chipY+200;
+    ctx.fillStyle=WARM;ctx.fillRect(PAD,sqY,W-PAD*2,130);
+    ctx.fillStyle=ORA;ctx.fillRect(PAD,sqY,6,130);
+    ctx.fillStyle=MIST;
+    ctx.font=`300 24px 'DM Sans', sans-serif`;
+    ctxWrapText(ctx,analysis.summary.slice(0,60)+(analysis.summary.length>60?'…':''),PAD+22,sqY+42,W-PAD*2-44,36);
+  }
+
+  // ─── フッター ───
+  ctx.fillStyle='rgba(196,98,45,.15)';
+  ctx.fillRect(PAD,H-128,W-PAD*2,1);
+  ctx.fillStyle=ORA;
+  ctx.font=`600 28px 'Shippori Mincho', serif`;
+  ctx.textAlign='center';
+  ctx.fillText('あなたも診断してみよう →',W/2,H-80);
+  ctx.fillStyle=MIST;
+  ctx.font=`300 24px 'DM Sans', sans-serif`;
+  ctx.fillText('app.honneroom.com',W/2,H-44);
+  ctx.textAlign='left';
+
+  return canvas.toDataURL('image/png');
+}
+
+async function showShareModal(analysis){
+  const modal=document.getElementById('shareModal');
+  const preview=document.getElementById('sharePreviewImg');
+  const generating=document.getElementById('shareGenerating');
+  const btnDl=document.getElementById('shareBtnDl');
+  const btnX=document.getElementById('shareBtnX');
+  const btnLine=document.getElementById('shareBtnLine');
+  const btnCopy=document.getElementById('shareBtnCopy');
+  if(!modal||!analysis)return;
+
+  // モーダル表示・リセット
+  modal.classList.add('show');
+  preview.style.display='none';generating.style.display='';
+  [btnDl,btnX,btnLine,btnCopy].forEach(b=>b.style.display='none');
+
+  let dataUrl='';
+  try{
+    dataUrl=await generateShareCard(analysis);
+    preview.src=dataUrl;preview.style.display='block';
+    generating.style.display='none';
+    [btnDl,btnX,btnLine,btnCopy].forEach(b=>b.style.display='');
+
+    // 感情名を取得
+    const topEmo=(analysis.emotion_wheel||[])[0]?.emotion||'';
+    const coreShort=(analysis.core_emotion||'').slice(0,30);
+    const shareText=`【本音ルーム 感情診断】\n「${coreShort}」\n${topEmo?`#${topEmo} `:''}#本音ルーム #感情診断\nあなたも試してみて → https://app.honneroom.com`;
+
+    // Web Share API（モバイルで画像ごと共有）
+    if(navigator.share&&dataUrl){
+      try{
+        const blob=await(await fetch(dataUrl)).blob();
+        const file=new File([blob],'honneroom-result.png',{type:'image/png'});
+        if(navigator.canShare&&navigator.canShare({files:[file]})){
+          btnDl.textContent='📲 シェア / 保存する';
+          btnDl.onclick=async()=>{
+            await navigator.share({title:'本音ルーム 感情診断',text:shareText,files:[file]}).catch(()=>{});
+          };
+          btnX.style.display='none';btnLine.style.display='none';btnCopy.style.display='none';
+          return;
+        }
+      }catch(e){}
+    }
+
+    // PC / フォールバック
+    btnDl.onclick=()=>{
+      const a=document.createElement('a');a.href=dataUrl;a.download='honneroom-result.png';a.click();
+    };
+    const tweetText=encodeURIComponent(`【本音ルーム 感情診断】「${coreShort}」\n${topEmo?`#${topEmo} `:''}#本音ルーム\nあなたも → https://app.honneroom.com`);
+    btnX.onclick=()=>window.open(`https://x.com/intent/tweet?text=${tweetText}`,'_blank');
+    const lineText=encodeURIComponent(`【本音ルーム 感情診断】「${coreShort}」\nあなたも試してみて → https://app.honneroom.com`);
+    btnLine.onclick=()=>window.open(`https://line.me/R/msg/text/?${lineText}`,'_blank');
+    btnCopy.onclick=()=>{
+      navigator.clipboard.writeText(shareText).then(()=>{btnCopy.textContent='✓ コピーしました！';setTimeout(()=>{btnCopy.textContent='📋 テキストをコピー';},2000);});
+    };
+  }catch(e){
+    console.error('generateShareCard error:',e);
+    generating.textContent='画像の生成に失敗しました。';
+  }
+}
+
+// シェアモーダルを閉じる
+document.getElementById('shareModalClose')?.addEventListener('click',()=>{
+  document.getElementById('shareModal').classList.remove('show');
+});
+document.getElementById('shareModal')?.addEventListener('click',e=>{
+  if(e.target===document.getElementById('shareModal'))
+    document.getElementById('shareModal').classList.remove('show');
+});
 
 async function openPortal(){
   const{data:sess}=await sb.auth.getSession();const token=sess?.session?.access_token;
