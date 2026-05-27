@@ -289,6 +289,44 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);p
 .report-month-fill{height:100%;background:var(--primary);border-radius:5px;opacity:.55}
 .report-month-count{font-size:11px;color:var(--mist);width:28px;text-align:right;flex-shrink:0}
 
+/* ENTRY CARD TYPE BADGE */
+.entry-card-type{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:white;padding:2px 8px;border-radius:10px;margin-top:6px;font-weight:500}
+
+/* DISTORTION ACCORDION */
+.dis-row{margin-bottom:8px}
+.dis-header{display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:9px 12px;background:var(--warm);transition:background .2s;user-select:none}
+.dis-header:hover{background:var(--primary-pale)}
+.dis-header-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.dis-header-type{font-size:12px;color:var(--ink);font-weight:500;flex:1}
+.dis-header-count{font-size:11px;color:var(--mist);white-space:nowrap;flex-shrink:0}
+.dis-chevron{font-size:10px;color:var(--mist);transition:transform .2s;flex-shrink:0;margin-left:6px}
+.dis-chevron.open{transform:rotate(180deg)}
+.dis-detail{display:none;padding:10px 14px;background:var(--cream);font-size:13px;color:var(--ink);font-weight:300;line-height:1.7;border:1px solid rgba(26,23,20,.06);border-top:none}
+.dis-detail.open{display:block}
+
+/* ALL TYPES MODAL */
+.all-types-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:700;display:none;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto}
+.all-types-overlay.show{display:flex}
+.all-types-modal{background:var(--cream);width:min(540px,100%);padding:24px;position:relative;border-top:4px solid var(--primary);margin:auto}
+.all-types-modal-title{font-family:'Shippori Mincho',serif;font-size:18px;font-weight:600;color:var(--ink);margin-bottom:16px;padding-right:36px}
+.all-types-modal-close{position:absolute;top:12px;right:14px;background:none;border:none;font-size:22px;cursor:pointer;color:var(--mist);padding:4px 8px;line-height:1}
+.all-type-card{display:flex;align-items:center;gap:14px;padding:14px 16px;background:white;margin-bottom:6px;border-left:4px solid var(--type-color,var(--primary));cursor:pointer;transition:all .2s}
+.all-type-card:hover{transform:translateX(2px)}
+.all-type-card.active-type{border-left-width:5px;background:var(--warm)}
+.all-type-card-symbol{font-size:26px;flex-shrink:0;line-height:1}
+.all-type-card-body{flex:1;min-width:0}
+.all-type-card-name{font-family:'Shippori Mincho',serif;font-size:15px;font-weight:600;color:var(--ink);margin-bottom:2px}
+.all-type-card-tagline{font-size:12px;color:var(--mist);font-weight:300;line-height:1.5}
+.all-type-btn{font-size:12px;color:var(--type-color,var(--primary));flex-shrink:0}
+
+/* TYPE DISTRIBUTION BAR */
+.type-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.type-bar-sym{font-size:16px;flex-shrink:0;width:22px;text-align:center}
+.type-bar-name{font-size:11px;color:var(--ink);width:80px;flex-shrink:0;line-height:1.3}
+.type-bar-track{flex:1;background:var(--warm);height:14px;border-radius:2px;overflow:hidden}
+.type-bar-fill{height:100%;border-radius:2px}
+.type-bar-count{font-size:11px;color:var(--mist);width:24px;text-align:right;flex-shrink:0}
+
 @media(max-width:560px){
   .uemail{display:none}
   .asec,.result-card,.entry-form-wrap{padding:16px}
@@ -311,6 +349,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);p
       <button class="share-btn share-btn-copy" id="shareBtnCopy" style="display:none">📋 テキストをコピー</button>
     </div>
     <button class="share-modal-close" id="shareModalClose">閉じる</button>
+  </div>
+</div>
+
+<!-- All Types Modal -->
+<div id="allTypesModal" class="all-types-overlay">
+  <div class="all-types-modal">
+    <button class="all-types-modal-close" id="allTypesModalClose">×</button>
+    <div class="all-types-modal-title">✦ 感情スタイル 全タイプ一覧</div>
+    <div id="allTypesList"></div>
   </div>
 </div>
 
@@ -616,7 +663,7 @@ function renderAnalysisCards(analysis){
   // ─── 診断カード（一番上）───
   const ptype=determineType(analysis);
   html+=`<div class="type-card result-card" style="--type-color:${ptype.color}">
-    <div class="type-card-badge">感情スタイル診断</div>
+    <div class="type-card-badge">今の感情スタイル</div>
     <div class="type-card-symbol">${ptype.symbol}</div>
     <div class="type-card-name" style="color:${ptype.color}">${esc(ptype.name)}</div>
     <div class="type-card-tagline">${esc(ptype.tagline)}</div>
@@ -626,6 +673,7 @@ function renderAnalysisCards(analysis){
     <div class="type-card-ref"><strong>参照：</strong>${esc(ptype.ref)}</div>
     <div class="type-card-insight">「${esc(ptype.insight)}」</div>
     <div class="type-card-care"><strong>💊 感情との付き合い方 ／ </strong>${esc(ptype.care)}</div>
+    <button onclick="showAllTypes('${ptype.id}')" style="margin-top:14px;width:100%;padding:10px;background:none;border:1px solid ${ptype.color};color:${ptype.color};font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .2s" onmouseover="this.style.background='${ptype.color}';this.style.color='white'" onmouseout="this.style.background='none';this.style.color='${ptype.color}'">他のタイプも見てみる →</button>
   </div>`;
 
   // 核心感情
@@ -683,6 +731,51 @@ function renderAnalysisCards(analysis){
   container.innerHTML=html;
   document.getElementById("btnUpgradeReframe")?.addEventListener("click",()=>switchTab("account"));
   document.getElementById("btnShareResult")?.addEventListener("click",()=>showShareModal(_lastAnalysis));
+}
+
+/* ===== 全タイプ一覧モーダル ===== */
+function showAllTypes(currentTypeId){
+  const overlay=document.getElementById('allTypesModal');
+  const list=document.getElementById('allTypesList');
+  if(!overlay||!list)return;
+  list.innerHTML=PERSONALITY_TYPES.map(t=>`
+    <div class="all-type-card${t.id===currentTypeId?' active-type':''}" style="--type-color:${t.color}" onclick="showTypeDetail('${t.id}','${currentTypeId||''}')">
+      <div class="all-type-card-symbol">${t.symbol}</div>
+      <div class="all-type-card-body">
+        <div class="all-type-card-name">${esc(t.name)}${t.id===currentTypeId?'<span style="font-size:10px;color:var(--primary);margin-left:6px;font-family:\'DM Sans\',sans-serif;font-weight:400">← 今のあなた</span>':''}</div>
+        <div class="all-type-card-tagline">${esc(t.tagline)}</div>
+      </div>
+      <div class="all-type-btn">詳細 ›</div>
+    </div>`).join('');
+  overlay.classList.add('show');
+}
+
+function showTypeDetail(typeId,currentTypeId){
+  const t=PERSONALITY_TYPES.find(x=>x.id===typeId);
+  if(!t)return;
+  const list=document.getElementById('allTypesList');
+  if(!list)return;
+  list.innerHTML=`
+    <button onclick="showAllTypes('${esc(currentTypeId||typeId)}')" style="background:none;border:none;cursor:pointer;color:var(--mist);font-size:13px;margin-bottom:16px;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:6px;padding:0">← 一覧に戻る</button>
+    <div class="type-card" style="--type-color:${t.color};margin-bottom:0">
+      <div class="type-card-badge">感情スタイル</div>
+      <div class="type-card-symbol">${t.symbol}</div>
+      <div class="type-card-name" style="color:${t.color}">${esc(t.name)}</div>
+      <div class="type-card-tagline">${esc(t.tagline)}</div>
+      <div class="type-card-traits">${t.traits.map(tr=>`<div class="type-card-trait">${esc(tr)}</div>`).join('')}</div>
+      <div class="type-card-ref"><strong>参照：</strong>${esc(t.ref)}</div>
+      <div class="type-card-insight">「${esc(t.insight)}」</div>
+      <div class="type-card-care"><strong>💊 感情との付き合い方 ／ </strong>${esc(t.care)}</div>
+    </div>`;
+}
+
+/* ===== 思考のクセ アコーディオン ===== */
+function toggleDis(i){
+  const header=document.querySelector(`.dis-header[data-i="${i}"]`);
+  const detail=document.querySelector(`.dis-detail[data-i="${i}"]`);
+  if(!detail)return;
+  const isOpen=detail.classList.toggle('open');
+  header?.querySelector('.dis-chevron')?.classList.toggle('open',isOpen);
 }
 
 /* ===== 分析実行 ===== */
@@ -862,6 +955,7 @@ function renderRecordList(entries,main){
   }
   main.innerHTML=`<div class="entries-list">`+entries.map(e=>{
     const a=(e.analyses||[])[0]||null;
+    const ptype=a?determineType(a):null;
     const bodyPreview=e.body?.slice(0,80)+(e.body?.length>80?"…":"");
     return`<div class="entry-card" data-id="${esc(e.id)}">
       <button class="entry-del-btn" onclick="deleteEntry('${esc(e.id)}',event)" title="削除">✕</button>
@@ -869,6 +963,7 @@ function renderRecordList(entries,main){
       ${a?.core_emotion?`<div class="entry-card-core">「${esc(a.core_emotion.slice(0,50))}」</div>`:""}
       <div class="entry-card-body">${esc(bodyPreview)}</div>
       ${a?.summary?`<div class="entry-card-summary">${esc(a.summary)}</div>`:""}
+      ${ptype?`<div class="entry-card-type" style="background:${ptype.color}">${ptype.symbol} ${esc(ptype.name)}</div>`:""}
     </div>`;
   }).join('')+`</div>`;
   main.querySelectorAll(".entry-card").forEach(c=>{
@@ -894,14 +989,15 @@ function renderCalendar(entries,main){
     main.innerHTML=premiumLockHtml('📅','感情カレンダー','1ヶ月の感情の変化をカレンダーで可視化します。\n毎日の記録から、あなたの感情パターンを発見できます。');
     return;
   }
-  // 日付→色マップ
+  // 日付→感情スタイル色マップ
   const dateMap={};
   entries.forEach(e=>{
     const d=new Date(e.created_at);
     const key=`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
     if(!dateMap[key]){
-      const dom=getDominantEmotion(e.analyses);
-      dateMap[key]=dom?(EMOTION_COLORS[dom.category]||'#8a7a72'):'#8a7a72';
+      const a=(e.analyses||[])[0];
+      const ptype=a?determineType(a):null;
+      dateMap[key]=ptype?ptype.color:'#8a7a72';
     }
   });
   const year=_calYear,month=_calMonth;
@@ -931,11 +1027,11 @@ function renderCalendar(entries,main){
   }
   html+=`</div></div>
   <div class="result-card" style="padding:14px 20px">
-    <div class="result-label">感情の色凡例</div>
-    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:6px">
-      ${Object.entries(EMOTION_COLORS).map(([name,color])=>
-        `<div style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--mist)">
-          <div style="width:9px;height:9px;border-radius:50%;background:${color};flex-shrink:0"></div>${name}
+    <div class="result-label">感情スタイル 色凡例</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">
+      ${PERSONALITY_TYPES.map(t=>
+        `<div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--mist)">
+          <div style="width:9px;height:9px;border-radius:50%;background:${t.color};flex-shrink:0"></div>${t.symbol}&nbsp;${esc(t.name)}
         </div>`).join('')}
     </div>
   </div>`;
@@ -952,7 +1048,7 @@ function renderTrend(entries,main){
     main.innerHTML=`<div class="empty"><div class="empty-h">まだデータが足りません</div><p>記録が増えると傾向が見えてきます。</p></div>`;
     return;
   }
-  const emotionCount={},distortionCount={};
+  const emotionCount={},distortionMap={},typeCount={};
   entries.forEach(e=>{
     const a=(e.analyses||[])[0];
     if(!a)return;
@@ -960,13 +1056,18 @@ function renderTrend(entries,main){
       emotionCount[em.category]=(emotionCount[em.category]||0)+(em.intensity||1);
     });
     (a.cognitive_distortions||[]).forEach(d=>{
-      distortionCount[d.type]=(distortionCount[d.type]||0)+1;
+      if(!distortionMap[d.type])distortionMap[d.type]={count:0,desc:d.description||""};
+      distortionMap[d.type].count++;
     });
+    const pt=determineType(a);
+    typeCount[pt.id]=(typeCount[pt.id]||0)+1;
   });
   const sortedEmo=Object.entries(emotionCount).sort((a,b)=>b[1]-a[1]);
   const maxEmo=sortedEmo[0]?.[1]||1;
-  const sortedDis=Object.entries(distortionCount).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  const maxDis=sortedDis[0]?.[1]||1;
+  const sortedDis=Object.entries(distortionMap).sort((a,b)=>b[1].count-a[1].count).slice(0,5);
+  const maxDis=sortedDis[0]?.[1]?.count||1;
+  const sortedTypes=Object.entries(typeCount).sort((a,b)=>b[1]-a[1]);
+  const maxType=sortedTypes[0]?.[1]||1;
   const weekCounts=[0,0,0,0];
   const now=Date.now();
   entries.forEach(e=>{
@@ -995,17 +1096,34 @@ function renderTrend(entries,main){
       </div>`).join('')}
   </div>`;
   if(sortedDis.length){
-    // 思考のクセは長いラベルがあるため縦レイアウト
     html+=`<div class="result-card">
-      <div class="result-label">よく見られる思考のクセ</div>
-      ${sortedDis.map(([type,count])=>`
-        <div style="margin-bottom:12px">
-          <div style="font-size:12px;color:var(--ink);margin-bottom:5px;font-weight:400">${esc(type)}</div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <div class="bar-track" style="flex:1"><div class="bar-fill" style="${barPct(count,maxDis)};background:var(--primary)"></div></div>
-            <div class="bar-count">${count}回</div>
+      <div class="result-label">よく見られる思考のクセ <span style="font-size:10px;color:var(--mist);font-weight:300">タップで解説</span></div>
+      ${sortedDis.map(([type,{count,desc}],i)=>`
+        <div class="dis-row">
+          <div class="dis-header" data-i="${i}" onclick="toggleDis(${i})">
+            <div class="dis-header-left">
+              <div class="dis-header-type">🔍 ${esc(type)}</div>
+              <div class="dis-header-count">${count}回</div>
+            </div>
+            <div class="dis-chevron">▼</div>
           </div>
+          <div class="dis-detail" data-i="${i}">${esc(desc)||'詳細はありません。'}</div>
         </div>`).join('')}
+    </div>`;
+  }
+  if(sortedTypes.length){
+    html+=`<div class="result-card">
+      <div class="result-label">感情スタイルの傾向</div>
+      ${sortedTypes.map(([tid,count])=>{
+        const t=PERSONALITY_TYPES.find(x=>x.id===tid);
+        if(!t)return'';
+        return`<div class="type-bar-row">
+          <div class="type-bar-sym">${t.symbol}</div>
+          <div class="type-bar-name">${esc(t.name)}</div>
+          <div class="type-bar-track"><div class="type-bar-fill" style="${barPct(count,maxType)};background:${t.color}"></div></div>
+          <div class="type-bar-count">${count}</div>
+        </div>`;
+      }).join('')}
     </div>`;
   }
   main.innerHTML=html;
@@ -1086,6 +1204,16 @@ function openEntryDetail(entryId,entries){
   </div>`;
 
   if(a){
+    // 感情スタイルカード
+    const ptype=determineType(a);
+    html+=`<div class="type-card result-card" style="--type-color:${ptype.color}">
+      <div class="type-card-badge">この日の感情スタイル</div>
+      <div class="type-card-symbol">${ptype.symbol}</div>
+      <div class="type-card-name" style="color:${ptype.color}">${esc(ptype.name)}</div>
+      <div class="type-card-tagline">${esc(ptype.tagline)}</div>
+      <div class="type-card-care"><strong>💊 </strong>${esc(ptype.care)}</div>
+      <button onclick="showAllTypes('${ptype.id}')" style="margin-top:12px;width:100%;padding:9px;background:none;border:1px solid var(--type-color,var(--primary));color:var(--type-color,var(--primary));font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer">他のタイプも見てみる →</button>
+    </div>`;
     if(a.core_emotion) html+=`<div class="result-card"><div class="result-label">あなたの核心感情</div><div class="core-emotion-text">${nl2br(a.core_emotion)}</div></div>`;
     if(a.summary) html+=`<div class="result-card"><div class="result-label">今の状態</div><div class="summary-text">${esc(a.summary)}</div></div>`;
     if(a.emotion_wheel) html+=`<div class="result-card"><div class="result-label">感情の内訳（プルチック）</div>${renderEmotionWheel(a.emotion_wheel)}</div>`;
@@ -1519,6 +1647,15 @@ document.getElementById('shareModalClose')?.addEventListener('click',()=>{
 document.getElementById('shareModal')?.addEventListener('click',e=>{
   if(e.target===document.getElementById('shareModal'))
     document.getElementById('shareModal').classList.remove('show');
+});
+
+// 全タイプモーダルを閉じる
+document.getElementById('allTypesModalClose')?.addEventListener('click',()=>{
+  document.getElementById('allTypesModal').classList.remove('show');
+});
+document.getElementById('allTypesModal')?.addEventListener('click',e=>{
+  if(e.target===document.getElementById('allTypesModal'))
+    document.getElementById('allTypesModal').classList.remove('show');
 });
 
 async function openPortal(){
