@@ -202,6 +202,57 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);p
 .pwa-modal-close{width:100%;padding:12px;background:var(--warm);border:none;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--mist);cursor:pointer;transition:background .2s}
 .pwa-modal-close:hover{background:var(--ink);color:white}
 
+/* RECORD SUB-TABS */
+.rec-tabs{display:flex;border-bottom:1px solid rgba(26,23,20,.08);margin-bottom:16px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-top:2px}
+.rec-tab{flex-shrink:0;padding:10px 14px;font-size:12px;color:var(--mist);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;white-space:nowrap;letter-spacing:.04em}
+.rec-tab.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:500}
+.rec-tab:hover:not(.active){color:var(--ink)}
+
+/* DELETE BUTTON */
+.entry-card{position:relative}
+.entry-del-btn{position:absolute;top:8px;right:10px;background:none;border:none;color:var(--mist);font-size:14px;cursor:pointer;padding:3px 7px;opacity:0;transition:opacity .2s;line-height:1}
+.entry-card:hover .entry-del-btn,.entry-card:focus-within .entry-del-btn{opacity:.6}
+.entry-del-btn:hover{color:var(--error);opacity:1!important}
+
+/* PREMIUM LOCK */
+.premium-lock{background:white;border:1px solid rgba(26,23,20,.06);padding:48px 24px;text-align:center}
+.premium-lock-icon{font-size:40px;margin-bottom:14px}
+.premium-lock-title{font-family:'Shippori Mincho',serif;font-size:18px;font-weight:600;color:var(--ink);margin-bottom:10px}
+.premium-lock-desc{font-size:13px;color:var(--mist);font-weight:300;line-height:1.9;margin-bottom:22px;white-space:pre-line}
+
+/* EMOTION CALENDAR */
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.cal-title{font-family:'Shippori Mincho',serif;font-size:16px;font-weight:600;color:var(--ink)}
+.cal-nav-btn{background:none;border:1px solid rgba(26,23,20,.12);padding:5px 11px;font-size:12px;cursor:pointer;color:var(--mist);font-family:'DM Sans',sans-serif;transition:all .2s}
+.cal-nav-btn:hover{border-color:var(--primary);color:var(--primary)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal-dow{text-align:center;font-size:10px;color:var(--mist);padding:4px 0;letter-spacing:.06em}
+.cal-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;border-radius:4px;transition:background .2s;min-height:34px}
+.cal-day.has-entry{cursor:pointer}.cal-day.has-entry:hover{background:var(--warm)}
+.cal-day.other-month{visibility:hidden}
+.cal-day.today .cal-day-num{color:var(--primary);font-weight:700}
+.cal-day-num{line-height:1;font-size:12px;color:var(--ink)}
+.cal-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
+/* TREND CHART */
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.bar-label{font-size:12px;color:var(--ink);min-width:52px;max-width:96px;text-align:right;flex-shrink:0;line-height:1.3}
+.bar-track{flex:1;background:var(--warm);height:16px;border-radius:2px;overflow:hidden}
+.bar-fill{height:100%;border-radius:2px;display:flex;align-items:center;justify-content:flex-end;padding-right:5px;font-size:10px;color:white;font-weight:500;min-width:4px}
+.bar-count{font-size:11px;color:var(--mist);width:22px;text-align:right;flex-shrink:0}
+
+/* MONTHLY REPORT */
+.report-stats{display:flex;gap:6px;flex-wrap:wrap}
+.report-stat{background:var(--warm);padding:14px 12px;text-align:center;flex:1;min-width:70px}
+.report-stat-num{font-family:'Shippori Mincho',serif;font-size:26px;font-weight:600;color:var(--primary);line-height:1}
+.report-stat-lbl{font-size:10px;color:var(--mist);margin-top:4px;letter-spacing:.04em}
+.report-month-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(26,23,20,.05)}
+.report-month-row:last-child{border-bottom:none}
+.report-month-name{font-size:12px;color:var(--ink);width:60px;flex-shrink:0}
+.report-month-bar{flex:1;background:var(--warm);height:10px;border-radius:5px;overflow:hidden}
+.report-month-fill{height:100%;background:var(--primary);border-radius:5px;opacity:.55}
+.report-month-count{font-size:11px;color:var(--mist);width:28px;text-align:right;flex-shrink:0}
+
 @media(max-width:560px){
   .uemail{display:none}
   .asec,.result-card,.entry-form-wrap{padding:16px}
@@ -236,8 +287,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);p
 
 <nav class="tab-nav">
   <button class="tab-btn active" data-tab="home">吐き出す</button>
-  <button class="tab-btn" data-tab="record">記録</button>
-  <button class="tab-btn" data-tab="account">設定</button>
+  <button class="tab-btn" data-tab="record" style="display:none">記録</button>
+  <button class="tab-btn" data-tab="account" style="display:none">設定</button>
 </nav>
 
 <div class="page">
@@ -283,6 +334,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);p
 
   <!-- 記録 tab -->
   <section id="tab-record" class="tab-pane">
+    <div id="recSubNav" class="rec-tabs" style="display:none">
+      <button class="rec-tab active" data-rtab="list" onclick="switchRecTab('list')">記録一覧</button>
+      <button class="rec-tab" data-rtab="calendar" onclick="switchRecTab('calendar')">感情カレンダー</button>
+      <button class="rec-tab" data-rtab="trend" onclick="switchRecTab('trend')">傾向・分析</button>
+      <button class="rec-tab" data-rtab="report" onclick="switchRecTab('report')">月次レポート</button>
+    </div>
     <div id="recordMain"></div>
     <div id="recordDetail" class="detail-view"></div>
   </section>
@@ -435,6 +492,7 @@ async function analyzeEntry(){
 
   // ログイン済みならエントリーを先に保存
   if(S.user){
+    _cachedEntries=null; // キャッシュ無効化
     const{data:entry,error:eErr}=await sb.from("entries").insert({user_id:S.user.id,body}).select("id").single();
     if(eErr){
       console.error("entry insert error:",eErr);
@@ -509,6 +567,46 @@ function showEntryForm(){
   $("#btnAnalyze").disabled=true;
 }
 
+/* ===== 記録サブタブ状態 ===== */
+let _recTab='list';
+let _calYear=new Date().getFullYear();
+let _calMonth=new Date().getMonth();
+let _cachedEntries=null;
+
+function getDominantEmotion(analyses){
+  const a=(analyses||[])[0];
+  if(!a?.emotion_wheel?.length)return null;
+  return[...a.emotion_wheel].sort((x,y)=>(y.intensity||3)-(x.intensity||3))[0];
+}
+
+function premiumLockHtml(icon,title,desc){
+  return`<div class="premium-lock">
+    <div class="premium-lock-icon">${icon}</div>
+    <div class="premium-lock-title">${title}</div>
+    <div class="premium-lock-desc">${desc}</div>
+    <button class="btn-p" onclick="switchTab('account')">Standardプランにアップグレード →</button>
+  </div>`;
+}
+
+function switchRecTab(tab){
+  _recTab=tab;
+  document.querySelectorAll('.rec-tab').forEach(b=>b.classList.toggle('active',b.dataset.rtab===tab));
+  document.getElementById('recordDetail').classList.remove('show');
+  if(_cachedEntries!=null)renderRecContent(_cachedEntries);
+}
+
+function renderRecContent(entries){
+  const main=document.getElementById('recordMain');
+  main.style.display='';
+  document.getElementById('recordDetail').classList.remove('show');
+  switch(_recTab){
+    case'list':renderRecordList(entries,main);break;
+    case'calendar':renderCalendar(entries,main);break;
+    case'trend':renderTrend(entries,main);break;
+    case'report':renderReport(entries,main);break;
+  }
+}
+
 /* ===== 記録一覧 ===== */
 async function renderRecord(){
   const main=document.getElementById("recordMain");
@@ -526,40 +624,232 @@ async function renderRecord(){
     return;
   }
 
-  main.innerHTML=`<div class="loading"><span class="spinner" style="font-size:18px;margin-right:8px">↻</span> 読み込み中…</div>`;
-
-  const{data,error}=await sb
-    .from("entries")
-    .select(`id,body,created_at,analyses(core_emotion,summary,emotion_wheel,cognitive_distortions,reframe)`)
-    .eq("user_id",S.user.id)
-    .order("created_at",{ascending:false})
-    .limit(200);
-
-  if(error){
-    main.innerHTML=`<div class="empty"><div class="empty-h">読み込みに失敗しました</div><p>Supabaseのentriesテーブルが作成されているか確認してください。</p></div>`;
-    return;
+  // キャッシュがなければ取得
+  if(_cachedEntries===null){
+    main.innerHTML=`<div class="loading"><span class="spinner" style="font-size:18px;margin-right:8px">↻</span> 読み込み中…</div>`;
+    const{data,error}=await sb
+      .from("entries")
+      .select(`id,body,created_at,analyses(core_emotion,summary,emotion_wheel,cognitive_distortions,reframe)`)
+      .eq("user_id",S.user.id)
+      .order("created_at",{ascending:false})
+      .limit(500);
+    if(error){
+      main.innerHTML=`<div class="empty"><div class="empty-h">読み込みに失敗しました</div></div>`;
+      return;
+    }
+    _cachedEntries=data||[];
   }
 
-  const entries=data||[];
+  // サブナビ表示
+  const subNav=document.getElementById('recSubNav');
+  if(subNav)subNav.style.display='';
+
+  renderRecContent(_cachedEntries);
+}
+
+function renderRecordList(entries,main){
   if(!entries.length){
-    main.innerHTML=`<div class="empty"><div class="empty-h">まだ記録がありません</div><p>「吐き出す」タブから気持ちを書いてみましょう。<br>分析結果が自動で保存されます。</p></div>`;
+    main.innerHTML=`<div class="empty"><div class="empty-h">まだ記録がありません</div><p>「吐き出す」タブから気持ちを書いてみましょう。</p></div>`;
     return;
   }
-
   main.innerHTML=`<div class="entries-list">`+entries.map(e=>{
     const a=(e.analyses||[])[0]||null;
     const bodyPreview=e.body?.slice(0,80)+(e.body?.length>80?"…":"");
     return`<div class="entry-card" data-id="${esc(e.id)}">
+      <button class="entry-del-btn" onclick="deleteEntry('${esc(e.id)}',event)" title="削除">✕</button>
       <div class="entry-card-date">${rtime(e.created_at)}</div>
       ${a?.core_emotion?`<div class="entry-card-core">「${esc(a.core_emotion.slice(0,50))}」</div>`:""}
       <div class="entry-card-body">${esc(bodyPreview)}</div>
       ${a?.summary?`<div class="entry-card-summary">${esc(a.summary)}</div>`:""}
     </div>`;
   }).join('')+`</div>`;
-
   main.querySelectorAll(".entry-card").forEach(c=>{
-    c.addEventListener("click",()=>openEntryDetail(c.dataset.id,entries));
+    c.addEventListener("click",e=>{
+      if(e.target.classList.contains('entry-del-btn'))return;
+      openEntryDetail(c.dataset.id,entries);
+    });
   });
+}
+
+async function deleteEntry(entryId,e){
+  e.stopPropagation();
+  if(!confirm('この記録を削除しますか？\nこの操作は取り消せません。'))return;
+  const{error}=await sb.from("entries").delete().eq("id",entryId).eq("user_id",S.user.id);
+  if(error){alert('削除に失敗しました。');return;}
+  _cachedEntries=null;
+  renderRecord();
+}
+
+/* ===== 感情カレンダー ===== */
+function renderCalendar(entries,main){
+  if(!S.isStd){
+    main.innerHTML=premiumLockHtml('📅','感情カレンダー','1ヶ月の感情の変化をカレンダーで可視化します。\n毎日の記録から、あなたの感情パターンを発見できます。');
+    return;
+  }
+  // 日付→色マップ
+  const dateMap={};
+  entries.forEach(e=>{
+    const d=new Date(e.created_at);
+    const key=`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+    if(!dateMap[key]){
+      const dom=getDominantEmotion(e.analyses);
+      dateMap[key]=dom?(EMOTION_COLORS[dom.category]||'#8a7a72'):'#8a7a72';
+    }
+  });
+  const year=_calYear,month=_calMonth;
+  const firstDay=new Date(year,month,1);
+  const totalDays=new Date(year,month+1,0).getDate();
+  const startDow=(firstDay.getDay()+6)%7;
+  const today=new Date();
+  let html=`<div class="result-card">
+    <div class="cal-header">
+      <div class="cal-title">${year}年${month+1}月</div>
+      <div style="display:flex;gap:6px">
+        <button class="cal-nav-btn" onclick="_calMonth--;if(_calMonth<0){_calMonth=11;_calYear--;}renderCalendar(_cachedEntries,document.getElementById('recordMain'))">◀</button>
+        <button class="cal-nav-btn" onclick="_calMonth++;if(_calMonth>11){_calMonth=0;_calYear++;}renderCalendar(_cachedEntries,document.getElementById('recordMain'))">▶</button>
+      </div>
+    </div>
+    <div class="cal-grid">
+    ${['月','火','水','木','金','土','日'].map(d=>`<div class="cal-dow">${d}</div>`).join('')}`;
+  for(let i=0;i<startDow;i++)html+=`<div class="cal-day other-month"></div>`;
+  for(let day=1;day<=totalDays;day++){
+    const key=`${year}-${month}-${day}`;
+    const color=dateMap[key];
+    const isToday=day===today.getDate()&&month===today.getMonth()&&year===today.getFullYear();
+    html+=`<div class="cal-day${color?' has-entry':''}${isToday?' today':''}">
+      <span class="cal-day-num">${day}</span>
+      ${color?`<div class="cal-dot" style="background:${color}"></div>`:''}
+    </div>`;
+  }
+  html+=`</div></div>
+  <div class="result-card" style="padding:14px 20px">
+    <div class="result-label">感情の色凡例</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:6px">
+      ${Object.entries(EMOTION_COLORS).map(([name,color])=>
+        `<div style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--mist)">
+          <div style="width:9px;height:9px;border-radius:50%;background:${color};flex-shrink:0"></div>${name}
+        </div>`).join('')}
+    </div>
+  </div>`;
+  main.innerHTML=html;
+}
+
+/* ===== 傾向・パターン分析 ===== */
+function renderTrend(entries,main){
+  if(!S.isStd){
+    main.innerHTML=premiumLockHtml('📊','傾向・パターン分析','感情の出現頻度や思考のクセのパターンを分析します。\n記録が増えるほど、精度が上がります。');
+    return;
+  }
+  if(!entries.length){
+    main.innerHTML=`<div class="empty"><div class="empty-h">まだデータが足りません</div><p>記録が増えると傾向が見えてきます。</p></div>`;
+    return;
+  }
+  const emotionCount={},distortionCount={};
+  entries.forEach(e=>{
+    const a=(e.analyses||[])[0];
+    if(!a)return;
+    (a.emotion_wheel||[]).forEach(em=>{
+      emotionCount[em.category]=(emotionCount[em.category]||0)+(em.intensity||1);
+    });
+    (a.cognitive_distortions||[]).forEach(d=>{
+      distortionCount[d.type]=(distortionCount[d.type]||0)+1;
+    });
+  });
+  const sortedEmo=Object.entries(emotionCount).sort((a,b)=>b[1]-a[1]);
+  const maxEmo=sortedEmo[0]?.[1]||1;
+  const sortedDis=Object.entries(distortionCount).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const maxDis=sortedDis[0]?.[1]||1;
+  const weekCounts=[0,0,0,0];
+  const now=Date.now();
+  entries.forEach(e=>{
+    const age=(now-new Date(e.created_at).getTime())/(86400000);
+    if(age<7)weekCounts[0]++;else if(age<14)weekCounts[1]++;else if(age<21)weekCounts[2]++;else if(age<28)weekCounts[3]++;
+  });
+  const maxWk=Math.max(...weekCounts,1);
+  let html=`<div class="result-card">
+    <div class="result-label">記録の頻度（過去4週間）</div>
+    ${['今週','先週','2週前','3週前'].map((lbl,i)=>`
+      <div class="bar-row">
+        <div class="bar-label">${lbl}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${Math.round((weekCounts[i]/maxWk)*100)}%;background:var(--primary)">${weekCounts[i]||''}</div></div>
+        <div class="bar-count">${weekCounts[i]}</div>
+      </div>`).join('')}
+  </div>
+  <div class="result-card">
+    <div class="result-label">よく感じる感情 TOP${Math.min(5,sortedEmo.length)}</div>
+    ${sortedEmo.slice(0,5).map(([cat,val])=>`
+      <div class="bar-row">
+        <div class="bar-label">${cat}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${Math.round((val/maxEmo)*100)}%;background:${EMOTION_COLORS[cat]||'#8a7a72'}"></div></div>
+        <div class="bar-count">${val}</div>
+      </div>`).join('')}
+  </div>`;
+  if(sortedDis.length){
+    html+=`<div class="result-card">
+      <div class="result-label">よく見られる思考のクセ</div>
+      ${sortedDis.map(([type,count])=>`
+        <div class="bar-row">
+          <div class="bar-label" style="max-width:110px;font-size:11px">${esc(type)}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.round((count/maxDis)*100)}%;background:var(--primary)"></div></div>
+          <div class="bar-count">${count}</div>
+        </div>`).join('')}
+    </div>`;
+  }
+  main.innerHTML=html;
+}
+
+/* ===== 月次レポート ===== */
+function renderReport(entries,main){
+  if(!S.isStd){
+    main.innerHTML=premiumLockHtml('📋','月次レポート','毎月の感情の傾向をまとめたレポートです。\n自分の感情の変化を月単位で振り返ることができます。');
+    return;
+  }
+  if(!entries.length){
+    main.innerHTML=`<div class="empty"><div class="empty-h">まだデータが足りません</div><p>記録が増えると月次レポートが作成されます。</p></div>`;
+    return;
+  }
+  const monthMap={};
+  entries.forEach(e=>{
+    const d=new Date(e.created_at);
+    const key=`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}`;
+    if(!monthMap[key])monthMap[key]={count:0,emotions:{}};
+    monthMap[key].count++;
+    const a=(e.analyses||[])[0];
+    if(a?.emotion_wheel)a.emotion_wheel.forEach(em=>{
+      monthMap[key].emotions[em.category]=(monthMap[key].emotions[em.category]||0)+1;
+    });
+  });
+  const months=Object.entries(monthMap).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,6);
+  const maxCount=Math.max(...months.map(m=>m[1].count),1);
+  let html=`<div class="result-card">
+    <div class="report-stats">
+      <div class="report-stat"><div class="report-stat-num">${entries.length}</div><div class="report-stat-lbl">累計記録数</div></div>
+      <div class="report-stat"><div class="report-stat-num">${months[0]?.[1]?.count||0}</div><div class="report-stat-lbl">今月の記録</div></div>
+      <div class="report-stat"><div class="report-stat-num">${months.length}</div><div class="report-stat-lbl">記録月数</div></div>
+    </div>
+  </div>
+  <div class="result-card">
+    <div class="result-label">月別記録数（直近6ヶ月）</div>
+    ${months.map(([key,data])=>`
+      <div class="report-month-row">
+        <div class="report-month-name">${key}</div>
+        <div class="report-month-bar"><div class="report-month-fill" style="width:${Math.round((data.count/maxCount)*100)}%"></div></div>
+        <div class="report-month-count">${data.count}件</div>
+      </div>`).join('')}
+  </div>
+  ${months.map(([key,data])=>{
+    const top=Object.entries(data.emotions).sort((a,b)=>b[1]-a[1]).slice(0,3);
+    if(!top.length)return'';
+    return`<div class="result-card">
+      <div class="result-label">${key} よく感じた感情</div>
+      <div class="emotion-chips">${top.map(([cat])=>`
+        <div class="emotion-chip" style="background:${EMOTION_COLORS[cat]||'#8a7a72'}">
+          <div class="emotion-chip-name">${esc(cat)}</div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }).join('')}`;
+  main.innerHTML=html;
 }
 
 function openEntryDetail(entryId,entries){
@@ -918,10 +1208,16 @@ async function main(){
     if(S.isStd) badge.classList.add("std");
     $("#btnLogout").style.display="";
     $("#btnLoginLink").style.display="none";
+
+    // ログイン後：記録・設定タブを表示
+    document.querySelectorAll('.tab-btn[data-tab="record"],.tab-btn[data-tab="account"]')
+      .forEach(b=>b.style.display='');
   } else {
-    // ゲストモード: ゲスト通知を表示
+    // ゲストモード: ゲスト通知を表示、タブは吐き出すのみ
     const gn=document.getElementById("guestNotice");
     if(gn) gn.style.display="";
+    document.querySelectorAll('.tab-btn[data-tab="record"],.tab-btn[data-tab="account"]')
+      .forEach(b=>b.style.display='none');
   }
 }
 
