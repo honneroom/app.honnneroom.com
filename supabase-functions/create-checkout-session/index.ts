@@ -1,14 +1,21 @@
 // create-checkout-session Edge Function
 // Deploy with: supabase functions deploy create-checkout-session
-// Set secrets:
-//   supabase secrets set STRIPE_SECRET_KEY=sk_live_...
-//   supabase secrets set STRIPE_PRICE_STANDARD=price_xxx
+// Required secrets:
+//   STRIPE_SECRET_KEY_LIVE=sk_live_...
+//   STRIPE_SECRET_KEY_TEST=sk_test_...
+//   STRIPE_PRICE_STANDARD=price_xxx
+//   APP_ENV=production  （または test）
 //   （将来プラン追加例）supabase secrets set STRIPE_PRICE_PRO=price_yyy
 
 import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const STRIPE_SECRET_KEY       = Deno.env.get("STRIPE_SECRET_KEY")!;
+// APP_ENV に応じて LIVE/TEST キーを切り替え
+const APP_ENV = Deno.env.get("APP_ENV") || "test";
+const STRIPE_SECRET_KEY = (APP_ENV === "production" || APP_ENV === "live")
+  ? Deno.env.get("STRIPE_SECRET_KEY_LIVE")!
+  : Deno.env.get("STRIPE_SECRET_KEY_TEST")!;
+
 const SUPABASE_URL            = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
