@@ -10,20 +10,23 @@
 import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-// APP_ENV に応じて LIVE/TEST キーを切り替え
-const APP_ENV = Deno.env.get("APP_ENV") || "test";
-const STRIPE_SECRET_KEY = (APP_ENV === "production" || APP_ENV === "live")
-  ? Deno.env.get("STRIPE_SECRET_KEY_LIVE")!
-  : Deno.env.get("STRIPE_SECRET_KEY_TEST")!;
-
-const SUPABASE_URL            = Deno.env.get("SUPABASE_URL")!;
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-// プラン名 → Stripe Price ID（シークレットから取得）
-// 新プランを追加する場合は secrets にキーを追加して下記に足すだけ
-const PRICE_MAP: Record<string, string | undefined> = {
-  standard: Deno.env.get("STRIPE_PRICE_STANDARD"),
-};
+// シークレットはリクエストごとに読み込む（デプロイ時点での undefined 固定を防ぐため）
+function getConfig() {
+  const APP_ENV = Deno.env.get("APP_ENV") || "test";
+  const stripeKey = (APP_ENV === "production" || APP_ENV === "live")
+    ? Deno.env.get("STRIPE_SECRET_KEY_LIVE")!
+    : Deno.env.get("STRIPE_SECRET_KEY_TEST")!;
+  return {
+    stripeKey,
+    supabaseUrl:     Deno.env.get("SUPABASE_URL")!,
+    supabaseService: Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    // プラン名 → Stripe Price ID
+    // 新プラン追加時は secrets にキーを追加して下記に足すだけ
+    priceMap: {
+      standard: Deno.env.get("STRIPE_PRICE_STANDARD"),
+    } as Record<string, string | undefined>,
+  };
+}
 
 function getCorsHeaders(req: Request) {
   const origin = req.headers.get("Origin") || "";
@@ -42,10 +45,11 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const cfg = getConfig();
     const { user_id, plan, success_url, cancel_url } = await req.json();
 
     // プラン名からPrice IDを解決
-    const priceId = PRICE_MAP[plan];
+    const priceId = cfg.priceMap[plan];
     if (!priceId) {
       return new Response(JSON.stringify({ error: `不明なプラン: ${plan}` }), {
         status: 400,
@@ -53,7 +57,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const stripe = new Stripe(STRIPE_SECRET_KEY, {
+    const stripe = new Stripe(cfg.stripeKey, {
       apiVersion: "2024-06-20",
       httpClient: Stripe.createFetchHttpClient(),
     });
@@ -62,7 +66,7 @@ Deno.serve(async (req) => {
     let customerId: string | undefined;
     let customerEmail: string | undefined;
     if (user_id) {
-      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+      const supabase = createClient(cfg.supabaseUrl, cfg.supabaseService);
       const { data: profile } = await supabase
         .from("profiles")
         .select("stripe_customer_id")
