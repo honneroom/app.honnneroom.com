@@ -296,7 +296,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);p
 <script>
 const SB_URL  = "https://rhynpigqhnbwjyudvvfw.supabase.co";
 const SB_KEY  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoeW5waWdxaG5id2p5dWR2dmZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3ODcyNTMsImV4cCI6MjA4MzM2MzI1M30.S9h-SH0JB0cEhMukUUaOuYEetx2I8qecZapIeCpk57M";
-const BILLING      = "https://app.honneroom.com/data/billing.json";
 const PORTAL       = "https://rhynpigqhnbwjyudvvfw.functions.supabase.co/create-portal-session";
 const CHECKOUT_URL = "https://rhynpigqhnbwjyudvvfw.functions.supabase.co/create-checkout-session";
 const ANALYZE_URL  = "https://rhynpigqhnbwjyudvvfw.functions.supabase.co/analyze-entry";
@@ -310,7 +309,7 @@ const sb = window.supabase.createClient(SB_URL, SB_KEY, {
 
 const S = {
   user:null, profile:null, isStd:false, isGoogleUser:false,
-  billingCfg:null, ICONS:[],
+  ICONS:[],
 };
 
 const $ = s => document.querySelector(s);
@@ -788,14 +787,7 @@ async function handleDeleteAccount(){
   }catch(e){if(statusEl){statusEl.textContent="エラーが発生しました。";statusEl.style.color="var(--error)";}}
 }
 
-async function loadBilling(){
-  try{const r=await fetch(BILLING,{cache:"no-store"});S.billingCfg=await r.json();}catch(e){}
-}
-
 async function createCheckout(){
-  const plan=(S.billingCfg?.stripe?.plans||[]).find(p=>p.id==="standard");
-  if(!plan?.price_id){alert("設定の読み込みに失敗しました。");return;}
-
   const btn=document.getElementById("btnSub");
   if(btn){btn.disabled=true;btn.textContent="処理中…";}
 
@@ -809,9 +801,10 @@ async function createCheckout(){
         ...(token?{Authorization:`Bearer ${token}`}:{}),
       },
       body:JSON.stringify({
-        price_id:plan.price_id,
         user_id:S.user?.id||null,
-        user_email:S.user?.email||null,
+        plan:"standard",
+        success_url:`${APP_URL}?checkout=success`,
+        cancel_url:APP_URL,
       }),
     });
     if(!res.ok)throw new Error(`${res.status}`);
@@ -867,6 +860,15 @@ function openIconPickerModal(currentUrl){
   overlay.addEventListener("click",e=>{if(e.target===overlay)close();});
 }
 
+/* ===== Toast ===== */
+function showToast(message){
+  const t=document.createElement("div");
+  t.textContent=message;
+  t.style.cssText="position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--ink);color:white;padding:12px 20px;font-size:13px;z-index:9999;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.2);transition:opacity .3s";
+  document.body.appendChild(t);
+  setTimeout(()=>{t.style.opacity="0";setTimeout(()=>t.remove(),300);},3000);
+}
+
 /* ===== Tab switching ===== */
 function switchTab(tab){
   document.querySelectorAll(".tab-btn").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));
@@ -889,7 +891,15 @@ $("#btnLogout").addEventListener("click",async()=>{await sb.auth.signOut();locat
 
 /* ===== Main ===== */
 async function main(){
-  await Promise.all([loadBilling(),loadIcons()]);
+  await loadIcons();
+
+  // ?checkout=success ハンドリング
+  const urlParams=new URLSearchParams(location.search);
+  if(urlParams.get("checkout")==="success"){
+    history.replaceState({},"",APP_URL);
+    setTimeout(()=>showToast("✓ Standardプランへの登録が完了しました！"),1200);
+  }
+
   const user=await getUser();
 
   if(user){

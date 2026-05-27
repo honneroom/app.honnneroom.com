@@ -4,7 +4,6 @@
       {
         "id": "standard",
         "name": "Standard",
-        "price_id": "price_XXXXXXXXXX",
         "amount": 390,
         "currency": "jpy",
         "interval": "month"
