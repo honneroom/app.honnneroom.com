@@ -241,6 +241,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);p
 .bar-fill{height:100%;border-radius:2px;display:flex;align-items:center;justify-content:flex-end;padding-right:5px;font-size:10px;color:white;font-weight:500}
 .bar-count{font-size:11px;color:var(--mist);width:22px;text-align:right;flex-shrink:0}
 
+/* TYPE CARD */
+.type-card{background:white;border:1px solid rgba(26,23,20,.06);padding:28px 24px;margin-bottom:8px;text-align:center;overflow:hidden;position:relative}
+.type-card::before{content:'';position:absolute;top:0;left:0;right:0;height:5px;background:var(--type-color,var(--primary))}
+.type-card-label{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--mist);margin-bottom:12px}
+.type-card-emoji{font-size:60px;line-height:1;margin-bottom:12px}
+.type-card-name{font-family:'Shippori Mincho',serif;font-size:26px;font-weight:700;margin-bottom:8px;line-height:1.4}
+.type-card-tagline{font-size:13px;color:var(--mist);font-weight:300;line-height:1.7;margin-bottom:16px}
+.type-card-desc{font-size:13px;color:var(--ink);font-weight:300;line-height:1.85;text-align:left;padding:12px 16px;margin-bottom:12px}
+.type-card-insight{font-family:'Shippori Mincho',serif;font-size:15px;font-weight:600;line-height:1.6;padding:10px 16px;border-radius:4px}
+
 /* SHARE BUTTON */
 .btn-share{width:100%;padding:14px;background:var(--ink);color:white;border:none;font-family:'DM Sans',sans-serif;font-size:14px;letter-spacing:.06em;cursor:pointer;transition:background .2s;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px}
 .btn-share:hover{background:#3f51b5}
@@ -430,6 +440,84 @@ const EMOTION_COLORS = {
   '怒り':'#e53935','期待':'#f57c00',
 };
 
+/* ===== 感情タイプ定義 ===== */
+const PERSONALITY_TYPES = [
+  {
+    id:'justice',name:'正義の火種タイプ',emoji:'⚡',
+    color:'#c62828',subcolor:'#e53935',
+    tagline:'「あるべき姿」への強いこだわりをもつ',
+    desc:'不公正や矛盾に誰より敏感で、強い信念と倫理観の持ち主。アドラー心理学では、この情熱を「共同体への貢献」に向けると大きな力になります。',
+    insight:'怒りは自分の価値観を知るサイン',
+    emotionKeys:['怒り'],
+  },
+  {
+    id:'empath',name:'深海の感受体タイプ',emoji:'🌊',
+    color:'#283593',subcolor:'#3f51b5',
+    tagline:'心の深みで世界を感じとる',
+    desc:'他者の感情に深く寄り添える高い共感力の持ち主。CBTでは、この豊かな感受性を「感情の波乗り」に活かせます。深く感じることは才能です。',
+    insight:'深く感じる力は、誰もが持てるものではない',
+    emotionKeys:['悲しみ'],
+  },
+  {
+    id:'cautious',name:'霧の先読み師タイプ',emoji:'🔮',
+    color:'#1b5e20',subcolor:'#388e3c',
+    tagline:'リスクを先読みする慎重な知性',
+    desc:'先を見越して丁寧に考える慎重さと想像力をもっています。アドラーの「勇気づけ」では、不安は成長の前に必ず現れるサインと考えます。',
+    insight:'慎重さは、準備という名の強さ',
+    emotionKeys:['恐れ'],
+  },
+  {
+    id:'sensor',name:'閃光の受信機タイプ',emoji:'✨',
+    color:'#006064',subcolor:'#00acc1',
+    tagline:'世界の変化を誰より早く感知する',
+    desc:'新しい情報や変化に素早く反応できる鋭い直感をもっています。この感知力はクリエイティブな発想の源になります。',
+    insight:'驚きは、学びが始まる瞬間',
+    emotionKeys:['驚き'],
+  },
+  {
+    id:'sunny',name:'陽だまりの採掘者タイプ',emoji:'☀️',
+    color:'#bf360c',subcolor:'#e8a020',
+    tagline:'どこにでも喜びを見つける天才',
+    desc:'日常の中に幸せを見出す特別な感性をもっています。アドラー心理学では、この感性が周りを照らす「共同体感覚」そのものです。',
+    insight:'喜びは、探す人のところに来る',
+    emotionKeys:['喜び'],
+  },
+  {
+    id:'bridge',name:'絆の錬金術師タイプ',emoji:'🤝',
+    color:'#33691e',subcolor:'#7cb342',
+    tagline:'信頼関係を黄金に変える力をもつ',
+    desc:'人との繋がりを深める特別な力をもっています。アドラー心理学が最も重視する「共同体感覚」が自然に備わっている、稀有なタイプです。',
+    insight:'信頼は、時間をかけて育てる宝',
+    emotionKeys:['信頼'],
+  },
+  {
+    id:'pioneer',name:'夜明けの先駆者タイプ',emoji:'🌅',
+    color:'#e65100',subcolor:'#f57c00',
+    tagline:'未来への期待を原動力にする',
+    desc:'可能性に目を向け、前に進む力をもっています。アドラー心理学の「目的論」的な生き方—過去より未来を向いて動く—が自然にできています。',
+    insight:'期待する力は、現実を変える燃料',
+    emotionKeys:['期待'],
+  },
+  {
+    id:'philosopher',name:'月の審美眼タイプ',emoji:'🌙',
+    color:'#4a148c',subcolor:'#8e24aa',
+    tagline:'妥協しない自己基準をもつ哲学者',
+    desc:'自分だけの価値観と審美眼をもち、本質を見抜く力があります。アドラーの「勇気」とニーチェ的な「自己超越」への意志が共存しています。',
+    insight:'基準をもつことは、最高の自己尊重',
+    emotionKeys:['嫌悪'],
+  },
+];
+
+function determineType(analysis){
+  if(!analysis)return PERSONALITY_TYPES[0];
+  const wheel=analysis.emotion_wheel||[];
+  if(!wheel.length)return PERSONALITY_TYPES[Math.floor(Date.now()%PERSONALITY_TYPES.length)];
+  const sorted=[...wheel].sort((a,b)=>(b.intensity||3)-(a.intensity||3));
+  const dominantCat=sorted[0]?.category;
+  return PERSONALITY_TYPES.find(t=>t.emotionKeys.includes(dominantCat))
+    ||PERSONALITY_TYPES[Math.floor(Date.now()%PERSONALITY_TYPES.length)];
+}
+
 function renderEmotionWheel(emotions){
   if(!emotions||!emotions.length)
     return `<div style="color:var(--mist);font-size:13px">感情の分類はありませんでした</div>`;
@@ -462,6 +550,17 @@ function renderAnalysisCards(analysis){
   const container=document.getElementById("analysisCards");
   if(!container)return;
   let html='';
+
+  // ─── タイプ診断カード（一番上・シェア用）───
+  const ptype=determineType(analysis);
+  html+=`<div class="type-card result-card" style="--type-color:${ptype.color}">
+    <div class="type-card-label">あなたの感情タイプ診断</div>
+    <div class="type-card-emoji">${ptype.emoji}</div>
+    <div class="type-card-name" style="color:${ptype.color}">${esc(ptype.name)}</div>
+    <div class="type-card-tagline">${esc(ptype.tagline)}</div>
+    <div class="type-card-desc" style="border-left:3px solid ${ptype.color};background:var(--cream)">${esc(ptype.desc)}</div>
+    <div class="type-card-insight" style="color:${ptype.color};background:var(--cream)">「${esc(ptype.insight)}」</div>
+  </div>`;
 
   // 核心感情
   if(analysis.core_emotion){
@@ -1188,96 +1287,93 @@ function rrFill(ctx,x,y,w,h,r,color){
   ctx.closePath();ctx.fill();
 }
 
+function ctxWrapCenter(ctx,text,cx,y,maxW,lineH){
+  const lines=[];let line='';
+  for(const c of[...text]){
+    const t=line+c;
+    if(ctx.measureText(t).width>maxW&&line){lines.push(line);line=c;}
+    else line=t;
+  }
+  if(line)lines.push(line);
+  const saved=ctx.textAlign;ctx.textAlign='center';
+  lines.forEach((l,i)=>ctx.fillText(l,cx,y+i*lineH));
+  ctx.textAlign=saved;
+  return lines.length;
+}
+
 async function generateShareCard(analysis){
+  const type=determineType(analysis);
   const W=1080,H=1080;
   const canvas=document.createElement('canvas');
   canvas.width=W;canvas.height=H;
   const ctx=canvas.getContext('2d');
-
-  // フォント読み込み待機
   try{await document.fonts.ready;}catch(e){}
 
-  const CREAM='#f5f0e8',ORA='#c4622d',INK='#1a1714',MIST='#8a7a72',WARM='#e8dfd0';
-  const PAD=72;
+  // ─── 背景グラデーション ───
+  const grad=ctx.createLinearGradient(0,0,W,H);
+  grad.addColorStop(0,type.color);
+  grad.addColorStop(1,type.subcolor);
+  ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
 
-  // 背景
-  ctx.fillStyle=CREAM;ctx.fillRect(0,0,W,H);
+  // 薄い下部オーバーレイ（フッター可読性UP）
+  const fgrad=ctx.createLinearGradient(0,H-260,0,H);
+  fgrad.addColorStop(0,'rgba(0,0,0,0)');fgrad.addColorStop(1,'rgba(0,0,0,0.3)');
+  ctx.fillStyle=fgrad;ctx.fillRect(0,H-260,W,260);
 
-  // 左アクセントバー
-  ctx.fillStyle=ORA;ctx.fillRect(0,0,18,H);
+  // トップバー
+  ctx.fillStyle='rgba(255,255,255,.12)';ctx.fillRect(0,0,W,96);
 
-  // 下部アクセント
-  ctx.fillStyle=ORA;ctx.globalAlpha=.07;ctx.fillRect(0,H-140,W,140);ctx.globalAlpha=1;
+  // ─── アプリ名 ───
+  ctx.textAlign='center';
+  ctx.fillStyle='rgba(255,255,255,.85)';
+  ctx.font=`600 30px 'Shippori Mincho', serif`;
+  ctx.fillText('本音ルーム  感情タイプ診断',W/2,60);
 
-  // ─── ヘッダー ───
-  ctx.fillStyle=ORA;
-  ctx.font=`700 38px 'Shippori Mincho', serif`;
-  ctx.fillText('本音ルーム',PAD,84);
-  ctx.fillStyle=MIST;
-  ctx.font=`300 26px 'DM Sans', sans-serif`;
-  ctx.fillText('感情診断レポート',PAD,122);
+  // ─── 絵文字 ───
+  ctx.font=`${Math.round(W*.13)}px serif`;
+  ctx.fillText(type.emoji,W/2,308);
 
-  // 区切り線
-  ctx.strokeStyle='rgba(196,98,45,.22)';ctx.lineWidth=1;
-  ctx.beginPath();ctx.moveTo(PAD,144);ctx.lineTo(W-PAD,144);ctx.stroke();
+  // ─── "あなたのタイプは" ───
+  ctx.fillStyle='rgba(255,255,255,.7)';
+  ctx.font=`300 32px 'DM Sans', sans-serif`;
+  ctx.fillText('あなたのタイプは',W/2,390);
 
-  // ─── 核心感情 ───
-  ctx.fillStyle=ORA;
-  ctx.font=`400 22px 'DM Sans', sans-serif`;
-  ctx.fillText('▪ あなたの核心感情',PAD,192);
-  if(analysis.core_emotion){
-    ctx.fillStyle=INK;
-    ctx.font=`700 54px 'Shippori Mincho', serif`;
-    const lines=ctxWrapText(ctx,analysis.core_emotion,PAD,258,W-PAD*2,72);
-    var coreBottom=258+lines*72;
-  } else {var coreBottom=260;}
-
-  // ─── 感情チップ ───
-  const emo=analysis.emotion_wheel||[];
-  const chipY=Math.max(coreBottom+40,420);
-  if(emo.length){
-    ctx.fillStyle=MIST;
-    ctx.font=`400 22px 'DM Sans', sans-serif`;
-    ctx.fillText('感じていた感情',PAD,chipY-10);
-    const cw=200,ch=76,gap=16;
-    emo.slice(0,4).forEach((e,i)=>{
-      const col=i%3,row=Math.floor(i/3);
-      const cx=PAD+col*(cw+gap),cy=chipY+20+row*(ch+gap);
-      const color=EMOTION_COLORS[e.category]||'#8a7a72';
-      rrFill(ctx,cx,cy,cw,ch,12,color);
-      ctx.fillStyle='white';
-      ctx.font=`600 28px 'Shippori Mincho', serif`;
-      ctx.textAlign='center';
-      ctx.fillText(e.emotion,cx+cw/2,cy+34);
-      ctx.font=`300 20px 'DM Sans', sans-serif`;
-      ctx.fillStyle='rgba(255,255,255,.8)';
-      ctx.fillText(e.category,cx+cw/2,cy+60);
-      ctx.textAlign='left';
-    });
+  // ─── タイプ名 ───
+  ctx.fillStyle='white';
+  ctx.font=`700 78px 'Shippori Mincho', serif`;
+  if(ctx.measureText(type.name).width>W-120){
+    ctx.font=`700 58px 'Shippori Mincho', serif`;
   }
+  ctx.fillText(type.name,W/2,486);
 
-  // ─── サマリー ───
-  if(analysis.summary){
-    const sqY=chipY+200;
-    ctx.fillStyle=WARM;ctx.fillRect(PAD,sqY,W-PAD*2,130);
-    ctx.fillStyle=ORA;ctx.fillRect(PAD,sqY,6,130);
-    ctx.fillStyle=MIST;
-    ctx.font=`300 24px 'DM Sans', sans-serif`;
-    ctxWrapText(ctx,analysis.summary.slice(0,60)+(analysis.summary.length>60?'…':''),PAD+22,sqY+42,W-PAD*2-44,36);
-  }
+  // ─── タグライン ───
+  ctx.fillStyle='rgba(255,255,255,.82)';
+  ctx.font=`300 33px 'DM Sans', sans-serif`;
+  ctxWrapCenter(ctx,type.tagline,W/2,556,W-160,48);
+
+  // ─── 区切り ───
+  ctx.strokeStyle='rgba(255,255,255,.28)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(W/2-220,618);ctx.lineTo(W/2+220,618);ctx.stroke();
+
+  // ─── インサイト ───
+  ctx.fillStyle='white';
+  ctx.font=`600 40px 'Shippori Mincho', serif`;
+  ctx.fillText(`「${type.insight}」`,W/2,698);
 
   // ─── フッター ───
-  ctx.fillStyle='rgba(196,98,45,.15)';
-  ctx.fillRect(PAD,H-128,W-PAD*2,1);
-  ctx.fillStyle=ORA;
-  ctx.font=`600 28px 'Shippori Mincho', serif`;
-  ctx.textAlign='center';
-  ctx.fillText('あなたも診断してみよう →',W/2,H-80);
-  ctx.fillStyle=MIST;
-  ctx.font=`300 24px 'DM Sans', sans-serif`;
-  ctx.fillText('app.honneroom.com',W/2,H-44);
-  ctx.textAlign='left';
+  ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(100,894);ctx.lineTo(W-100,894);ctx.stroke();
 
+  ctx.fillStyle='rgba(255,255,255,.9)';
+  ctx.font=`600 28px 'Shippori Mincho', serif`;
+  ctx.fillText('あなたのタイプは？',W/2,950);
+  ctx.fillStyle='rgba(255,255,255,.65)';
+  ctx.font=`300 24px 'DM Sans', sans-serif`;
+  ctx.fillText('app.honneroom.com',W/2,992);
+  ctx.font=`300 21px 'DM Sans', sans-serif`;
+  ctx.fillText('#本音ルーム  #感情タイプ診断',W/2,1032);
+
+  ctx.textAlign='left';
   return canvas.toDataURL('image/png');
 }
 
@@ -1303,20 +1399,19 @@ async function showShareModal(analysis){
     generating.style.display='none';
     [btnDl,btnX,btnLine,btnCopy].forEach(b=>b.style.display='');
 
-    // 感情名を取得
-    const topEmo=(analysis.emotion_wheel||[])[0]?.emotion||'';
-    const coreShort=(analysis.core_emotion||'').slice(0,30);
-    const shareText=`【本音ルーム 感情診断】\n「${coreShort}」\n${topEmo?`#${topEmo} `:''}#本音ルーム #感情診断\nあなたも試してみて → https://app.honneroom.com`;
+    // タイプ名ベースのシェアテキスト（個人内容を含まない）
+    const type=determineType(analysis);
+    const shareText=`【感情タイプ診断】\n私は「${type.name}」でした！\n${type.tagline}\n\n#本音ルーム #感情タイプ診断\nあなたのタイプは？→ https://app.honneroom.com`;
 
     // Web Share API（モバイルで画像ごと共有）
     if(navigator.share&&dataUrl){
       try{
         const blob=await(await fetch(dataUrl)).blob();
-        const file=new File([blob],'honneroom-result.png',{type:'image/png'});
+        const file=new File([blob],'honneroom-type.png',{type:'image/png'});
         if(navigator.canShare&&navigator.canShare({files:[file]})){
           btnDl.textContent='📲 シェア / 保存する';
           btnDl.onclick=async()=>{
-            await navigator.share({title:'本音ルーム 感情診断',text:shareText,files:[file]}).catch(()=>{});
+            await navigator.share({title:`私は「${type.name}」でした！`,text:shareText,files:[file]}).catch(()=>{});
           };
           btnX.style.display='none';btnLine.style.display='none';btnCopy.style.display='none';
           return;
@@ -1326,11 +1421,11 @@ async function showShareModal(analysis){
 
     // PC / フォールバック
     btnDl.onclick=()=>{
-      const a=document.createElement('a');a.href=dataUrl;a.download='honneroom-result.png';a.click();
+      const a=document.createElement('a');a.href=dataUrl;a.download=`honneroom-${type.id}.png`;a.click();
     };
-    const tweetText=encodeURIComponent(`【本音ルーム 感情診断】「${coreShort}」\n${topEmo?`#${topEmo} `:''}#本音ルーム\nあなたも → https://app.honneroom.com`);
+    const tweetText=encodeURIComponent(`私の感情タイプは「${type.name}」でした！\n${type.tagline}\n#本音ルーム #感情タイプ診断\nあなたのタイプは？→ https://app.honneroom.com`);
     btnX.onclick=()=>window.open(`https://x.com/intent/tweet?text=${tweetText}`,'_blank');
-    const lineText=encodeURIComponent(`【本音ルーム 感情診断】「${coreShort}」\nあなたも試してみて → https://app.honneroom.com`);
+    const lineText=encodeURIComponent(`私の感情タイプは「${type.name}」でした！\nあなたのタイプは？→ https://app.honneroom.com`);
     btnLine.onclick=()=>window.open(`https://line.me/R/msg/text/?${lineText}`,'_blank');
     btnCopy.onclick=()=>{
       navigator.clipboard.writeText(shareText).then(()=>{btnCopy.textContent='✓ コピーしました！';setTimeout(()=>{btnCopy.textContent='📋 テキストをコピー';},2000);});
