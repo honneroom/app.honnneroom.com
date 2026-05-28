@@ -1016,6 +1016,7 @@ let _calMonth=new Date().getMonth();
 let _cachedEntries=null;
 let _calDateMap={}; // 感情カレンダー用: "YYYY-M-D" → {color,ptype,entries[]}
 let _searchQuery='';
+let _isComposing=false;
 
 function getDominantEmotion(analyses){
   const a=(analyses||[])[0];
@@ -1097,6 +1098,7 @@ function titleAreaHtml(entryId,title){
 }
 
 function setSearchQuery(val){
+  if(_isComposing)return; // IME変換中は無視（確定後に再実行）
   _searchQuery=val;
   const main=document.getElementById('recordMain');
   renderRecordList(_cachedEntries||[],main);
@@ -1145,7 +1147,7 @@ function renderRecordList(entries,main){
   const q=_searchQuery.trim().toLowerCase();
   const filtered=q?entries.filter(e=>(e.title||'').toLowerCase().includes(q)||(e.body||'').toLowerCase().includes(q)):entries;
 
-  const searchBar=`<div class="entry-search-wrap"><input class="entry-search-input" type="search" placeholder="🔍 タイトル・内容で検索…" value="${esc(_searchQuery)}" oninput="setSearchQuery(this.value)"></div>`;
+  const searchBar=`<div class="entry-search-wrap"><input class="entry-search-input" type="search" placeholder="🔍 タイトル・内容で検索…" value="${esc(_searchQuery)}" oninput="setSearchQuery(this.value)" oncompositionstart="_isComposing=true" oncompositionend="_isComposing=false;setSearchQuery(this.value)"></div>`;
 
   if(!filtered.length){
     main.innerHTML=searchBar+(q
