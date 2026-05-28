@@ -2,9 +2,9 @@
 // Deploy with: supabase functions deploy create-checkout-session
 // Required secrets:
 //   STRIPE_SECRET_KEY_LIVE=sk_live_...
-//   STRIPE_SECRET_KEY_TEST=sk_test_...
+//   STRIPE_SECRET_KEY_TEST=sk_test_...   （テスト時のみ）
 //   STRIPE_PRICE_STANDARD=price_xxx
-//   APP_ENV=production  （または test）
+//   APP_ENV=production  （prod / production / live のいずれかで本番キーを使用）
 //   （将来プラン追加例）supabase secrets set STRIPE_PRICE_PRO=price_yyy
 
 import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
@@ -12,16 +12,17 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 // シークレットはリクエストごとに読み込む（デプロイ時点での undefined 固定を防ぐため）
 function getConfig() {
-  const APP_ENV = Deno.env.get("APP_ENV") || "test";
-  const stripeKey = (APP_ENV === "production" || APP_ENV === "live")
-    ? Deno.env.get("STRIPE_SECRET_KEY_LIVE")!
-    : Deno.env.get("STRIPE_SECRET_KEY_TEST")!;
+  const APP_ENV = (Deno.env.get("APP_ENV") || "test").toLowerCase();
+  const isLive = APP_ENV === "production" || APP_ENV === "prod" || APP_ENV === "live";
+  const stripeKey = isLive
+    ? Deno.env.get("STRIPE_SECRET_KEY_LIVE")
+    : Deno.env.get("STRIPE_SECRET_KEY_TEST");
   return {
     stripeKey,
+    isLive,
     supabaseUrl:     Deno.env.get("SUPABASE_URL")!,
     supabaseService: Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     // プラン名 → Stripe Price ID
-    // 新プラン追加時は secrets にキーを追加して下記に足すだけ
     priceMap: {
       standard: Deno.env.get("STRIPE_PRICE_STANDARD"),
     } as Record<string, string | undefined>,
@@ -46,6 +47,17 @@ Deno.serve(async (req) => {
 
   try {
     const cfg = getConfig();
+
+    // Stripe キーが設定されていなければ即エラー
+    if (!cfg.stripeKey) {
+      const keyName = cfg.isLive ? "STRIPE_SECRET_KEY_LIVE" : "STRIPE_SECRET_KEY_TEST";
+      console.error(`Missing secret: ${keyName} (APP_ENV=${Deno.env.get("APP_ENV")})`);
+      return new Response(JSON.stringify({ error: `Stripe キーが未設定です: ${keyName}` }), {
+        status: 500,
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+      });
+    }
+
     const { user_id, plan, success_url, cancel_url } = await req.json();
 
     // プラン名からPrice IDを解決
