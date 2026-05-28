@@ -501,6 +501,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);p
   #seo-section{padding:36px 16px 48px}
   .seo-h1{font-size:18px}
 }
+
+/* LOCKED PREVIEW (無料プランのぼかし表示) */
+.locked-preview-wrap{position:relative;overflow:hidden;margin-top:6px}
+.locked-preview-inner{filter:blur(6px);pointer-events:none;user-select:none;opacity:.85}
+.locked-preview-shield{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(245,240,232,.55);backdrop-filter:blur(1px)}
+.locked-preview-badge{font-size:12px;color:var(--mist);background:white;padding:6px 16px;border:1px solid rgba(26,23,20,.12);letter-spacing:.02em}
+.preview-upgrade-cta{background:white;border:1px solid rgba(196,98,45,.18);border-top:none;padding:18px 20px;text-align:center}
+.preview-upgrade-cta p{font-size:13px;color:var(--mist);margin-bottom:12px;line-height:1.7;font-weight:300}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
@@ -1198,6 +1206,25 @@ function premiumLockHtml(icon,title,desc){
   </div>`;
 }
 
+// カードタイトルは見せて中身をぼかすプレビューカード
+function lockedPreviewCard(label,innerHtml){
+  return`<div class="result-card" style="padding-bottom:0">
+    <div class="result-label">${label}</div>
+    <div class="locked-preview-wrap">
+      <div class="locked-preview-inner">${innerHtml}</div>
+      <div class="locked-preview-shield"><span class="locked-preview-badge">🔒 Standardプランで閲覧</span></div>
+    </div>
+  </div>`;
+}
+
+// アップグレード誘導フッター
+function previewUpgradeCta(){
+  return`<div class="preview-upgrade-cta">
+    <p>Standardプラン（¥390/月）ですべての分析・レポートが閲覧できます</p>
+    <button class="btn-p" onclick="switchTab('account')" style="padding:11px 28px;font-size:13px">プランをアップグレード →</button>
+  </div>`;
+}
+
 function switchRecTab(tab){
   _recTab=tab;
   document.querySelectorAll('.rec-tab').forEach(b=>b.classList.toggle('active',b.dataset.rtab===tab));
@@ -1489,7 +1516,21 @@ function calDayClick(key){
 /* ===== 傾向・パターン分析 ===== */
 function renderTrend(entries,main){
   if(!S.isStd){
-    main.innerHTML=premiumLockHtml('📊','傾向・パターン分析','感情の出現頻度や思考のクセのパターンを分析します。\n記録が増えるほど、精度が上がります。');
+    // 無料ユーザー：セクション名は見せ、中身はぼかす
+    const fakeWeekRows=['今週','先週','2週前','3週前'].map((lbl,i)=>{
+      const w=[65,85,45,70][i],n=[3,4,2,3][i];
+      return`<div class="bar-row"><div class="bar-label">${lbl}</div><div class="bar-track"><div class="bar-fill" style="width:${w}%;background:var(--primary)">${n}</div></div><div class="bar-count">${n}</div></div>`;
+    }).join('');
+    const FAKE_EMO=[['悲しみ',90],['怒り',70],['不安',55],['喜び',38],['信頼',22]];
+    const fakeEmoRows=FAKE_EMO.map(([cat,w])=>`<div class="bar-row"><div class="bar-label">${cat}</div><div class="bar-track"><div class="bar-fill" style="width:${w}%;background:${EMOTION_COLORS[cat]||'#8a7a72'}"></div></div><div class="bar-count">${Math.round(w/10)}</div></div>`).join('');
+    const fakeDisRows=['全か無か思考','感情的決めつけ','読心術'].map((type,i)=>`<div class="dis-row"><div class="dis-header"><div class="dis-header-left"><div class="dis-header-type">🔍 ${type}</div><div class="dis-header-count">${[5,3,2][i]}回</div></div><div class="dis-chevron">▼</div></div></div>`).join('');
+    const fakeTypeRows=PERSONALITY_TYPES.slice(0,3).map((t,i)=>`<div class="type-bar-row"><div class="type-bar-sym">${t.symbol}</div><div class="type-bar-name">${esc(t.name)}</div><div class="type-bar-track"><div class="type-bar-fill" style="width:${[80,50,30][i]}%;background:${t.color}"></div></div><div class="type-bar-count">${[8,5,3][i]}</div></div>`).join('');
+    main.innerHTML=
+      lockedPreviewCard('記録の頻度（過去4週間）',fakeWeekRows)+
+      lockedPreviewCard('よく感じる感情 TOP5',fakeEmoRows)+
+      lockedPreviewCard('よく見られる思考のクセ',fakeDisRows)+
+      lockedPreviewCard('感情スタイルの傾向',fakeTypeRows)+
+      previewUpgradeCta();
     return;
   }
   if(!entries.length){
@@ -1580,7 +1621,27 @@ function renderTrend(entries,main){
 /* ===== 月次レポート ===== */
 function renderReport(entries,main){
   if(!S.isStd){
-    main.innerHTML=premiumLockHtml('📋','月次レポート','毎月の感情の傾向をまとめたレポートです。\n自分の感情の変化を月単位で振り返ることができます。');
+    // 累計数は見せる（記録のモチベーションに）
+    const monthKeys=[...new Set(entries.map(e=>{const d=new Date(e.created_at);return`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}`;}))].sort().reverse().slice(0,4);
+    const thisMonth=new Date().toISOString().slice(0,7).replace('-','/');
+    const thisMonthCount=entries.filter(e=>e.created_at.startsWith(thisMonth.replace('/','-'))).length;
+    // ぼかし用の感情チップ（ダミー）
+    const fakeChips=`<div class="emotion-chips">${['悲しみ','怒り','不安'].map(cat=>`<div class="emotion-chip" style="background:${EMOTION_COLORS[cat]||'#8a7a72'}"><div class="emotion-chip-name">${cat}</div></div>`).join('')}</div>`;
+    let html=`<div class="result-card">
+      <div class="report-stats">
+        <div class="report-stat"><div class="report-stat-num">${entries.length}</div><div class="report-stat-lbl">累計記録数</div></div>
+        <div class="report-stat"><div class="report-stat-num">${thisMonthCount}</div><div class="report-stat-lbl">今月の記録</div></div>
+        <div class="report-stat"><div class="report-stat-num">${monthKeys.length}</div><div class="report-stat-lbl">記録月数</div></div>
+      </div>
+    </div>`;
+    // 月ごとの「よく感じた感情」カード（タイトルは実際の月、中身はぼかし）
+    if(monthKeys.length){
+      monthKeys.forEach(key=>{html+=lockedPreviewCard(`${key} よく感じた感情`,fakeChips);});
+    } else {
+      html+=`<div class="empty"><p style="font-size:13px">記録が増えると月次レポートが作成されます。</p></div>`;
+    }
+    html+=previewUpgradeCta();
+    main.innerHTML=html;
     return;
   }
   if(!entries.length){
