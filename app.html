@@ -217,6 +217,25 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);p
 .entry-card:hover .entry-share-btn,.entry-card:focus-within .entry-share-btn{opacity:.6}
 .entry-share-btn:hover{color:var(--primary);opacity:1!important}
 
+/* ENTRY SEARCH */
+.entry-search-wrap{padding:10px 16px 8px;position:sticky;top:0;background:var(--cream);z-index:5;border-bottom:1px solid rgba(26,23,20,.06)}
+.entry-search-input{width:100%;padding:9px 14px;border:1px solid rgba(26,23,20,.15);background:white;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--ink);outline:none;-webkit-appearance:none}
+.entry-search-input:focus{border-color:var(--primary-light)}
+.entry-search-input::placeholder{color:var(--mist)}
+
+/* ENTRY TITLE EDITING */
+.entry-card-title{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:2px;display:flex;align-items:center;gap:5px;line-height:1.4;word-break:break-all}
+.entry-title-edit-btn{background:none;border:none;color:var(--mist);font-size:12px;cursor:pointer;padding:0 2px;opacity:0;transition:opacity .2s;line-height:1;flex-shrink:0}
+.entry-card:hover .entry-title-edit-btn,.entry-card:focus-within .entry-title-edit-btn{opacity:.5}
+.entry-title-edit-btn:hover{color:var(--primary);opacity:1!important}
+.entry-title-add-btn{background:none;border:none;font-size:12px;color:var(--mist);cursor:pointer;padding:0;margin-bottom:4px;opacity:0;transition:opacity .2s;font-family:'DM Sans',sans-serif;display:block;text-align:left}
+.entry-card:hover .entry-title-add-btn,.entry-card:focus-within .entry-title-add-btn{opacity:.5}
+.entry-title-add-btn:hover{color:var(--primary);opacity:1!important}
+.entry-title-edit-wrap{display:flex;gap:5px;margin-bottom:6px;align-items:center}
+.entry-title-edit-input{flex:1;padding:5px 8px;border:1px solid var(--primary-light);font-size:13px;font-family:'DM Sans',sans-serif;background:white;outline:none;min-width:0}
+.entry-title-edit-save{padding:5px 10px;background:var(--primary);color:white;border:none;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;flex-shrink:0}
+.entry-title-edit-cancel{padding:5px 8px;background:none;border:1px solid rgba(26,23,20,.15);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--mist);flex-shrink:0}
+
 /* PREMIUM LOCK */
 .premium-lock{background:white;border:1px solid rgba(26,23,20,.06);padding:48px 24px;text-align:center}
 .premium-lock-icon{font-size:40px;margin-bottom:14px}
@@ -996,6 +1015,7 @@ let _calYear=new Date().getFullYear();
 let _calMonth=new Date().getMonth();
 let _cachedEntries=null;
 let _calDateMap={}; // 感情カレンダー用: "YYYY-M-D" → {color,ptype,entries[]}
+let _searchQuery='';
 
 function getDominantEmotion(analyses){
   const a=(analyses||[])[0];
@@ -1053,7 +1073,7 @@ async function renderRecord(){
     main.innerHTML=`<div class="loading"><span class="spinner" style="font-size:18px;margin-right:8px">↻</span> 読み込み中…</div>`;
     const{data,error}=await sb
       .from("entries")
-      .select(`id,body,created_at,analyses(core_emotion,summary,emotion_wheel,cognitive_distortions,reframe)`)
+      .select(`id,body,title,created_at,analyses(core_emotion,summary,emotion_wheel,cognitive_distortions,reframe)`)
       .eq("user_id",S.user.id)
       .order("created_at",{ascending:false})
       .limit(500);
@@ -1071,12 +1091,69 @@ async function renderRecord(){
   renderRecContent(_cachedEntries);
 }
 
+function titleAreaHtml(entryId,title){
+  if(title)return`<div class="entry-card-title">${esc(title)}<button class="entry-title-edit-btn" onclick="openTitleEdit('${entryId}',event)" title="タイトルを編集">✎</button></div>`;
+  return`<button class="entry-title-add-btn" onclick="openTitleEdit('${entryId}',event)">＋ タイトルを追加</button>`;
+}
+
+function setSearchQuery(val){
+  _searchQuery=val;
+  const main=document.getElementById('recordMain');
+  renderRecordList(_cachedEntries||[],main);
+  // restore focus & cursor at end
+  const inp=main.querySelector('.entry-search-input');
+  if(inp){inp.focus();const l=inp.value.length;inp.setSelectionRange(l,l);}
+}
+
+function openTitleEdit(entryId,event){
+  event.stopPropagation();
+  const area=document.querySelector(`[data-title-area="${entryId}"]`);
+  if(!area)return;
+  const entry=_cachedEntries?.find(x=>x.id===entryId);
+  const cur=entry?.title||'';
+  area.innerHTML=`<div class="entry-title-edit-wrap">
+    <input class="entry-title-edit-input" value="${esc(cur)}" placeholder="タイトルを入力（50字以内）" maxlength="50">
+    <button class="entry-title-edit-save" onclick="saveTitleEdit('${entryId}')">保存</button>
+    <button class="entry-title-edit-cancel" onclick="cancelTitleEdit('${entryId}')">×</button>
+  </div>`;
+  const inp=area.querySelector('.entry-title-edit-input');
+  inp.focus();inp.select();
+  inp.addEventListener('keydown',ev=>{
+    if(ev.key==='Enter')saveTitleEdit(entryId);
+    if(ev.key==='Escape')cancelTitleEdit(entryId);
+  });
+}
+
+async function saveTitleEdit(entryId){
+  const area=document.querySelector(`[data-title-area="${entryId}"]`);
+  const newTitle=(area?.querySelector('.entry-title-edit-input')?.value||'').trim();
+  const{error}=await sb.from("entries").update({title:newTitle||null}).eq("id",entryId).eq("user_id",S.user.id);
+  if(error){showToast('保存に失敗しました');return;}
+  const entry=_cachedEntries?.find(x=>x.id===entryId);
+  if(entry)entry.title=newTitle||null;
+  if(area)area.innerHTML=titleAreaHtml(entryId,newTitle||null);
+  showToast('タイトルを保存しました');
+}
+
+function cancelTitleEdit(entryId){
+  const area=document.querySelector(`[data-title-area="${entryId}"]`);
+  const entry=_cachedEntries?.find(x=>x.id===entryId);
+  if(area)area.innerHTML=titleAreaHtml(entryId,entry?.title||null);
+}
+
 function renderRecordList(entries,main){
-  if(!entries.length){
-    main.innerHTML=`<div class="empty"><div class="empty-h">まだ記録がありません</div><p>「気持ちを書く」タブから、今の感情を書いてみましょう。</p></div>`;
+  const q=_searchQuery.trim().toLowerCase();
+  const filtered=q?entries.filter(e=>(e.title||'').toLowerCase().includes(q)||(e.body||'').toLowerCase().includes(q)):entries;
+
+  const searchBar=`<div class="entry-search-wrap"><input class="entry-search-input" type="search" placeholder="🔍 タイトル・内容で検索…" value="${esc(_searchQuery)}" oninput="setSearchQuery(this.value)"></div>`;
+
+  if(!filtered.length){
+    main.innerHTML=searchBar+(q
+      ?`<div class="empty"><div class="empty-h">検索結果がありません</div><p>「${esc(q)}」に一致する記録はありませんでした。</p></div>`
+      :`<div class="empty"><div class="empty-h">まだ記録がありません</div><p>「気持ちを書く」タブから、今の感情を書いてみましょう。</p></div>`);
     return;
   }
-  main.innerHTML=`<div class="entries-list">`+entries.map(e=>{
+  main.innerHTML=searchBar+`<div class="entries-list">`+filtered.map(e=>{
     const a=(e.analyses||[])[0]||null;
     const ptype=a?determineType(a):null;
     const bodyPreview=e.body?.slice(0,80)+(e.body?.length>80?"…":"");
@@ -1084,6 +1161,7 @@ function renderRecordList(entries,main){
       <button class="entry-del-btn" onclick="deleteEntry('${esc(e.id)}',event)" title="削除">✕</button>
       ${a?`<button class="entry-share-btn" onclick="shareEntry('${esc(e.id)}',event)" title="シェア">📤</button>`:""}
       <div class="entry-card-date">${rtime(e.created_at)}</div>
+      <div data-title-area="${esc(e.id)}">${titleAreaHtml(esc(e.id),e.title||null)}</div>
       ${a?.core_emotion?`<div class="entry-card-core">「${esc(a.core_emotion.slice(0,50))}」</div>`:""}
       <div class="entry-card-body">${esc(bodyPreview)}</div>
       ${a?.summary?`<div class="entry-card-summary">${esc(a.summary)}</div>`:""}
@@ -1092,7 +1170,7 @@ function renderRecordList(entries,main){
   }).join('')+`</div>`;
   main.querySelectorAll(".entry-card").forEach(c=>{
     c.addEventListener("click",e=>{
-      if(e.target.classList.contains('entry-del-btn')||e.target.classList.contains('entry-share-btn'))return;
+      if(e.target.closest('[data-title-area]')||e.target.classList.contains('entry-del-btn')||e.target.classList.contains('entry-share-btn'))return;
       openEntryDetail(c.dataset.id,entries);
     });
   });
@@ -1383,6 +1461,13 @@ function openEntryDetail(entryId,entries){
 
   const a=(e.analyses||[])[0]||null;
   let html=`<button class="back-btn" id="detailBackBtn">← 記録一覧に戻る</button>`;
+
+  html+=`<div class="result-card">
+    <div class="result-label" style="display:flex;align-items:center;justify-content:space-between">
+      <span>タイトル</span>
+    </div>
+    <div data-title-area="${esc(e.id)}">${titleAreaHtml(esc(e.id),e.title||null)}</div>
+  </div>`;
 
   html+=`<div class="result-card">
     <div class="result-label">記録日時</div>
